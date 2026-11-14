@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>학생일지 | 리드인</title>
+<style>
+:root{--ink:#182b2a;--muted:#6b7c79;--green:#176b5b;--mint:#e6f3ee;--line:#e4ebe7;--paper:#f5f8f6;--soft:#f5faf7;--red:#a33f3f;--amber:#94620b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;font-size:14px}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.55;cursor:default}
+.hidden{display:none!important}
+.top{background:#fff;border-bottom:1px solid var(--line);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:30}
+.brand{display:flex;gap:11px;align-items:center}
+.logo{width:38px;height:38px;border-radius:12px;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:800;font-size:17px}
+.brand h1{font-size:17px;margin:0}
+.brand p{font-size:12px;color:var(--muted);margin:2px 0 0}
+.topright{display:flex;gap:8px;align-items:center}
+.ghost{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 11px;font-size:12px;color:#536560}
+.ghost:hover{border-color:#c9d8d1}
+.primary{background:var(--green);color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:800}
+.primary:hover:not(:disabled){background:#105949}
+.outline{border:1px solid var(--green);background:#fff;color:var(--green);font-weight:750;border-radius:9px;padding:7px 11px;font-size:12px}
+.shell{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:calc(100vh - 63px)}
+/* 사이드바 */
+.side{background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;height:calc(100vh - 63px);position:sticky;top:63px}
+.sidetop{padding:14px 14px 10px;border-bottom:1px solid var(--line)}
+.sidetop .row{display:flex;gap:8px}
+.search{flex:1;border:1px solid #dce5e0;border-radius:10px;padding:10px 12px;outline:none;min-width:0}
+.search:focus,.inp:focus,.ta:focus,.combo input:focus{border-color:#5b9c88;box-shadow:0 0 0 3px #176b5b17}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.chip{border:1px solid #dce5e0;background:#fff;border-radius:99px;padding:5px 10px;font-size:12px;color:#536560}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff}
+.sortrow{display:flex;align-items:center;gap:6px;margin-top:9px;font-size:12px;color:var(--muted)}
+.sortrow select{flex:1;border:1px solid #dce5e0;border-radius:8px;padding:6px 8px;background:#fff;font-size:12px}
+.slist{overflow:auto;flex:1;padding:6px}
+.sitem{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:9px;cursor:pointer}
+.sitem:hover{background:#f3f7f5}
+.sitem.on{background:var(--mint)}
+.sitem .nm{font-weight:700}
+.sitem .gr{font-size:11px;color:var(--muted)}
+.sitem .meta{margin-left:auto;font-size:11px;white-space:nowrap;color:var(--muted)}
+.meta.warn{color:var(--amber);font-weight:700}
+.meta.bad{color:var(--red);font-weight:700}
+.st{font-size:10px;font-weight:800;border-radius:5px;padding:2px 5px;background:#fff5df;color:var(--amber)}
+.st.out{background:#eef1ef;color:#6b7c79}
+.sidefoot{padding:10px 14px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+/* 본문 */
+.main{padding:22px 26px 60px;min-width:0}
+.banner{display:flex;align-items:center;gap:10px;background:#fff5df;border:1px solid #efd59b;color:#7a5410;border-radius:12px;padding:11px 14px;font-size:13px;margin-bottom:14px}
+.banner.err{background:#fceeee;border-color:#e8b9b9;color:#8a2f2f}
+.banner button{margin-left:auto;border:0;background:#7a5410;color:#fff;border-radius:8px;padding:7px 11px;font-size:12px;font-weight:700}
+.banner.err button{background:#8a2f2f}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 5px 20px #1b44330a}
+.pad{padding:20px}
+.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.head h2{margin:0;font-size:24px;letter-spacing:-.5px;cursor:text}
+.head h2:hover{background:#f3f7f5;border-radius:6px}
+.head .grade{color:var(--muted);font-size:14px}
+.head .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.stsel{border:1px solid #dce5e0;border-radius:8px;padding:6px 8px;background:#fff;font-weight:700}
+.props{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 18px}
+.prop{display:flex;flex-direction:column;gap:5px;min-width:0}
+.prop label{font-size:11px;font-weight:800;color:var(--muted)}
+.prop .line{display:flex;gap:6px;align-items:center}
+.inp{border:1px solid #dce5e0;border-radius:8px;padding:7px 9px;outline:none;background:#fff;min-width:0}
+input[type=date].inp{width:150px}
+.prop .ago{font-size:11px;color:var(--muted);white-space:nowrap}
+.prop .ago.warn{color:var(--amber);font-weight:700}
+.prop .ago.bad{color:var(--red);font-weight:700}
+.prop.wide{grid-column:1 / -1}
+.prop.wide .inp{width:100%}
+.tabs{display:flex;gap:6px;margin:18px 0 0}
+.tab{border:1px solid var(--line);border-bottom:0;background:#f3f7f5;border-radius:11px 11px 0 0;padding:10px 16px;font-weight:750;color:#536560}
+.tab.on{background:#fff;color:var(--green)}
+.composer{border-top-left-radius:0}
+.ta{width:100%;border:1px solid #dce5e0;border-radius:11px;padding:11px 12px;line-height:1.55;outline:none;background:#fff;resize:vertical}
+.ta.c{min-height:96px}
+.ta.small{min-height:60px}
+.crow{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.crow .hint{font-size:11px;color:var(--muted)}
+.crow .primary{margin-left:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fld label{display:block;font-size:11px;font-weight:800;color:var(--muted);margin:0 0 5px}
+.fld .inp{width:100%}
+/* 발문 */
+.pickrow{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:12px}
+.combo{position:relative}
+.combo input{width:100%;border:1px solid #dce5e0;border-radius:10px;padding:11px 12px;outline:none;background:#fff}
+.menu{display:none;position:absolute;z-index:20;left:0;right:0;top:calc(100% + 5px);background:#fff;border:1px solid #d7e2dc;border-radius:12px;box-shadow:0 12px 30px #10302622;max-height:300px;overflow:auto;padding:5px}
+.menu.open{display:block}
+.opt{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;cursor:pointer}
+.opt.act{background:var(--mint)}
+.opt.sel .t{font-weight:800}
+.opt .hint{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}
+.opt .sub{font-size:11px;color:var(--muted)}
+.opt.add{color:var(--green);border-top:1px dashed var(--line);margin-top:3px}
+.none{padding:12px;font-size:13px;color:var(--muted)}
+.lv{display:inline-block;font-size:11px;font-weight:800;color:var(--green);background:var(--mint);border-radius:6px;padding:3px 7px;white-space:nowrap}
+.lv.nolv{color:var(--muted);background:#eef1ef}
+.qnav{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 12px}
+.qbtn{border:1px solid #dce5e0;border-radius:9px;background:#fff;color:#536560;padding:7px 11px;font-size:12px}
+.qbtn.active{background:var(--green);color:#fff;border-color:var(--green)}
+.qbtn.free{border-style:dashed;color:var(--green)}
+.qbtn.free.active{color:#fff;border-style:solid}
+.qbtn i{font-style:normal;font-weight:800;margin-left:3px}
+.qtype{font-size:11px;font-weight:800;color:var(--green);letter-spacing:.06em;margin-bottom:6px}
+.question{font-size:17px;font-weight:750;line-height:1.55;margin:0 0 12px}
+.answerbox{background:#fafcfb;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:12px}
+.cap{font-size:11px;color:var(--muted);font-weight:800;margin-bottom:5px}
+.answerbox p{margin:0;line-height:1.6}
+.tin{width:100%;border:1px solid #dce5e0;border-radius:11px;padding:11px 12px;outline:none;margin-bottom:8px}
+.grade{display:flex;gap:8px;margin:10px 0 0}
+.grade button{flex:1;border:1px solid var(--line);background:#fff;padding:9px;border-radius:10px;color:var(--muted);font-weight:750}
+.grade button.on[data-grade="ok"]{background:#e8f5ec;border-color:#81bd91;color:#267341}
+.grade button.on[data-grade="part"]{background:#fff5df;border-color:#e6bd66;color:#94620b}
+.grade button.on[data-grade="re"]{background:#fceeee;border-color:#dc9898;color:#a33f3f}
+/* 타임라인 */
+.cols{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;margin-top:18px}
+.colhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.colhead h3{margin:0;font-size:15px}
+.colhead span{font-size:12px;color:var(--muted)}
+.ent{border-top:1px solid var(--line);padding:12px 0}
+.ent:first-of-type{border-top:0;padding-top:2px}
+.ent .top2{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.ent .dt{font-size:12px;font-weight:800;color:var(--green)}
+.ent .dt.nodt{color:var(--muted);font-weight:600}
+.ent .acts{margin-left:auto;display:flex;gap:10px}
+.lnk{border:0;background:none;color:#8a9a95;font-size:12px;padding:0}
+.lnk:hover{color:var(--green)}
+.lnk.del:hover{color:var(--red)}
+.ent .body{white-space:pre-wrap;word-break:break-word;line-height:1.6}
+.tagb{font-size:10px;font-weight:800;border-radius:5px;padding:2px 6px;background:var(--mint);color:var(--green)}
+.tagb.other{background:#eef1ef;color:#6b7c79}
+.sync{font-size:10px;font-weight:800;border-radius:5px;padding:2px 6px;white-space:nowrap}
+.sync.ok{background:#e8f5ec;color:#267341}
+.sync.err{background:#fceeee;color:#a33f3f}
+.sync.wait{background:#eef1ef;color:#6b7c79}
+.empty{padding:18px 10px;text-align:center;border:1px dashed #d9e3de;border-radius:12px;color:var(--muted);font-size:13px;line-height:1.65}
+.editbox{margin-top:6px}
+.editbox .crow{margin-top:8px}
+/* 발문 기록(구조화) */
+.bookcard{border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-top:10px}
+.bchead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bchead strong{font-size:14px}
+.bdate{font-size:12px;font-weight:700;color:var(--green)}
+.tally{margin-left:auto;font-size:12px;color:var(--muted)}
+.score{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:12px}
+.score input{width:56px;border:1px solid #dce5e0;border-radius:7px;padding:3px 6px;text-align:right;outline:none}
+.rec{border-top:1px solid var(--line);padding:9px 0 3px;margin-top:8px}
+.rec .rt{display:flex;align-items:center;gap:8px}
+.rec .rt small{color:var(--muted);font-size:11px}
+.rec .rt .lnk{margin-left:auto}
+.badge{font-size:11px;font-weight:800;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.badge.ok{background:#e8f5ec;color:#267341}
+.badge.part{background:#fff5df;color:#94620b}
+.badge.re{background:#fceeee;color:#a33f3f}
+.rec p{margin:5px 0;line-height:1.55;font-size:13px;word-break:break-word}
+.rec .eq{font-weight:750}
+.rec .em{background:#f5f8f6;border-radius:8px;padding:7px 9px;color:#4c5f5a}
+.rec b.lab{font-size:11px;color:var(--muted);margin-right:6px}
+/* 대시보드 */
+.dash h2{margin:0 0 4px;font-size:23px}
+.dash .sub{color:var(--muted);margin:0 0 18px}
+.dgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.dcard h3{margin:0 0 4px;font-size:15px}
+.dcard .desc{font-size:12px;color:var(--muted);margin:0 0 10px}
+.drow{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line);cursor:pointer}
+.drow:hover .nm{color:var(--green)}
+.drow .nm{font-weight:700}
+.drow .meta{margin-left:auto;font-size:12px}
+.loading{padding:50px 20px;text-align:center;color:var(--muted)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#183c34;color:#fff;padding:11px 17px;border-radius:10px;box-shadow:0 6px 22px #102a241f;opacity:0;pointer-events:none;transition:.2s;font-size:13px;z-index:60;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.toast.bad{background:#8a2f2f}
+.modalback{position:fixed;inset:0;background:#14252266;display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
+.modalback.open{display:flex}
+.modal{background:#fff;width:min(420px,100%);padding:22px;border-radius:16px}
+.modal h3{margin:0 0 6px;font-size:17px}
+.modal .desc{font-size:12px;color:var(--muted);line-height:1.6;margin:0 0 6px}
+.modal label{display:block;font-size:12px;font-weight:750;margin:12px 0 6px}
+.modal .inp{width:100%}
+.lvchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.modalfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.modalfoot button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 13px}
+.modalfoot .primary{background:var(--green);color:#fff;border:0}
+.loginwrap{min-height:calc(100vh - 63px);display:grid;place-items:center;padding:20px}
+.login{width:min(380px,100%);padding:28px}
+.login h2{margin:0 0 6px;font-size:21px}
+.login p{margin:0 0 18px;color:var(--muted);font-size:13px;line-height:1.6}
+.login .inp{width:100%;padding:12px 13px;margin-bottom:10px}
+.login .err{color:var(--red);font-size:13px;min-height:18px;margin:0 0 8px}
+.login .primary{width:100%;padding:12px}
+@media(max-width:1100px){.props{grid-template-columns:repeat(2,minmax(0,1fr))}.dgrid{grid-template-columns:1fr}.cols{grid-template-columns:1fr}}
+@media(max-width:760px){.shell{grid-template-columns:1fr}.side{position:static;height:auto;max-height:46vh}.main{padding:16px}.props{grid-template-columns:1fr}.brand p{display:none}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div class="brand"><div class="logo">일</div><div><h1>학생일지</h1><p>리드인 황남1점 · 노션 학생 일지와 바로 연결</p></div></div>
+  <div class="topright hidden" id="topright"><button class="ghost" id="btnRefresh" title="노션에서 학생 목록과 정보를 다시 불러와요">노션에서 새로고침</button><button class="ghost" id="btnLogout">로그아웃</button></div></header>
+
+<div id="loginView" class="loginwrap hidden"><section class="card login">
+  <h2>로그인</h2><p>원장님 비밀번호(문해력마당과 같은 비밀번호)를 입력해 주세요.</p>
+  <input class="inp" id="pw" type="password" autocomplete="current-password" placeholder="비밀번호">
+  <div class="err" id="loginErr"></div>
+  <button class="primary" id="btnLogin">로그인</button></section></div>
+
+<div id="loadingView" class="loading">불러오는 중이에요...</div>
+
+<div id="appView" class="shell hidden">
+  <aside class="side">
+    <div class="sidetop">
+      <div class="row"><input class="search" id="q" placeholder="이름 검색 (초성 가능)" autocomplete="off" spellcheck="false"><button class="outline" id="btnNew" title="새 학생 추가">+ 학생</button></div>
+      <div class="chips" id="chips"></div>
+      <div class="sortrow">정렬 <select id="sort">
+        <option value="name">이름순</option>
+        <option value="journal">일지 업데이트 오래된 순</option>
+        <option value="consult">상담한 지 오래된 순</option>
+        <option value="report">레포트 보낸 지 오래된 순</option>
+        <option value="joined">최근 입회순</option>
+      </select></div>
+    </div>
+    <div class="slist" id="slist"></div>
+    <div class="sidefoot" id="sidefoot"></div>
+  </aside>
+  <main class="main">
+    <div id="banners"></div>
+    <div id="dash"></div>
+    <div id="detail" class="hidden">
+      <section class="card pad">
+        <div class="head"><h2 id="dName" title="눌러서 이름 고치기"></h2><span class="grade" id="dGrade"></span>
+          <div class="right"><select class="stsel" id="dStatus"><option>재원</option><option>휴원</option><option>퇴원</option></select><a class="ghost" id="dNotion" target="_blank" rel="noopener" style="text-decoration:none">노션에서 열기</a></div></div>
+        <div class="props">
+          <div class="prop"><label>입회일</label><div class="line"><input type="date" class="inp" data-prop="joined"><span class="ago" data-ago="joined"></span></div></div>
+          <div class="prop"><label>생년월일</label><div class="line"><input type="date" class="inp" data-prop="birth"></div></div>
+          <div class="prop"><label>일지 최종 업데이트일</label><div class="line"><input type="date" class="inp" data-prop="journalAt"><span class="ago" data-ago="journalAt"></span></div></div>
+          <div class="prop"><label>마지막 상담일</label><div class="line"><input type="date" class="inp" data-prop="lastConsult"><button class="outline" data-today="lastConsult">오늘 상담함</button><span class="ago" data-ago="lastConsult"></span></div></div>
+          <div class="prop"><label>마지막 레포트 발송일</label><div class="line"><input type="date" class="inp" data-prop="lastReport"><button class="outline" data-today="lastReport">오늘 보냄</button><span class="ago" data-ago="lastReport"></span></div></div>
+          <div class="prop"><label>&nbsp;</label><div class="line"></div></div>
+          <div class="prop wide"><label>비고</label><input class="inp" data-prop="memo" placeholder="비고 (입력 후 다른 곳을 누르면 저장돼요)"></div>
+        </div>
+      </section>
+
+      <div class="tabs" id="tabs"><button class="tab on" data-tab="comment">코멘트</button><button class="tab" data-tab="balmun">발문</button><button class="tab" data-tab="repco">렙코 기록</button></div>
+      <section class="card pad composer">
+        <div id="tab-comment">
+          <textarea class="ta c" id="cText" placeholder="오늘 수업 모습, 컨디션, 성격, 주의할 점 등 무엇이든 적어 주세요. (Ctrl+Enter로 저장)"></textarea>
+          <div class="crow"><input type="date" class="inp" id="cDate"><span class="hint">노션 학생 일지 왼쪽 칸 맨 위에 날짜와 함께 들어가요</span><button class="primary" id="cSave">코멘트 저장</button></div>
+        </div>
+        <div id="tab-balmun" class="hidden">
+          <div class="pickrow"><div class="combo"><input id="bookInput" autocomplete="off" spellcheck="false" placeholder="책 제목 (초성 가능, 최근 발문한 책이 위에)"><div class="menu" id="bookMenu"></div></div></div>
+          <div id="bookArea"></div>
+        </div>
+        <div id="tab-repco" class="hidden">
+          <div class="grid2"><div class="fld"><label>렙코</label><input class="inp" id="rRepco" placeholder="예: 4레벨 1코스 올라감"></div><div class="fld"><label>이해도</label><input class="inp" id="rUnd" placeholder="예: 93"></div></div>
+          <div class="fld" style="margin-top:10px"><label>덧붙일 말 (선택)</label><textarea class="ta small" id="rExtra"></textarea></div>
+          <div class="crow"><input type="date" class="inp" id="rDate"><span class="hint">노션 학생 일지 오른쪽 칸 맨 위에 들어가요</span><button class="primary" id="rSave">렙코 기록 저장</button></div>
+        </div>
+      </section>
+
+      <div class="cols">
+        <section class="card pad"><div class="colhead"><h3>일지 · 코멘트와 발문</h3><span id="lCount"></span></div><div id="leftList"></div></section>
+        <section class="card pad"><div class="colhead"><h3>렙코 기록</h3><span id="rCount"></span></div><div id="rightList"></div></section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modalback" id="bookModal"><div class="modal"><h3>새 책 추가</h3>
+  <p class="desc">발문지가 없는 책은 '직접 질문'으로 기록해요. 발문지 질문을 넣고 싶으면 Aside에게 발문지 파일을 주세요.</p>
+  <label for="newTitle">책 제목</label><input class="inp" id="newTitle" autocomplete="off">
+  <label for="newLevel">레벨</label><input class="inp" id="newLevel" autocomplete="off" placeholder="예: 6레벨">
+  <div class="lvchips" id="lvchips"></div>
+  <div class="modalfoot"><button id="cancelAdd">취소</button><button class="primary" id="confirmAdd">추가</button></div></div></div>
+<div class="modalback" id="stuModal"><div class="modal"><h3>새 학생 추가</h3>
+  <p class="desc">노션 학생 일지에 새 페이지가 만들어져요. 노션 템플릿(코멘트 추가, 렙코 기록 버튼)이 그대로 들어가요.</p>
+  <label for="nsName">이름</label><input class="inp" id="nsName" autocomplete="off">
+  <label for="nsBirth">생년월일 (선택, 넣으면 학년이 자동으로 나와요)</label><input type="date" class="inp" id="nsBirth">
+  <label for="nsJoined">입회일</label><input type="date" class="inp" id="nsJoined">
+  <div class="modalfoot"><button id="nsCancel">취소</button><button class="primary" id="nsSave">추가</button></div></div></div>
+
+<script>
+'use strict';
+const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
+const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
+const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
+const LEVELS=['기초','1레벨','2레벨','3레벨','4레벨','5레벨','6레벨','7레벨'];
+const GRADE={ok:'○ 맞음',part:'△ 부분 이해',re:'× 다시 확인'},MARK={ok:'○',part:'△',re:'×'};
+const ERR={BADLOGIN:'비밀번호가 맞지 않아요.',NETWORK:'인터넷 연결을 확인해 주세요.',AUTH:'로그인이 끝났어요. 다시 로그인해 주세요.',NOSTUDENT:'노션 학생 일지에 없는 학생이에요.',NOBOOK:'등록되지 않은 책이에요.',EMPTY:'내용을 적어 주세요.',MANAGED:'발문 기록은 발문 탭에서 고쳐 주세요.',NOEDIT:'이 줄은 앱에서 고칠 수 없어요. 노션에서 고쳐 주세요.',BADVALUE:'값이 올바르지 않아요.',NOSESSION:'먼저 답을 하나 이상 기록해 주세요.'};
+const $=id=>document.getElementById(id);
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toast(t,bad){const el=$('toast');el.textContent=t;el.classList.toggle('bad',!!bad);el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),bad?4200:2200)}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function kstDay(d){const x=new Date((d?new Date(d):new Date()).getTime()+9*3600e3);return x.toISOString().slice(0,10)}
+function dayLabel(k){if(!k)return '';const p=String(k).slice(0,10).split('-').map(Number);const y=p[0]!==+kstDay().slice(0,4)?String(p[0]).slice(2)+'/':'';return y+p[1]+'/'+p[2]+'('+'일월화수목금토'[new Date(p[0],p[1]-1,p[2]).getDay()]+')'}
+function daysAgo(k){if(!k)return null;const a=new Date(kstDay()+'T00:00:00Z'),b=new Date(String(k).slice(0,10)+'T00:00:00Z');return Math.round((a-b)/864e5)}
+function agoText(k){const n=daysAgo(k);if(n==null)return '';return n<=0?'오늘':n===1?'어제':n<31?n+'일 전':n<365?Math.floor(n/30)+'달 전':Math.floor(n/365)+'년 전'}
+function agoCls(k,warn,bad){const n=daysAgo(k);if(n==null)return 'bad';return n>=bad?'bad':n>=warn?'warn':''}
+function shortGrade(g){if(!g)return '';return g.replace('초등학교 ','초').replace('중학교 ','중').replace('고등학교 ','고').replace('학년','')}
+
+async function api(fn,args){
+  let r;try{r=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args||{})})}catch(e){throw new Error('NETWORK')}
+  const t=await r.text();
+  if(!r.ok){let m='ERROR';try{m=JSON.parse(t).message||m}catch(_){}throw new Error(m)}
+  return t?JSON.parse(t):null;
+}
+function errText(e){const m=String(e&&e.message||e);if(/^NOTION/.test(m))return '노션에 반영하지 못했어요. 잠시 뒤 다시 해 주세요.';return ERR[m]||('문제가 생겼어요: '+m)}
+
+/* ---------- 상태 ---------- */
+const S={token:ls.get(TOKEN_KEY),students:[],books:[],unsynced:0,warn:null,filter:'재원',sort:'name',q:'',
+  sel:null,page:null,pageLoading:false,tab:'comment',bookId:null,cur:0,grade:'',queue:[],editing:null};
+try{S.queue=JSON.parse(ls.get(QUEUE_KEY)||'[]')}catch(e){S.queue=[]}
+try{const p=JSON.parse(ls.get(PREF_KEY)||'{}');S.filter=p.filter||'재원';S.sort=p.sort||'name';S.bookId=p.bookId||null;S.tab=p.tab||'comment'}catch(e){}
+function savePref(){ls.set(PREF_KEY,JSON.stringify({filter:S.filter,sort:S.sort,bookId:S.bookId,tab:S.tab}))}
+function saveQueue(){ls.set(QUEUE_KEY,JSON.stringify(S.queue))}
+const stu=id=>S.students.find(s=>s.id===id);
+const bookById=id=>S.books.find(b=>b.id===id);
+function putStudent(s){if(!s)return;const i=S.students.findIndex(x=>x.id===s.id);if(i>=0)S.students[i]=Object.assign({},S.students[i],s);else S.students.push(s)}
+
+/* ---------- 시작 ---------- */
+function show(v){$('loginView').classList.toggle('hidden',v!=='login');$('loadingView').classList.toggle('hidden',v!=='loading');$('appView').classList.toggle('hidden',v!=='app');$('topright').classList.toggle('hidden',v!=='app')}
+async function boot(){
+  if(!S.token){show('login');setTimeout(()=>$('pw').focus(),50);return}
+  show('loading');
+  try{
+    const b=await api('bm_bootstrap',{p_token:S.token});
+    S.students=b.students||[];S.books=b.books||[];S.unsynced=b.unsynced||0;S.warn=b.warn;
+    if(!bookById(S.bookId))S.bookId=(S.books[0]||{}).id||null;
+    show('app');renderSide();renderBanners();renderMain();flushQueue();
+    const h=decodeURIComponent(location.hash.slice(1));if(h&&stu(h))selectStudent(h);
+  }catch(e){
+    if(onAuthFail(e))return;
+    $('loadingView').innerHTML=esc(errText(e))+'<br><br><button class="ghost" onclick="location.reload()">다시 시도</button>';
+  }
+}
+$('btnLogin').onclick=async()=>{
+  const pw=$('pw').value;if(!pw){$('pw').focus();return}
+  $('btnLogin').disabled=true;$('loginErr').textContent='';
+  try{const r=await api('bm_login',{p_pw:pw});S.token=r.token;ls.set(TOKEN_KEY,r.token);$('pw').value='';await boot()}
+  catch(e){$('loginErr').textContent=errText(e)}
+  finally{$('btnLogin').disabled=false}
+};
+$('pw').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('btnLogin').click()});
+$('btnLogout').onclick=async()=>{if(S.queue.length&&!confirm('아직 못 보낸 기록이 '+S.queue.length+'건 있어요. 그래도 로그아웃할까요? (기록은 이 컴퓨터에 남아 다음 로그인 때 보내요)'))return;try{await api('logout',{p_token:S.token})}catch(e){}ls.del(TOKEN_KEY);S.token=null;show('login')};
+function onAuthFail(e){if(String(e&&e.message)==='AUTH'){ls.del(TOKEN_KEY);S.token=null;show('login');$('loginErr').textContent=ERR.AUTH;return true}return false}
+$('btnRefresh').onclick=async()=>{
+  $('btnRefresh').disabled=true;
+  try{const r=await api('bm_refresh',{p_token:S.token});S.students=r.students;renderSide();if(S.sel)await loadPage();else renderMain();toast('노션에서 학생 '+r.count+'명을 다시 불러왔어요')}
+  catch(e){if(!onAuthFail(e))toast(errText(e),true)}
+  finally{$('btnRefresh').disabled=false}
+};
+
+/* ---------- 한글 검색 ---------- */
+const CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+const JUNG=['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅗㅏ','ㅗㅐ','ㅗㅣ','ㅛ','ㅜ','ㅜㅓ','ㅜㅔ','ㅜㅣ','ㅠ','ㅡ','ㅡㅣ','ㅣ'];
+const JONG=['','ㄱ','ㄲ','ㄱㅅ','ㄴ','ㄴㅈ','ㄴㅎ','ㄷ','ㄹ','ㄹㄱ','ㄹㅁ','ㄹㅂ','ㄹㅅ','ㄹㅌ','ㄹㅍ','ㄹㅎ','ㅁ','ㅂ','ㅂㅅ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const SPLIT={'ㅘ':'ㅗㅏ','ㅙ':'ㅗㅐ','ㅚ':'ㅗㅣ','ㅝ':'ㅜㅓ','ㅞ':'ㅜㅔ','ㅟ':'ㅜㅣ','ㅢ':'ㅡㅣ','ㄳ':'ㄱㅅ','ㄵ':'ㄴㅈ','ㄶ':'ㄴㅎ','ㄺ':'ㄹㄱ','ㄻ':'ㄹㅁ','ㄼ':'ㄹㅂ','ㄽ':'ㄹㅅ','ㄾ':'ㄹㅌ','ㄿ':'ㄹㅍ','ㅀ':'ㄹㅎ','ㅄ':'ㅂㅅ'};
+const squash=s=>String(s).toLowerCase().replace(/\s+/g,'');
+function jamo(s){let o='';for(const ch of squash(s)){const c=ch.charCodeAt(0);if(c>=0xAC00&&c<=0xD7A3){const i=c-0xAC00;o+=CHO[Math.floor(i/588)]+JUNG[Math.floor(i%588/28)]+JONG[i%28]}else o+=SPLIT[ch]||ch}return o}
+function chosung(s){let o='';for(const ch of squash(s)){const c=ch.charCodeAt(0);o+=(c>=0xAC00&&c<=0xD7A3)?CHO[Math.floor((c-0xAC00)/588)]:ch}return o}
+function matches(q,t){const qq=squash(q);if(!qq)return true;if(/^[ㄱ-ㅎ]+$/.test(qq))return chosung(t).includes(qq);return jamo(t).includes(jamo(qq))}
+
+/* ---------- 사이드바 ---------- */
+const SORTS={
+  name:{cmp:(a,b)=>a.name.localeCompare(b.name,'ko'),meta:s=>s.journalAt?{t:'일지 '+agoText(s.journalAt),c:agoCls(s.journalAt,7,14)}:{t:'일지 없음',c:'bad'}},
+  journal:{cmp:(a,b)=>(a.journalAt||'')<(b.journalAt||'')?-1:(a.journalAt||'')>(b.journalAt||'')?1:a.name.localeCompare(b.name,'ko'),meta:s=>s.journalAt?{t:'일지 '+agoText(s.journalAt),c:agoCls(s.journalAt,7,14)}:{t:'일지 없음',c:'bad'}},
+  consult:{cmp:(a,b)=>(a.lastConsult||'')<(b.lastConsult||'')?-1:(a.lastConsult||'')>(b.lastConsult||'')?1:a.name.localeCompare(b.name,'ko'),meta:s=>s.lastConsult?{t:'상담 '+agoText(s.lastConsult),c:agoCls(s.lastConsult,60,120)}:{t:'상담 기록 없음',c:'bad'}},
+  report:{cmp:(a,b)=>(a.lastReport||'')<(b.lastReport||'')?-1:(a.lastReport||'')>(b.lastReport||'')?1:a.name.localeCompare(b.name,'ko'),meta:s=>s.lastReport?{t:'레포트 '+agoText(s.lastReport),c:agoCls(s.lastReport,60,120)}:{t:'발송 기록 없음',c:'bad'}},
+  joined:{cmp:(a,b)=>(b.joined||'')<(a.joined||'')?-1:(b.joined||'')>(a.joined||'')?1:a.name.localeCompare(b.name,'ko'),meta:s=>({t:s.joined?'입회 '+dayLabel(s.joined):'',c:''})}
+};
+function visibleStudents(){
+  const f=S.filter,list=S.students.filter(s=>(f==='전체'||s.status===f)&&matches(S.q,s.name));
+  return list.sort(SORTS[S.sort].cmp);
+}
+function renderSide(){
+  const cnt=st=>S.students.filter(s=>s.status===st).length;
+  $('chips').innerHTML=[['재원',cnt('재원')],['휴원',cnt('휴원')],['퇴원',cnt('퇴원')],['전체',S.students.length]].map(([k,n])=>'<button class="chip'+(S.filter===k?' on':'')+'" data-f="'+k+'">'+k+' '+n+'</button>').join('');
+  $('sort').value=S.sort;
+  const list=visibleStudents();
+  $('slist').innerHTML=list.map(s=>{const m=SORTS[S.sort].meta(s);return '<div class="sitem'+(s.id===S.sel?' on':'')+'" data-id="'+s.id+'"><div><div class="nm">'+esc(s.name)+(s.status!=='재원'?' <span class="st'+(s.status==='퇴원'?' out':'')+'">'+esc(s.status||'')+'</span>':'')+'</div><div class="gr">'+esc(shortGrade(s.grade))+'</div></div><span class="meta '+m.c+'">'+esc(m.t)+'</span></div>'}).join('')||'<div class="none">찾는 학생이 없어요.</div>';
+  $('sidefoot').textContent=list.length+'명 · 노션 학생 일지와 같은 명단이에요';
+}
+$('chips').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;S.filter=b.dataset.f;savePref();renderSide()};
+$('sort').onchange=()=>{S.sort=$('sort').value;savePref();renderSide()};
+$('q').addEventListener('input',()=>{S.q=$('q').value.trim();renderSide()});
+$('q').addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229)return;if(e.key==='Enter'){const f=visibleStudents()[0];if(f)selectStudent(f.id)}if(e.key==='Escape'){$('q').value='';S.q='';renderSide()}});
+$('slist').onclick=e=>{const it=e.target.closest('[data-id]');if(it)selectStudent(it.dataset.id)};
+
+/* ---------- 학생 선택 ---------- */
+async function selectStudent(id){
+  S.sel=id;S.page=null;S.editing=null;history.replaceState(null,'','#'+encodeURIComponent(id));
+  renderSide();renderMain();await loadPage();
+}
+async function loadPage(){
+  const id=S.sel;if(!id)return;S.pageLoading=true;renderTimeline();
+  try{const p=await api('bm_page',{p_token:S.token,p_page:id});if(S.sel!==id)return;S.page=p;putStudent(p.student);if(p.warn)toast(p.warn,true)}
+  catch(e){if(!onAuthFail(e))toast(errText(e),true)}
+  finally{S.pageLoading=false;if(S.sel===id){renderSide();renderMain()}}
+}
+
+/* ---------- 본문 ---------- */
+function renderMain(){
+  const s=stu(S.sel);
+  $('dash').classList.toggle('hidden',!!s);$('detail').classList.toggle('hidden',!s);
+  if(!s){renderDash();return}
+  $('dName').textContent=s.name;$('dGrade').textContent=s.grade||'';
+  $('dStatus').value=s.status||'재원';$('dNotion').href=s.url||'#';
+  document.querySelectorAll('[data-prop]').forEach(el=>{const k=el.dataset.prop;if(document.activeElement!==el)el.value=s[k]||''});
+  document.querySelectorAll('[data-ago]').forEach(el=>{const k=el.dataset.ago;const lim={journalAt:[7,14],lastConsult:[60,120],lastReport:[60,120],joined:[1e9,1e9]}[k];el.textContent=s[k]?agoText(s[k]):'';el.className='ago '+(s[k]?agoCls(s[k],lim[0],lim[1]):'')});
+  if(!$('cDate').value)$('cDate').value=kstDay();if(!$('rDate').value)$('rDate').value=kstDay();
+  renderTabs();renderBalmun();renderTimeline();
+}
+function renderDash(){
+  const act=S.students.filter(s=>s.status==='재원');
+  const top=(arr,key,lim,label)=>arr.slice().sort((a,b)=>(a[key]||'')<(b[key]||'')?-1:1).slice(0,8).map(s=>'<div class="drow" data-id="'+s.id+'"><span class="nm">'+esc(s.name)+'</span><span class="gr" style="font-size:11px;color:var(--muted)">'+esc(shortGrade(s.grade))+'</span><span class="meta '+agoCls(s[key],lim[0],lim[1])+'">'+(s[key]?label+' '+agoText(s[key]):label+' 기록 없음')+'</span></div>').join('');
+  $('dash').innerHTML='<div class="dash"><h2>오늘 챙길 학생</h2><p class="sub">재원생 '+act.length+'명 기준이에요. 이름을 누르면 바로 일지를 쓸 수 있어요.</p><div class="dgrid">'
+    +'<section class="card pad dcard"><h3>일지 오래된 학생</h3><p class="desc">일지 최종 업데이트일이 오래된 순</p>'+top(act,'journalAt',[7,14],'일지')+'</section>'
+    +'<section class="card pad dcard"><h3>상담한 지 오래된 학생</h3><p class="desc">마지막 상담일이 오래된 순</p>'+top(act,'lastConsult',[60,120],'상담')+'</section>'
+    +'<section class="card pad dcard"><h3>레포트 보낸 지 오래된 학생</h3><p class="desc">마지막 발송일이 오래된 순</p>'+top(act,'lastReport',[60,120],'레포트')+'</section>'
+    +'</div></div>';
+}
+$('dash').onclick=e=>{const r=e.target.closest('[data-id]');if(r)selectStudent(r.dataset.id)};
+
+/* ---------- 학생 정보 고치기 ---------- */
+async function setProp(key,value,okMsg){
+  const id=S.sel;
+  try{const s=await api('bm_set_prop',{p_token:S.token,p_page:id,p_key:key,p_value:value});putStudent(s);renderSide();if(S.sel===id)renderMain();toast(okMsg||'노션에 반영했어요')}
+  catch(e){if(!onAuthFail(e))toast(errText(e),true);renderMain()}
+}
+document.querySelectorAll('[data-prop]').forEach(el=>{
+  const k=el.dataset.prop;
+  if(el.type==='date')el.addEventListener('change',()=>setProp(k,el.value));
+  else{el.addEventListener('blur',()=>{const s=stu(S.sel);if(s&&(s[k]||'')!==el.value.trim())setProp(k,el.value.trim(),'비고를 저장했어요')});el.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)el.blur()})}
+});
+document.querySelectorAll('[data-today]').forEach(b=>b.onclick=()=>setProp(b.dataset.today,kstDay(),b.dataset.today==='lastConsult'?'오늘 상담한 것으로 기록했어요':'오늘 레포트 보낸 것으로 기록했어요'));
+$('dStatus').onchange=()=>setProp('status',$('dStatus').value,'상태를 '+$('dStatus').value+'(으)로 바꿨어요');
+$('dName').onclick=()=>{const s=stu(S.sel);const v=prompt('이름을 고쳐 주세요',s.name);if(v&&v.trim()&&v.trim()!==s.name)setProp('name',v.trim(),'이름을 고쳤어요')};
+
+/* ---------- 새 학생 ---------- */
+$('btnNew').onclick=()=>{$('nsName').value=S.q||'';$('nsBirth').value='';$('nsJoined').value=kstDay();$('stuModal').classList.add('open');setTimeout(()=>$('nsName').focus(),120)};
+$('nsCancel').onclick=()=>$('stuModal').classList.remove('open');
+$('nsSave').onclick=async()=>{
+  const name=$('nsName').value.trim();if(!name){$('nsName').focus();return}
+  if(S.students.some(s=>s.name===name)&&!confirm('같은 이름의 학생이 이미 있어요. 그래도 추가할까요?'))return;
+  $('nsSave').disabled=true;
+  try{const r=await api('bm_create_student',{p_token:S.token,p:{name,birth:$('nsBirth').value,joined:$('nsJoined').value,status:'재원'}});S.students=r.students;$('stuModal').classList.remove('open');S.filter='재원';$('q').value='';S.q='';toast(name+' 학생을 노션 학생 일지에 추가했어요');selectStudent(r.student.id)}
+  catch(e){if(!onAuthFail(e))toast(errText(e),true)}
+  finally{$('nsSave').disabled=false}
+};
+$('nsName').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('nsSave').click()});
+
+/* ---------- 탭 ---------- */
+function renderTabs(){document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===S.tab));['comment','balmun','repco'].forEach(k=>$('tab-'+k).classList.toggle('hidden',S.tab!==k))}
+$('tabs').onclick=e=>{const t=e.target.closest('[data-tab]');if(!t)return;S.tab=t.dataset.tab;savePref();renderTabs();renderBalmun()};
+
+/* ---------- 오프라인 보관 ---------- */
+async function send(fn,args){
+  try{return await api(fn,args)}
+  catch(e){if(String(e.message)==='NETWORK'){S.queue.push({id:uid(),fn,args,at:new Date().toISOString()});saveQueue();renderBanners();return {queued:true}}throw e}
+}
+let flushing=false;
+async function flushQueue(){
+  if(flushing||!S.queue.length||!S.token)return;flushing=true;let sent=0;
+  try{while(S.queue.length){const q=S.queue[0];
+    try{const r=await api(q.fn,Object.assign({},q.args,{p_token:S.token}));if(r&&r.unsynced!=null)S.unsynced=r.unsynced}
+    catch(e){if(String(e.message)==='NETWORK')break;if(onAuthFail(e))break;toast('보관해 둔 기록 1건을 못 보냈어요: '+errText(e),true)}
+    S.queue.shift();saveQueue();sent++}}
+  finally{flushing=false}
+  if(sent){renderBanners();if(S.sel)await loadPage();toast('보관해 둔 기록 '+sent+'건을 보냈어요')}
+}
+window.addEventListener('online',flushQueue);setInterval(flushQueue,20000);
+
+/* ---------- 코멘트 / 렙코 ---------- */
+function touchLocal(id){const s=stu(id);if(s){s.journalAt=kstDay();renderSide()}}
+async function addEntry(col,day,text,btn,after){
+  const id=S.sel;btn.disabled=true;
+  try{const r=await send('bm_add_entry',{p_token:S.token,p_page:id,p_col:col,p_day:day,p_text:text});
+    if(r.queued)toast('인터넷이 끊겨서 이 컴퓨터에 보관했어요. 연결되면 자동으로 보내요',true);
+    else{touchLocal(id);if(S.page&&S.sel===id){(col===1?S.page.right:S.page.left).unshift(r)}toast(col===1?'렙코 기록을 노션에 넣었어요':'코멘트를 노션에 넣었어요')}
+    after();renderMain();
+  }catch(e){if(!onAuthFail(e))toast(errText(e),true)}
+  finally{btn.disabled=false}
+}
+$('cSave').onclick=()=>{const t=$('cText').value.trim();if(!t){$('cText').focus();toast('코멘트를 적어 주세요');return}addEntry(0,$('cDate').value||kstDay(),t,$('cSave'),()=>{$('cText').value=''})};
+$('cText').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();$('cSave').click()}});
+$('rSave').onclick=()=>{const a=$('rRepco').value.trim(),b=$('rUnd').value.trim(),c=$('rExtra').value.trim();if(!a&&!b&&!c){$('rRepco').focus();toast('렙코나 이해도를 적어 주세요');return}
+  const text='\n렙코: '+a+'\n이해도: '+b+(c?'\n'+c:'');addEntry(1,$('rDate').value||kstDay(),text,$('rSave'),()=>{$('rRepco').value='';$('rUnd').value='';$('rExtra').value=''})};
+
+/* ---------- 타임라인 (노션 페이지 내용) ---------- */
+function managedOf(blockId){return S.page&&(S.page.managed||[]).find(m=>m.block===blockId)}
+function entHtml(b,col){
+  const m=managedOf(b.id);
+  if(S.editing&&S.editing.id===b.id){
+    return '<div class="ent"><div class="editbox"><textarea class="ta small" id="edText">'+esc(b.text)+'</textarea><div class="crow"><input type="date" class="inp" id="edDate" value="'+(b.date||'')+'"><span class="hint">날짜를 비우면 날짜 없이 저장돼요</span><button class="ghost" data-cancel="1">취소</button><button class="primary" data-saveedit="'+b.id+'">저장</button></div></div></div>';
+  }
+  const acts=m?'<button class="lnk" data-gobook="'+m.bookId+'">발문 탭에서 보기</button>':b.editable?'<button class="lnk" data-edit="'+b.id+'">수정</button><button class="lnk del" data-delblk="'+b.id+'">삭제</button>':'<span class="tagb other">'+esc(b.type)+'</span>';
+  return '<div class="ent"><div class="top2"><span class="dt'+(b.date?'':' nodt')+'">'+(b.date?dayLabel(b.date):'날짜 없음')+'</span>'+(m?'<span class="tagb">발문</span>':'')+'<span class="acts">'+acts+'</span></div><div class="body">'+esc(b.text||'')+'</div></div>';
+}
+function queuedEntries(col){if(!S.sel)return [];return S.queue.filter(q=>q.fn==='bm_add_entry'&&q.args.p_page===S.sel&&q.args.p_col===col).map(q=>'<div class="ent"><div class="top2"><span class="dt">'+dayLabel(q.args.p_day)+'</span><span class="sync wait">보내기 대기</span></div><div class="body">'+esc(q.args.p_text.replace(/^\n/,''))+'</div></div>').join('')}
+function renderTimeline(){
+  if(!S.sel)return;
+  if(!S.page){const l='<div class="empty">노션 학생 일지에서 불러오는 중이에요...</div>';$('leftList').innerHTML=l;$('rightList').innerHTML=l;$('lCount').textContent='';$('rCount').textContent='';return}
+  const L=S.page.left||[],R=S.page.right||[];
+  $('lCount').textContent=L.length+'개';$('rCount').textContent=S.page.twoCols?R.length+'개':'';
+  $('leftList').innerHTML=queuedEntries(0)+(L.map(b=>entHtml(b,0)).join('')||'<div class="empty">아직 기록이 없어요.</div>');
+  $('rightList').innerHTML=S.page.twoCols?(queuedEntries(1)+(R.map(b=>entHtml(b,1)).join('')||'<div class="empty">아직 렙코 기록이 없어요.</div>')):'<div class="empty">이 학생 노션 페이지는 칸이 하나라서 렙코 기록도 왼쪽에 함께 보여요.</div>';
+}
+function findBlock(id){return (S.page.left||[]).find(b=>b.id===id)||(S.page.right||[]).find(b=>b.id===id)}
+async function onTimelineClick(e){
+  const ed=e.target.closest('[data-edit]'),dl=e.target.closest('[data-delblk]'),sv=e.target.closest('[data-saveedit]'),cc=e.target.closest('[data-cancel]'),gb=e.target.closest('[data-gobook]');
+  if(ed){S.editing={id:ed.dataset.edit};renderTimeline();const t=$('edText');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}return}
+  if(cc){S.editing=null;renderTimeline();return}
+  if(gb){S.tab='balmun';S.bookId=gb.dataset.gobook;savePref();renderTabs();renderBalmun();window.scrollTo({top:0,behavior:'smooth'});return}
+  if(sv){const id=sv.dataset.saveedit,t=$('edText').value,d=$('edDate').value||null;sv.disabled=true;
+    try{await api('bm_edit_block',{p_token:S.token,p_block:id,p_day:d,p_text:t});const b=findBlock(id);if(b){b.text=t.trim();b.date=d}S.editing=null;renderTimeline();toast('노션에서도 고쳤어요')}
+    catch(err){if(!onAuthFail(err))toast(errText(err),true);sv.disabled=false}return}
+  if(dl){const id=dl.dataset.delblk;if(!confirm('이 기록을 지울까요? 노션 학생 일지에서도 지워져요. (노션 휴지통에서 되살릴 수 있어요)'))return;
+    try{await api('bm_delete_block',{p_token:S.token,p_block:id});S.page.left=S.page.left.filter(b=>b.id!==id);S.page.right=S.page.right.filter(b=>b.id!==id);renderTimeline();toast('지웠어요')}
+    catch(err){if(!onAuthFail(err))toast(errText(err),true)}}
+}
+$('leftList').addEventListener('click',onTimelineClick);$('rightList').addEventListener('click',onTimelineClick);
+
+/* ---------- 발문 ---------- */
+function makeCombo(o){
+  const input=o.input,menu=o.menu;let list=[],active=-1,dirty=false;
+  function refresh(){const q=dirty?input.value.trim():'',all=o.items();list=all.filter(it=>matches(q,o.text(it))).map(it=>({it}));
+    if(q&&!/[ㄱ-ㅎㅏ-ㅣ]/.test(q)&&!all.some(it=>squash(o.text(it))===squash(q)))list.push({add:q});active=list.length?0:-1;draw()}
+  function draw(){menu.innerHTML=list.map((x,i)=>x.add?'<div class="opt add'+(i===active?' act':'')+'" data-i="'+i+'">+ <b>'+esc(x.add)+'</b>&nbsp;새 책으로 추가</div>':'<div class="opt'+(i===active?' act':'')+(o.isSel(x.it)?' sel':'')+'" data-i="'+i+'">'+o.render(x.it)+'</div>').join('')||'<div class="none">등록된 책이 없어요. 제목을 입력해 주세요.</div>';menu.classList.add('open');const el=menu.querySelector('.act');if(el&&el.scrollIntoView)el.scrollIntoView({block:'nearest'})}
+  function close(){menu.classList.remove('open');dirty=false;input.value=o.current()}
+  function pick(i){const x=list[i];if(!x)return;menu.classList.remove('open');dirty=false;if(x.add)o.onAdd(x.add);else o.onPick(x.it);input.value=o.current();input.blur()}
+  input.addEventListener('focus',()=>{dirty=false;input.select();refresh()});
+  input.addEventListener('input',()=>{dirty=true;refresh()});
+  input.addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229)return;if(e.key==='ArrowDown'){e.preventDefault();if(list.length){active=(active+1)%list.length;draw()}}else if(e.key==='ArrowUp'){e.preventDefault();if(list.length){active=(active-1+list.length)%list.length;draw()}}else if(e.key==='Enter'){e.preventDefault();if(active>=0)pick(active)}else if(e.key==='Escape')input.blur()});
+  input.addEventListener('blur',()=>setTimeout(close,140));
+  menu.addEventListener('mousedown',e=>{const el=e.target.closest('.opt[data-i]');if(!el)return;e.preventDefault();pick(+el.dataset.i)});
+  return {sync(){input.value=o.current()}};
+}
+const byLast=(a,b)=>(b.last||'')>(a.last||'')?1:(b.last||'')<(a.last||'')?-1:0;
+const bookCombo=makeCombo({input:$('bookInput'),menu:$('bookMenu'),
+  items(){return S.books.map((b,i)=>Object.assign({i},b)).sort((x,y)=>byLast(x,y)||y.i-x.i)},
+  text:b=>b.title,isSel:b=>b.id===S.bookId,current:()=>(bookById(S.bookId)||{}).title||'',
+  render(b){return (b.level?'<span class="lv">'+esc(b.level)+'</span>':'<span class="lv nolv">레벨 미정</span>')+'<span class="t">'+esc(b.title)+'</span>'+(b.questions&&b.questions.length?'<span class="sub">발문지 '+b.questions.length+'문항</span>':'')+(b.last?'<span class="hint">최근 발문 '+dayLabel(kstDay(b.last))+'</span>':'')},
+  onPick:b=>{S.bookId=b.id;S.cur=b.questions.length?0:'free';S.grade='';savePref();renderBalmun()},onAdd:q=>openBookModal(q)});
+function openBookModal(title){$('newTitle').value=title;$('newLevel').value='';drawLvChips();$('bookModal').classList.add('open');setTimeout(()=>$('newLevel').focus(),160)}
+function drawLvChips(){$('lvchips').innerHTML=LEVELS.map(l=>'<button type="button" class="chip'+($('newLevel').value.trim()===l?' on':'')+'" data-lv="'+l+'">'+l+'</button>').join('')}
+$('lvchips').onclick=e=>{const b=e.target.closest('[data-lv]');if(!b)return;$('newLevel').value=b.dataset.lv;drawLvChips()};
+$('newLevel').oninput=drawLvChips;
+$('cancelAdd').onclick=()=>$('bookModal').classList.remove('open');
+$('confirmAdd').onclick=async()=>{const title=$('newTitle').value.trim(),level=$('newLevel').value.trim();if(!title){$('newTitle').focus();return}if(!level){toast('레벨을 골라 주세요');return}
+  $('confirmAdd').disabled=true;try{const r=await api('bm_add_book',{p_token:S.token,p:{title,level}});S.books=r.books;S.bookId=r.id;S.cur='free';$('bookModal').classList.remove('open');savePref();renderBalmun();toast('〈'+title+'〉을(를) 추가했어요')}catch(e){if(!onAuthFail(e))toast(errText(e),true)}finally{$('confirmAdd').disabled=false}};
+[$('newTitle'),$('newLevel')].forEach(el=>el.addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229)return;if(e.key==='Enter')$('confirmAdd').click();if(e.key==='Escape')$('bookModal').classList.remove('open')}));
+
+function latestGrade(qn){if(!S.page)return '';let g='',t='';for(const r of S.page.records)if(r.bookId===S.bookId&&r.qn===qn&&r.ts>t){t=r.ts;g=r.grade}return g}
+function suggestScore(rs){if(!rs.length)return null;let v=0;rs.forEach(r=>{v+=r.grade==='ok'?1:r.grade==='part'?.5:0});return Math.round(v/rs.length*10)*10}
+function renderBalmun(){
+  bookCombo.sync();
+  if(S.tab!=='balmun')return;
+  const b=bookById(S.bookId);
+  if(!b){$('bookArea').innerHTML='<div class="empty">책을 골라 주세요.</div>';return}
+  const qs=b.questions||[];if(S.cur!=='free'&&!qs[S.cur])S.cur=qs.length?0:'free';
+  const free=S.cur==='free',x=free?null:qs[S.cur];
+  let h='<div class="qnav">'+qs.map((q,i)=>{const g=latestGrade(i+1);return '<button class="qbtn'+(i===S.cur?' active':'')+'" data-q="'+i+'">질문 '+(i+1)+(g?'<i>'+MARK[g]+'</i>':'')+'</button>'}).join('')+'<button class="qbtn free'+(free?' active':'')+'" data-q="free">+ 직접 질문</button></div>';
+  if(free)h+='<div class="qtype">직접 질문</div><input class="tin" id="freeQ" placeholder="발문지에 없는 질문을 적어 주세요"><textarea class="ta small" id="freeA" placeholder="모범 답안 (없으면 비워 두세요)" style="margin-bottom:10px"></textarea>';
+  else h+='<div class="qtype">'+esc(x.kind||'')+'</div><p class="question">'+esc(x.q)+'</p><div class="answerbox"><div class="cap">모범 답안</div><p>'+esc(x.a||'(모범 답안 없음)')+'</p></div>';
+  h+='<textarea class="ta c" id="childAnswer" placeholder="아이의 답을 적어 주세요."></textarea><div class="grade" id="grades">'+['ok','part','re'].map(g=>'<button data-grade="'+g+'" class="'+(S.grade===g?'on':'')+'">'+GRADE[g]+'</button>').join('')+'</div>';
+  h+='<div class="crow"><span class="hint">같은 날 같은 책 답은 노션에 한 덩어리로 모여요</span><button class="primary" id="aSave">답변 기록 저장</button></div>';
+  h+=bookRecordsHtml(b);
+  const keep={a:($('childAnswer')||{}).value||'',fq:($('freeQ')||{}).value||'',fa:($('freeA')||{}).value||''};
+  $('bookArea').innerHTML=h;
+  $('childAnswer').value=keep.a;if(free){$('freeQ').value=keep.fq;$('freeA').value=keep.fa}
+}
+function bookRecordsHtml(b){
+  if(!S.page)return '';
+  const rs=S.page.records.filter(r=>r.bookId===b.id);if(!rs.length)return '';
+  const sess={};(S.page.sessions||[]).forEach(x=>{sess[x.bookId+'|'+x.day]=x});
+  const days=Array.from(new Set(rs.map(r=>r.day))).sort().reverse();
+  return days.map(d=>{const dr=rs.filter(r=>r.day===d).sort((a,b)=>a.ts<b.ts?-1:1),x=sess[b.id+'|'+d]||{},sug=suggestScore(dr),c={ok:0,part:0,re:0};dr.forEach(r=>c[r.grade]++);
+    return '<div class="bookcard"><div class="bchead"><strong>&lt;'+esc(b.title)+'&gt;</strong><span class="bdate">'+dayLabel(d)+'</span><label class="score">점수 <input type="number" min="0" max="100" step="5" data-score="'+d+'" value="'+(x.score==null?'':x.score)+'" placeholder="'+(sug==null?'':sug)+'">점</label>'
+      +(x.sync==='ok'?'<span class="sync ok">노션 ✓</span>':x.sync?'<span class="sync err" title="'+esc(x.error||'')+'">노션 기록 실패</span>':'')+'<span class="tally">○'+c.ok+' △'+c.part+' ×'+c.re+'</span></div>'
+      +dr.map(r=>'<div class="rec"><div class="rt"><span class="badge '+r.grade+'">'+GRADE[r.grade]+'</span><small>'+(r.qn?'질문 '+r.qn+' · ':'')+esc(r.kind||'')+'</small><button class="lnk del" data-delrec="'+r.id+'">삭제</button></div><p class="eq">'+esc(r.question)+'</p><p><b class="lab">아이 답</b>'+esc(r.answer)+'</p>'+(r.model?'<p class="em"><b class="lab">모범 답안</b>'+esc(r.model)+'</p>':'')+'</div>').join('')+'</div>'}).join('');
+}
+$('bookArea').addEventListener('click',async e=>{
+  const qb=e.target.closest('[data-q]'),gb=e.target.closest('[data-grade]'),sv=e.target.closest('#aSave'),dr=e.target.closest('[data-delrec]');
+  if(qb){S.cur=qb.dataset.q==='free'?'free':+qb.dataset.q;S.grade='';renderBalmun();const f=S.cur==='free'?$('freeQ'):$('childAnswer');if(f)f.focus();return}
+  if(gb){S.grade=gb.dataset.grade;document.querySelectorAll('#grades button').forEach(x=>x.classList.toggle('on',x.dataset.grade===S.grade));return}
+  if(sv){await saveAnswer(sv);return}
+  if(dr){if(!confirm('이 답변 기록을 지울까요? 노션 학생 일지에서도 빠져요.'))return;
+    try{const r=await api('bm_delete_record',{p_token:S.token,p_id:dr.dataset.delrec});S.unsynced=r.unsynced;await loadPage();toast('기록을 지웠어요')}catch(err){if(!onAuthFail(err))toast(errText(err),true)}}
+});
+$('bookArea').addEventListener('change',async e=>{const el=e.target.closest('[data-score]');if(!el)return;const v=el.value.trim(),n=v===''?null:Math.max(0,Math.min(100,Math.round(+v)));
+  try{const r=await api('bm_set_score',{p_token:S.token,p_page:S.sel,p_book:S.bookId,p_day:el.dataset.score,p_score:n});S.unsynced=r.unsynced;await loadPage();toast(n==null?'점수를 지웠어요':'점수 '+n+'점을 노션에도 반영했어요')}catch(err){if(!onAuthFail(err))toast(errText(err),true)}});
+$('bookArea').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest('[data-score]'))e.target.blur();if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&e.target.id==='childAnswer'){e.preventDefault();$('aSave').click()}});
+async function saveAnswer(btn){
+  const s=stu(S.sel),b=bookById(S.bookId);let q;
+  if(!b){toast('책을 먼저 골라 주세요');$('bookInput').focus();return}
+  if(S.cur==='free'){const t=$('freeQ').value.trim();if(!t){toast('질문을 적어 주세요');$('freeQ').focus();return}q={qn:null,kind:'직접 질문',q:t,a:$('freeA').value.trim()}}
+  else{const x=b.questions[S.cur];q={qn:S.cur+1,kind:x.kind,q:x.q,a:x.a}}
+  const answer=$('childAnswer').value.trim();if(!answer){$('childAnswer').focus();toast('아이의 답을 먼저 적어 주세요');return}
+  if(!S.grade){toast('이해도(○△×)를 골라 주세요');return}
+  btn.disabled=true;const id=S.sel;
+  try{const r=await send('bm_save_answer',{p_token:S.token,p:{pageId:s.id,bookId:b.id,qn:q.qn,kind:q.kind,question:q.q,model:q.a,answer,grade:S.grade}});
+    $('childAnswer').value='';S.grade='';if(S.cur==='free'){$('freeQ').value='';$('freeA').value=''}else if(S.cur<b.questions.length-1)S.cur++;
+    if(r.queued){toast('인터넷이 끊겨서 이 컴퓨터에 보관했어요. 연결되면 자동으로 보내요',true);renderBalmun()}
+    else{S.unsynced=r.unsynced;b.last=new Date().toISOString();touchLocal(id);await loadPage();toast(r.sync&&r.sync.status==='error'?'저장은 됐는데 노션에 못 넣었어요. 위의 \'다시 보내기\'를 눌러 주세요':'저장하고 노션 학생 일지에도 기록했어요',r.sync&&r.sync.status==='error')}
+    renderBanners();const ca=$('childAnswer');if(ca)ca.focus();
+  }catch(e){if(!onAuthFail(e))toast(errText(e),true)}
+  finally{btn.disabled=false}
+}
+
+/* ---------- 알림 띠 ---------- */
+function renderBanners(){
+  let h='';
+  if(S.queue.length)h+='<div class="banner">인터넷이 끊겨 이 컴퓨터에 보관 중인 기록이 '+S.queue.length+'건 있어요. 연결되면 자동으로 보내요.<button id="bnFlush">지금 보내기</button></div>';
+  if(S.unsynced)h+='<div class="banner err">서버에는 저장됐지만 노션 학생 일지에 못 들어간 발문 기록이 '+S.unsynced+'건 있어요.<button id="bnRetry">노션에 다시 보내기</button></div>';
+  if(S.warn)h+='<div class="banner">'+esc(S.warn)+'</div>';
+  $('banners').innerHTML=h;
+  const f=$('bnFlush');if(f)f.onclick=flushQueue;
+  const r=$('bnRetry');if(r)r.onclick=async()=>{r.disabled=true;try{const x=await api('bm_retry',{p_token:S.token});S.unsynced=x.unsynced;renderBanners();if(S.sel)await loadPage();toast(x.failed?'아직 '+x.failed+'건은 못 보냈어요. 잠시 뒤 다시 눌러 주세요':'노션에 '+x.ok+'건을 다시 보냈어요',!!x.failed)}catch(e){if(!onAuthFail(e))toast(errText(e),true)}finally{r.disabled=false}};
+}
+boot();
+</script>
+</body></html>
