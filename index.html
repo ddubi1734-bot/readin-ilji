@@ -186,6 +186,26 @@ input[type=date].inp{width:150px}
 .modalfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
 .modalfoot button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 13px}
 .modalfoot .primary{background:var(--green);color:#fff;border:0}
+.bookbar{display:flex;gap:8px;align-items:center}
+.bookbar .combo{flex:1}
+.edmodal{width:min(860px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;padding:0}
+.edhead{padding:20px 22px 12px;border-bottom:1px solid var(--line)}
+.edhead .grid2{grid-template-columns:2fr 1fr}
+.edbody{padding:14px 22px;overflow:auto;flex:1}
+.edq{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:#fbfdfc}
+.edq .qtop{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.edq .qno{font-weight:800;color:var(--green);min-width:44px}
+.edq .kind{width:140px}
+.edq .qtools{margin-left:auto;display:flex;gap:4px}
+.edq .qtools button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:4px 8px;font-size:12px;color:#536560}
+.edq .qtools button.rm:hover{color:var(--red);border-color:#e8b9b9}
+.edq textarea{width:100%;margin-top:6px}
+.edq .lab{font-size:11px;font-weight:800;color:var(--muted);margin-top:8px;display:block}
+.edfoot{padding:12px 22px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.edfoot .grow{flex:1;font-size:12px;color:var(--muted)}
+.edfoot button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 13px}
+.edfoot .primary{background:var(--green);color:#fff;border:0}
+.edfoot .danger{color:var(--red)}
 .loginwrap{min-height:calc(100vh - 63px);display:grid;place-items:center;padding:20px}
 .login{width:min(380px,100%);padding:28px}
 .login h2{margin:0 0 6px;font-size:21px}
@@ -250,7 +270,7 @@ input[type=date].inp{width:150px}
           <div class="crow"><input type="date" class="inp" id="cDate"><span class="hint">노션 학생 일지 왼쪽 칸 맨 위에 날짜와 함께 들어가요</span><button class="primary" id="cSave">코멘트 저장</button></div>
         </div>
         <div id="tab-balmun" class="hidden">
-          <div class="pickrow"><div class="combo"><input id="bookInput" autocomplete="off" spellcheck="false" placeholder="책 제목 (초성 가능, 최근 발문한 책이 위에)"><div class="menu" id="bookMenu"></div></div></div>
+          <div class="pickrow"><div class="bookbar"><div class="combo"><input id="bookInput" autocomplete="off" spellcheck="false" placeholder="책 제목 (초성 가능, 최근 발문한 책이 위에)"><div class="menu" id="bookMenu"></div></div><button class="outline" id="btnEditBook">발문지 편집</button></div></div>
           <div id="bookArea"></div>
         </div>
         <div id="tab-repco" class="hidden">
@@ -270,11 +290,20 @@ input[type=date].inp{width:150px}
 
 <div class="toast" id="toast"></div>
 <div class="modalback" id="bookModal"><div class="modal"><h3>새 책 추가</h3>
-  <p class="desc">발문지가 없는 책은 '직접 질문'으로 기록해요. 발문지 질문을 넣고 싶으면 Aside에게 발문지 파일을 주세요.</p>
+  <p class="desc">추가하면 바로 발문지 편집 화면이 열려요. 질문을 나중에 넣어도 되고, 그동안은 '직접 질문'으로 기록할 수 있어요.</p>
   <label for="newTitle">책 제목</label><input class="inp" id="newTitle" autocomplete="off">
   <label for="newLevel">레벨</label><input class="inp" id="newLevel" autocomplete="off" placeholder="예: 6레벨">
   <div class="lvchips" id="lvchips"></div>
   <div class="modalfoot"><button id="cancelAdd">취소</button><button class="primary" id="confirmAdd">추가</button></div></div></div>
+<div class="modalback" id="edModal"><div class="modal edmodal">
+  <div class="edhead"><h3 style="margin:0 0 10px">발문지 편집</h3>
+    <div class="grid2"><div class="fld"><label>책 제목</label><input class="inp" id="edTitle" autocomplete="off"></div><div class="fld"><label>레벨</label><input class="inp" id="edLevel" autocomplete="off" list="lvlist"></div></div>
+    <p class="desc" style="margin:10px 0 0">고친 내용은 다음 발문부터 적용돼요. 이미 남긴 기록과 노션 학생 일지는 그때 물어본 질문 그대로 남아요.</p></div>
+  <div class="edbody" id="edList"></div>
+  <div class="edfoot"><button id="edAdd">+ 질문 추가</button><span class="grow" id="edInfo"></span><button class="danger" id="edDelete">책 삭제</button><button id="edCancel">취소</button><button class="primary" id="edSave">저장</button></div>
+</div></div>
+<datalist id="lvlist"><option>기초</option><option>1레벨</option><option>2레벨</option><option>3레벨</option><option>4레벨</option><option>5레벨</option><option>6레벨</option><option>7레벨</option></datalist>
+<datalist id="kindlist"><option>사실 문제</option><option>추론 질문</option><option>어휘</option><option>비판 질문</option><option>생각 나누기</option></datalist>
 <div class="modalback" id="stuModal"><div class="modal"><h3>새 학생 추가</h3>
   <p class="desc">노션 학생 일지에 새 페이지가 만들어져요. 노션 템플릿(코멘트 추가, 렙코 기록 버튼)이 그대로 들어가요.</p>
   <label for="nsName">이름</label><input class="inp" id="nsName" autocomplete="off">
@@ -289,7 +318,7 @@ const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
 const LEVELS=['기초','1레벨','2레벨','3레벨','4레벨','5레벨','6레벨','7레벨'];
 const GRADE={ok:'○ 맞음',part:'△ 부분 이해',re:'× 다시 확인'},MARK={ok:'○',part:'△',re:'×'};
-const ERR={BADLOGIN:'비밀번호가 맞지 않아요.',NETWORK:'인터넷 연결을 확인해 주세요.',AUTH:'로그인이 끝났어요. 다시 로그인해 주세요.',NOSTUDENT:'노션 학생 일지에 없는 학생이에요.',NOBOOK:'등록되지 않은 책이에요.',EMPTY:'내용을 적어 주세요.',MANAGED:'발문 기록은 발문 탭에서 고쳐 주세요.',NOEDIT:'이 줄은 앱에서 고칠 수 없어요. 노션에서 고쳐 주세요.',BADVALUE:'값이 올바르지 않아요.',NOSESSION:'먼저 답을 하나 이상 기록해 주세요.'};
+const ERR={BADLOGIN:'비밀번호가 맞지 않아요.',NETWORK:'인터넷 연결을 확인해 주세요.',AUTH:'로그인이 끝났어요. 다시 로그인해 주세요.',NOSTUDENT:'노션 학생 일지에 없는 학생이에요.',NOBOOK:'등록되지 않은 책이에요.',EMPTY:'내용을 적어 주세요.',MANAGED:'발문 기록은 발문 탭에서 고쳐 주세요.',DUPBOOK:'같은 제목의 책이 이미 있어요.',BOOKUSED:'이 책으로 남긴 발문 기록이 있어서 지울 수 없어요. 지난 기록을 지키기 위해서예요.',NOEDIT:'이 줄은 앱에서 고칠 수 없어요. 노션에서 고쳐 주세요.',BADVALUE:'값이 올바르지 않아요.',NOSESSION:'먼저 답을 하나 이상 기록해 주세요.'};
 const $=id=>document.getElementById(id);
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -551,10 +580,45 @@ $('lvchips').onclick=e=>{const b=e.target.closest('[data-lv]');if(!b)return;$('n
 $('newLevel').oninput=drawLvChips;
 $('cancelAdd').onclick=()=>$('bookModal').classList.remove('open');
 $('confirmAdd').onclick=async()=>{const title=$('newTitle').value.trim(),level=$('newLevel').value.trim();if(!title){$('newTitle').focus();return}if(!level){toast('레벨을 골라 주세요');return}
-  $('confirmAdd').disabled=true;try{const r=await api('bm_add_book',{p_token:S.token,p:{title,level}});S.books=r.books;S.bookId=r.id;S.cur='free';$('bookModal').classList.remove('open');savePref();renderBalmun();toast('〈'+title+'〉을(를) 추가했어요')}catch(e){if(!onAuthFail(e))toast(errText(e),true)}finally{$('confirmAdd').disabled=false}};
+  $('confirmAdd').disabled=true;try{const r=await api('bm_add_book',{p_token:S.token,p:{title,level}});S.books=r.books;S.bookId=r.id;S.cur='free';$('bookModal').classList.remove('open');savePref();renderBalmun();toast('〈'+title+'〉을(를) 추가했어요');const nb=bookById(r.id);if(nb&&!nb.questions.length)openEditor(r.id,true)}catch(e){if(!onAuthFail(e))toast(errText(e),true)}finally{$('confirmAdd').disabled=false}};
+
+/* ---------- 발문지 편집 ---------- */
+function openEditor(id,addFirst){
+  const b=bookById(id);if(!b){toast('책을 먼저 골라 주세요');return}
+  S.ed={id:b.id,used:b.used||0,qs:(b.questions||[]).map(q=>({id:q.id,kind:q.kind||'',q:q.q||'',a:q.a||''})),dirty:false};
+  if(addFirst)S.ed.qs.push({id:'',kind:'사실 문제',q:'',a:''});
+  $('edTitle').value=b.title;$('edLevel').value=b.level||'';renderEditor();$('edModal').classList.add('open');
+  setTimeout(()=>{const t=document.querySelector('#edList textarea[data-f="q"]');if(addFirst&&t)t.focus()},120);
+}
+function renderEditor(){
+  const qs=S.ed.qs;
+  $('edList').innerHTML=qs.map((q,i)=>'<div class="edq" data-i="'+i+'"><div class="qtop"><span class="qno">질문 '+(i+1)+'</span><input class="inp kind" data-f="kind" list="kindlist" placeholder="종류" value="'+esc(q.kind)+'"><span class="qtools"><button data-mv="-1" title="위로"'+(i===0?' disabled':'')+'>↑</button><button data-mv="1" title="아래로"'+(i===qs.length-1?' disabled':'')+'>↓</button><button class="rm" data-rm="1">삭제</button></span></div>'
+    +'<textarea class="ta small" data-f="q" placeholder="질문">'+esc(q.q)+'</textarea><span class="lab">모범 답안</span><textarea class="ta small" data-f="a" placeholder="모범 답안 (없으면 비워 두세요)">'+esc(q.a)+'</textarea></div>').join('')||'<div class="empty">아직 질문이 없어요. 아래 \'+ 질문 추가\'를 눌러 주세요.</div>';
+  $('edInfo').textContent='질문 '+qs.length+'개'+(S.ed.used?' · 이 책 발문 기록 '+S.ed.used+'건':'');
+  $('edDelete').classList.toggle('hidden',!!S.ed.used);
+}
+$('edList').addEventListener('input',e=>{const box=e.target.closest('.edq'),f=e.target.dataset.f;if(!box||!f)return;S.ed.qs[+box.dataset.i][f]=e.target.value;S.ed.dirty=true});
+$('edList').addEventListener('click',e=>{const box=e.target.closest('.edq');if(!box)return;const i=+box.dataset.i,qs=S.ed.qs;
+  const mv=e.target.closest('[data-mv]');if(mv){const j=i+(+mv.dataset.mv);if(j<0||j>=qs.length)return;[qs[i],qs[j]]=[qs[j],qs[i]];S.ed.dirty=true;renderEditor();return}
+  if(e.target.closest('[data-rm]')){if(qs[i].q.trim()&&!confirm('질문 '+(i+1)+'을(를) 지울까요? (이미 남긴 기록은 그대로 남아요)'))return;qs.splice(i,1);S.ed.dirty=true;renderEditor()}});
+$('edAdd').onclick=()=>{const last=S.ed.qs[S.ed.qs.length-1];S.ed.qs.push({id:'',kind:last?last.kind:'사실 문제',q:'',a:''});S.ed.dirty=true;renderEditor();const ts=document.querySelectorAll('#edList textarea[data-f="q"]');const t=ts[ts.length-1];if(t){t.focus();t.scrollIntoView({block:'center'})}};
+$('edCancel').onclick=()=>{if(S.ed&&S.ed.dirty&&!confirm('고친 내용을 저장하지 않고 닫을까요?'))return;$('edModal').classList.remove('open')};
+$('edTitle').addEventListener('input',()=>{S.ed.dirty=true});$('edLevel').addEventListener('input',()=>{S.ed.dirty=true});
+$('edSave').onclick=async()=>{
+  const title=$('edTitle').value.trim();if(!title){$('edTitle').focus();toast('책 제목을 적어 주세요');return}
+  const empties=S.ed.qs.filter(q=>!q.q.trim()).length;if(empties&&!confirm('내용이 빈 질문 '+empties+'개는 빼고 저장할게요.'))return;
+  $('edSave').disabled=true;
+  try{const r=await api('bm_save_book',{p_token:S.token,p:{id:S.ed.id,title,level:$('edLevel').value.trim(),questions:S.ed.qs}});S.books=r.books;S.cur=0;S.grade='';$('edModal').classList.remove('open');renderBalmun();toast('발문지를 저장했어요. 다음 발문부터 적용돼요')}
+  catch(e){if(!onAuthFail(e))toast(errText(e),true)}
+  finally{$('edSave').disabled=false}
+};
+$('edDelete').onclick=async()=>{if(!confirm('〈'+$('edTitle').value+'〉 발문지를 지울까요?'))return;
+  try{const r=await api('bm_delete_book',{p_token:S.token,p_id:S.ed.id});S.books=r.books;if(S.bookId===S.ed.id)S.bookId=(S.books[0]||{}).id||null;savePref();$('edModal').classList.remove('open');renderBalmun();toast('책을 지웠어요')}
+  catch(e){if(!onAuthFail(e))toast(errText(e),true)}};
+$('btnEditBook').onclick=()=>openEditor(S.bookId,false);
 [$('newTitle'),$('newLevel')].forEach(el=>el.addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229)return;if(e.key==='Enter')$('confirmAdd').click();if(e.key==='Escape')$('bookModal').classList.remove('open')}));
 
-function latestGrade(qn){if(!S.page)return '';let g='',t='';for(const r of S.page.records)if(r.bookId===S.bookId&&r.qn===qn&&r.ts>t){t=r.ts;g=r.grade}return g}
+function latestGrade(q,qn){if(!S.page)return '';let g='',t='';for(const r of S.page.records){if(r.bookId!==S.bookId)continue;const hit=r.qid?r.qid===q.id:(r.qn===qn&&r.question===q.q);if(hit&&r.ts>t){t=r.ts;g=r.grade}}return g}
 function suggestScore(rs){if(!rs.length)return null;let v=0;rs.forEach(r=>{v+=r.grade==='ok'?1:r.grade==='part'?.5:0});return Math.round(v/rs.length*10)*10}
 function renderBalmun(){
   bookCombo.sync();
@@ -563,7 +627,7 @@ function renderBalmun(){
   if(!b){$('bookArea').innerHTML='<div class="empty">책을 골라 주세요.</div>';return}
   const qs=b.questions||[];if(S.cur!=='free'&&!qs[S.cur])S.cur=qs.length?0:'free';
   const free=S.cur==='free',x=free?null:qs[S.cur];
-  let h='<div class="qnav">'+qs.map((q,i)=>{const g=latestGrade(i+1);return '<button class="qbtn'+(i===S.cur?' active':'')+'" data-q="'+i+'">질문 '+(i+1)+(g?'<i>'+MARK[g]+'</i>':'')+'</button>'}).join('')+'<button class="qbtn free'+(free?' active':'')+'" data-q="free">+ 직접 질문</button></div>';
+  let h='<div class="qnav">'+qs.map((q,i)=>{const g=latestGrade(q,i+1);return '<button class="qbtn'+(i===S.cur?' active':'')+'" data-q="'+i+'">질문 '+(i+1)+(g?'<i>'+MARK[g]+'</i>':'')+'</button>'}).join('')+'<button class="qbtn free'+(free?' active':'')+'" data-q="free">+ 직접 질문</button></div>';
   if(free)h+='<div class="qtype">직접 질문</div><input class="tin" id="freeQ" placeholder="발문지에 없는 질문을 적어 주세요"><textarea class="ta small" id="freeA" placeholder="모범 답안 (없으면 비워 두세요)" style="margin-bottom:10px"></textarea>';
   else h+='<div class="qtype">'+esc(x.kind||'')+'</div><p class="question">'+esc(x.q)+'</p><div class="answerbox"><div class="cap">모범 답안</div><p>'+esc(x.a||'(모범 답안 없음)')+'</p></div>';
   h+='<textarea class="ta c" id="childAnswer" placeholder="아이의 답을 적어 주세요."></textarea><div class="grade" id="grades">'+['ok','part','re'].map(g=>'<button data-grade="'+g+'" class="'+(S.grade===g?'on':'')+'">'+GRADE[g]+'</button>').join('')+'</div>';
@@ -598,11 +662,11 @@ async function saveAnswer(btn){
   const s=stu(S.sel),b=bookById(S.bookId);let q;
   if(!b){toast('책을 먼저 골라 주세요');$('bookInput').focus();return}
   if(S.cur==='free'){const t=$('freeQ').value.trim();if(!t){toast('질문을 적어 주세요');$('freeQ').focus();return}q={qn:null,kind:'직접 질문',q:t,a:$('freeA').value.trim()}}
-  else{const x=b.questions[S.cur];q={qn:S.cur+1,kind:x.kind,q:x.q,a:x.a}}
+  else{const x=b.questions[S.cur];q={qn:S.cur+1,qid:x.id,kind:x.kind,q:x.q,a:x.a}}
   const answer=$('childAnswer').value.trim();if(!answer){$('childAnswer').focus();toast('아이의 답을 먼저 적어 주세요');return}
   if(!S.grade){toast('이해도(○△×)를 골라 주세요');return}
   btn.disabled=true;const id=S.sel;
-  try{const r=await send('bm_save_answer',{p_token:S.token,p:{pageId:s.id,bookId:b.id,qn:q.qn,kind:q.kind,question:q.q,model:q.a,answer,grade:S.grade}});
+  try{const r=await send('bm_save_answer',{p_token:S.token,p:{pageId:s.id,bookId:b.id,qn:q.qn,qid:q.qid||null,kind:q.kind,question:q.q,model:q.a,answer,grade:S.grade}});
     $('childAnswer').value='';S.grade='';if(S.cur==='free'){$('freeQ').value='';$('freeA').value=''}else if(S.cur<b.questions.length-1)S.cur++;
     if(r.queued){toast('인터넷이 끊겨서 이 컴퓨터에 보관했어요. 연결되면 자동으로 보내요',true);renderBalmun()}
     else{S.unsynced=r.unsynced;b.last=new Date().toISOString();touchLocal(id);await loadPage();toast(r.sync&&r.sync.status==='error'?'저장은 됐는데 노션에 못 넣었어요. 위의 \'다시 보내기\'를 눌러 주세요':'저장하고 노션 학생 일지에도 기록했어요',r.sync&&r.sync.status==='error')}
