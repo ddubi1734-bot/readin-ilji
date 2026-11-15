@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>결석 캘린더 | 리드인</title>
+<title>결석·보강 캘린더 | 리드인</title>
 <meta name="theme-color" content="#176b5b">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='8' width='56' height='52' rx='12' fill='%23176b5b'/%3E%3Crect x='4' y='8' width='56' height='16' rx='8' fill='%230f5446'/%3E%3Crect x='16' y='3' width='6' height='12' rx='3' fill='%23fff'/%3E%3Crect x='42' y='3' width='6' height='12' rx='3' fill='%23fff'/%3E%3Cpath d='M22 40l7 7 14-15' stroke='%23fff' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
@@ -100,7 +100,7 @@ button{cursor:pointer}button:disabled{opacity:.55;cursor:default}
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .cal .wd{padding:8px;font-size:12px;font-weight:800;color:var(--muted);text-align:left;border-bottom:1px solid var(--line);background:#fbfcfb}
 .cal .wd.sun{color:#c0504d}.cal .wd.sat{color:#3f6fb5}
-.cell{min-height:112px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:5px 5px 8px;cursor:pointer;position:relative}
+.cell{min-height:96px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:5px 5px 8px;cursor:pointer;position:relative}
 .cell:nth-child(7n){border-right:0}
 .cell:hover{background:#fafcfb}
 .cell.out{background:#fafbfa}.cell.out .dn{color:#b8c3bf}
@@ -117,6 +117,16 @@ button{cursor:pointer}button:disabled{opacity:.55;cursor:default}
 .ev.mk.done .tg,.legend .pill[style*='a8d5ba'] .tg{background:#1d7a4a}.ev.mk.late .tg{background:#7a3fa3}
 .ev.mk.late{border-color:#c9a6e0;color:#7a3fa3}
 .ev.dim{opacity:.18}
+.ln{display:flex;align-items:flex-start;gap:4px;font-size:11.5px;line-height:1.35;border-radius:6px;padding:2px 4px;margin-bottom:2px}
+.ln .tg{flex:none;font-size:10px;font-weight:800;border-radius:4px;padding:0 4px;color:#fff;background:#94620b;line-height:1.5}
+.ln .nms{display:flex;flex-wrap:wrap;gap:0 6px;min-width:0}
+.nmi{font-weight:750;cursor:pointer;white-space:nowrap}.nmi:hover{text-decoration:underline}.nmi em{font-style:normal;font-weight:600;opacity:.75;margin-left:2px;font-size:10.5px}.nmi.dim{opacity:.18}
+.ln.st-wait{background:#fff4e0;color:#7a5512}.ln.st-booked{background:#e7effc;color:#2f5fb3}.ln.st-booked .tg{background:#2f5fb3}.ln.st-check{background:#f3e8fb;color:#7a3fa3}.ln.st-check .tg{background:#7a3fa3}
+.ln.st-done,.ln.st-closed{background:#eef6f1;color:#1d7a4a}.ln.st-done .tg,.ln.st-closed .tg{background:#1d7a4a}.ln.st-expired{background:#fbeaea;color:#a33f3f}.ln.st-expired .tg{background:#a33f3f}
+.ln.sh .tg{background:#c27c0e}.ln.sh{background:#fffaf0;border:1px dashed #f0d6a8}
+.ln.bk{background:#fff;border:1.5px dashed #9fb7e3;color:#2f5fb3}.ln.bk .tg{background:#2f5fb3}.ln.bk.late{border-color:#c9a6e0;color:#7a3fa3}.ln.bk.late .tg{background:#7a3fa3}
+.ln.mk{background:#fff;border:1.5px dashed #a8d5ba;color:#1d7a4a}.ln.mk .tg{background:#1d7a4a}
+.legend .ln.lg{margin:0;font-size:11.5px}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px;align-items:center}
 .legend .pill{font-size:11px}
 /* table */
@@ -175,7 +185,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 <body>
 <header class="top">
   <div class="brand" id="brandHome" title="오늘 화면으로"><img class="logo" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23176b5b'/%3E%3Crect x='12' y='16' width='40' height='36' rx='6' fill='%23fff'/%3E%3Crect x='12' y='16' width='40' height='10' rx='5' fill='%23cfe8de'/%3E%3Crect x='20' y='10' width='5' height='11' rx='2.5' fill='%23fff'/%3E%3Crect x='39' y='10' width='5' height='11' rx='2.5' fill='%23fff'/%3E%3Cpath d='M23 39l6 6 12-13' stroke='%23176b5b' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-    <div><h1>결석 캘린더</h1><p>리드인 황남1점 · 노션 결석 캘린더에 자동 백업</p></div></div>
+    <div><h1>결석·보강 캘린더</h1><p>리드인 황남1점 · 노션 결석 캘린더에 자동 백업</p></div></div>
   <div class="topright hidden" id="topright">
     <button class="sync" id="syncPill" title="앱 기록은 노션 결석 캘린더에 자동으로 백업돼요. 못 보낸 게 있으면 눌러서 다시 보내요">노션 백업</button>
     <a class="ghost opt" href="../" title="학생일지 앱으로">학생일지</a>
@@ -198,7 +208,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-14';
+const APP_VER='2026-11-15-15';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -358,32 +368,49 @@ function vHome(c){const t=today();
   </div></div>`}
 
 /* 캘린더 */
-function vCal(){const y=S.calY,m=S.calM,t=today();
+const CV_DEF={ab:true,sh:false,bk:true,mk:false,done:false};
+function cvGet(){try{return Object.assign({},CV_DEF,JSON.parse(ls.get('absence.cv.v1')||'{}'))}catch(e){return {...CV_DEF}}}
+function vCal(){const y=S.calY,m=S.calM,t=today(),cv=cvGet();
   const first=`${y}-${String(m).padStart(2,'0')}-01`;const start=addDays(first,-pd(first).getUTCDay());
   const lastDay=addDays(addMonths(first,1),-1);const end=addDays(lastDay,6-pd(lastDay).getUTCDay());
-  const byDay=new Map(),mkDay=new Map();
-  for(const r of S.rows){if(r.d&&r.d>=start&&r.d<=end){if(!byDay.has(r.d))byDay.set(r.d,[]);byDay.get(r.d).push(r)}
-    if(S.showMk&&r.k&&r.k>=start&&r.k<=end&&r.s!=='종료'&&!(r.s==='완료'&&S.allocs.some(x=>x.a===r.id&&x.d===r.k))){if(!mkDay.has(r.k))mkDay.set(r.k,[]);mkDay.get(r.k).push(r)}}
-  const agDay=new Map();if(S.showMk){const gm=new Map();for(const x of S.allocs){if(x.d<start||x.d>end)continue;if(!gm.has(x.g))gm.set(x.g,{g:x.g,n:x.n,d:x.d,m:0,c:0});const o=gm.get(x.g);o.m+=x.m;o.c++}for(const o of gm.values()){if(!agDay.has(o.d))agDay.set(o.d,[]);agDay.get(o.d).push(o)}}
-  const q=S.calQ.trim();
-  const ym=first.slice(0,7),mRows=S.rows.filter(r=>r.d&&r.d.startsWith(ym));
+  const ym=first.slice(0,7),q=S.calQ.trim();
+  const isDone=r=>r.s==='완료'||r.s==='종료';
+  // 날짜별로 모으기
+  const day=new Map();const put=(d,k,o)=>{if(d<start||d>end)return;if(!day.has(d))day.set(d,{ab:[],sh:[],bk:[],mk:[]});day.get(d)[k].push(o)};
+  const cnt={ab:0,sh:0,bk:0,mk:0};
+  for(const r of S.rows){if(!r.d||!r.n)continue;const sh=isShort(r);
+    if(cv.done||!isDone(r)){put(r.d,sh?'sh':'ab',r)}
+    if(r.d.startsWith(ym)&&(cv.done||!isDone(r)))cnt[sh?'sh':'ab']++;
+    if(r.k&&!isDone(r)){put(r.k,'bk',r);if(r.k.startsWith(ym))cnt.bk++}}
+  const gm=new Map();for(const x of S.allocs){if(!gm.has(x.g))gm.set(x.g,{n:x.n,d:x.d,m:0,more:/더 하고 감/.test(x.memo||'')});gm.get(x.g).m+=x.m}
+  for(const o of gm.values()){put(o.d,'mk',o);if(o.d.startsWith(ym))cnt.mk++}
+  for(const r of S.rows){if(r.s==='완료'&&r.k&&!S.allocs.some(x=>x.a===r.id)){put(r.k,'mk',{n:r.n,d:r.k,m:r.m,id:r.id});if(r.k.startsWith(ym))cnt.mk++}}
+  const nm=(n,txt,attrs)=>`<span class="nmi ${q&&!match(n,q)?'dim':''}" ${attrs}>${esc(n)}${txt!=null&&txt!==''?`<em>${txt}</em>`:''}</span>`;
+  const line=(cls,tag,items)=>items.length?`<div class="ln ${cls}"><span class="tg">${tag}</span><span class="nms">${items.join('')}</span></div>`:'';
   let cells='';for(let d=start;d<=end;d=addDays(d,1)){
-    const list=(byDay.get(d)||[]).sort((a,b)=>a.n.localeCompare(b.n)),mk=(mkDay.get(d)||[]).sort((a,b)=>a.n.localeCompare(b.n));
-    const sumM=list.reduce((a,r)=>a+(+r.m||0),0);const wd=pd(d).getUTCDay();
+    const o=day.get(d)||{ab:[],sh:[],bk:[],mk:[]};const wd=pd(d).getUTCDay();let body='';
+    if(cv.ab){const by={};o.ab.sort((a,b)=>a.n.localeCompare(b.n)).forEach(r=>{const k=info(r).key;(by[k]=by[k]||[]).push(r)});
+      for(const k of ['wait','booked','check','expired','done','closed'])if(by[k])body+=line('st-'+k,'결석',by[k].map(r=>nm(r.n,r.m,`data-act="edit" data-id="${r.id}" title="${esc(r.n)} ${r.m}분 · ${esc(info(r).label)}"`)))}
+    if(cv.sh){const by={};o.sh.sort((a,b)=>a.n.localeCompare(b.n)).forEach(r=>{const k=info(r).key;(by[k]=by[k]||[]).push(r)});
+      for(const k of ['wait','booked','check','expired','done','closed'])if(by[k])body+=line('sh st-'+k,'덜',by[k].map(r=>nm(r.n,r.m,`data-act="edit" data-id="${r.id}" title="${esc(r.n)} 수업 덜 함 ${r.m}분 · ${esc(info(r).label)}"`)))}
+    if(cv.bk&&o.bk.length){const late=o.bk.filter(r=>r.k<t),up=o.bk.filter(r=>r.k>=t);
+      body+=line('bk','보강',up.sort((a,b)=>a.n.localeCompare(b.n)).map(r=>nm(r.n,plan(r)||'',`data-act="edit" data-id="${r.id}" title="보강 예약: ${esc(r.n)} ${plan(r)}분 (${mdw(r.d)} 결석분)"`)));
+      body+=line('bk late','확인',late.sort((a,b)=>a.n.localeCompare(b.n)).map(r=>nm(r.n,plan(r)||'',`data-act="edit" data-id="${r.id}" title="보강일이 지났어요: ${esc(r.n)} (${mdw(r.d)} 결석분) · 완료 확인"`)))}
+    if(cv.mk&&o.mk.length){const per=new Map();o.mk.forEach(x=>{const z=per.get(x.n)||{n:x.n,m:0,more:false};z.m+=(+x.m||0);z.more=z.more||x.more;per.set(x.n,z)});
+      body+=line('mk','보강함',[...per.values()].sort((a,b)=>a.n.localeCompare(b.n)).map(z=>nm(z.n,(z.more?'+':'')+z.m,`data-act="student" data-n="${esc(z.n)}" title="${esc(z.n)} ${z.m}분 보강${z.more?' (더 하고 간 시간 포함)':''}"`)))}
+    const nAb=o.ab.filter(r=>!isDone(r)).length;
     cells+=`<div class="cell ${d.slice(0,7)!==ym?'out':''} ${d===t?'today':''} ${wd===0?'sun':''}" data-act="dayAdd" data-d="${d}">
-      <div class="dn"><span>${+d.slice(8)===1||d===start?(+d.slice(5,7))+'월 '+(+d.slice(8))+'일':+d.slice(8)}</span>${list.length?`<span class="ds">${list.length}명</span>`:''}</div>
-      ${list.map(r=>{const i=info(r);return `<div class="ev st-${i.key} ${q&&!match(r.n,q)?'dim':''}" data-act="edit" data-id="${r.id}" title="${esc(r.n)} · ${r.m!=null?r.m+'분':''} · ${esc(i.label)}${r.memo?' · '+esc(r.memo):''}"><span class="en">${esc(r.n||'(이름 없음)')}</span><span class="em">${r.memo==='수업 덜 함'?'덜 ':''}${r.m!=null?r.m:''}</span></div>`}).join('')}
-      ${mk.map(r=>`<div class="ev mk ${r.s==='완료'?'done':r.k<t?'late':''} ${q&&!match(r.n,q)?'dim':''}" data-act="edit" data-id="${r.id}" title="보강 예약: ${esc(r.n)} ${plan(r)?plan(r)+'분':''} (${mdw(r.d)} 결석분${r.pm&&r.pm<rem(r)?', 남은 '+rem(r)+'분 중':''})"><span class="tg">보강</span><span class="en">${esc(r.n)}</span><span class="em">${r.s==='완료'?'완료':(r.k<t?'확인 ':'')+(plan(r)?plan(r)+'분':'보강')}</span></div>`).join('')}
-      ${(agDay.get(d)||[]).map(o=>`<div class="ev mk done ${q&&!match(o.n,q)?'dim':''}" data-act="student" data-n="${esc(o.n)}" title="보강함: ${esc(o.n)} ${o.m}분 (결석 ${o.c}건에 나눠 채움)"><span class="tg">보강</span><span class="en">${esc(o.n)}</span><span class="em">${o.m}분</span></div>`).join('')}
-    </div>`}
+      <div class="dn"><span>${+d.slice(8)===1||d===start?(+d.slice(5,7))+'월 '+(+d.slice(8))+'일':+d.slice(8)}</span></div>${body}</div>`}
+  const tg=(k,l)=>`<button class="chip ${cv[k]?'on':''}" data-act="cv" data-v="${k}">${l}${cnt[k]!=null?` <b>${cnt[k]}</b>`:''}</button>`;
+  const mRows=S.rows.filter(r=>r.d&&r.d.startsWith(ym));
   return `<div class="calhead"><h2>${y}년 ${m}월</h2>
     <button class="ghost" data-act="calMove" data-v="-1">◀ 지난 달</button><button class="ghost" data-act="calMove" data-v="0">오늘</button><button class="ghost" data-act="calMove" data-v="1">다음 달 ▶</button>
     <span style="flex:1"></span>
-    <input class="search" id="calQ" placeholder="학생 찾기 (초성 가능)" value="${esc(S.calQ)}" autocomplete="off">
-    <label class="chip ${S.showMk?'on':''}" style="cursor:pointer"><input type="checkbox" id="showMk" ${S.showMk?'checked':''} style="display:none">보강 일정 보기</label></div>
-    <div id="vbody"><div class="sum" style="margin-bottom:8px">${m}월 결석 <b>${mRows.length}건</b> · <b>${mins(mRows.reduce((a,r)=>a+(+r.m||0),0))}</b> · 보강 완료 <b>${mRows.filter(r=>r.s==='완료').length}</b> · 보강 전 <b>${mRows.filter(r=>OPEN.has(info(r).key)).length}</b> · 소멸 <b>${mRows.filter(r=>info(r).key==='expired').length}</b> &nbsp;|&nbsp; 빈 칸을 누르면 그날 결석을 기록해요.</div>
+    <input class="search" id="calQ" placeholder="학생 찾기 (초성 가능)" value="${esc(S.calQ)}" autocomplete="off"></div>
+    <div class="toolbar" style="margin:-2px 0 8px"><span class="sum">보기</span>${tg('ab','결석')}${tg('sh','덜 함')}${tg('bk','보강 예약')}${tg('mk','보강함')}<span style="width:8px"></span>${tg('done','끝난 것도 보기')}</div>
+    <div id="vbody"><div class="sum" style="margin-bottom:8px">${m}월 결석 <b>${mRows.filter(r=>!isShort(r)).length}건</b> · 덜 함 <b>${mRows.filter(isShort).length}건</b> · 보강 완료 <b>${mRows.filter(r=>r.s==='완료').length}</b> · 보강 전 <b>${mRows.filter(r=>OPEN.has(info(r).key)).length}</b> &nbsp;|&nbsp; 빈 칸을 누르면 그날 결석을 기록해요.</div>
     <div class="cal">${[...DOW].map((w,i)=>`<div class="wd ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('')}${cells}</div>
-    <div class="legend">${['wait','booked','check','done','expired','closed'].map(k=>pill({key:k,label:{wait:'보강 전',booked:'예약',check:'보강일 지남',done:'완료',expired:'소멸',closed:'종료'}[k]})).join('')}<span class="pill" style="border:1.5px dashed #9fb7e3;color:var(--blue);background:#fff"><span class="tg">보강</span>예약 (할 시간)</span><span class="pill" style="border:1.5px dashed #a8d5ba;color:#1d7a4a;background:#fff"><span class="tg">보강</span>한 날 (한 시간)</span></div></div>`}
+    <div class="legend"><span class="ln st-wait lg"><span class="tg">결석</span>보강 전</span><span class="ln st-booked lg"><span class="tg">결석</span>예약됨</span><span class="ln st-done lg"><span class="tg">결석</span>완료</span><span class="ln sh st-wait lg"><span class="tg">덜</span>수업 덜 함</span><span class="ln bk lg"><span class="tg">보강</span>예약 (할 분)</span><span class="ln bk late lg"><span class="tg">확인</span>보강일 지남</span><span class="ln mk lg"><span class="tg">보강함</span>한 날 (+는 더 하고 감)</span></div></div>`}
 
 /* 보강 전 */
 function pendRows(){const q=S.pq.trim();return rowsBy(r=>{const i=info(r);if(!OPEN.has(i.key))return false;if(!match(r.n,q))return false;if(S.pt==='ab'&&isShort(r))return false;if(S.pt==='short'&&!isShort(r))return false;
@@ -708,7 +735,7 @@ function openOnhi(p){const d=p.d;
   const shorts=[],overs=[];
   for(const o of per.values()){const df=o.dur-o.sm;
     if(df<=-dMin){const ex=S.rows.some(r=>r.n===o.n&&r.d===d);shorts.push({...o,m:-df,ex,on:!ex})}
-    else if(df>=dMin){const done=S.allocs.some(x=>x.n===o.n&&x.d===d&&/더 하고 감/.test(x.memo||''));const open=S.rows.filter(r=>r.n===o.n&&OPEN.has(info(r).key)&&rem(r)>0&&r.d!==d).sort((x,y)=>(x.d||'').localeCompare(y.d||''));overs.push({...o,m:df,done,open,on:!done&&open.length>0})}}
+    else if(df>=dMin){const done=S.allocs.some(x=>x.n===o.n&&x.d===d&&/더 하고 감/.test(x.memo||''));const sameDay=S.rows.some(r=>r.n===o.n&&r.s==='완료'&&r.k===d)||S.allocs.some(x=>x.n===o.n&&x.d===d&&!/더 하고 감/.test(x.memo||''))||mk.some(z=>z.n===o.n);const open=S.rows.filter(r=>r.n===o.n&&OPEN.has(info(r).key)&&rem(r)>0&&r.d!==d).sort((x,y)=>(x.d||'').localeCompare(y.d||''));overs.push({...o,m:df,done,open,sameDay,on:!done&&!sameDay&&open.length>0})}}
   shorts.sort((a,b)=>a.n.localeCompare(b.n));overs.sort((a,b)=>a.n.localeCompare(b.n));
   const noTime=[...new Set(at.filter(a=>a[6]==='1'&&a[5]==null).map(a=>a[0]))];
   const appOnly=S.rows.filter(r=>r.d===d&&r.n&&!ab.some(a=>a.n===r.n)&&r.memo!=='수업 덜 함');
@@ -726,7 +753,7 @@ function openOnhi(p){const d=p.d;
     m.querySelector('#ohMk').innerHTML=mk.map((x,i)=>{const owe=remSum(x.open);return `<div class="row"><input type="checkbox" class="cbx" data-mk="${i}" ${x.on?'checked':''} ${x.done||!x.open.length?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" step="5" data-mkm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.done||!x.open.length?'disabled':''}>분<span class="sum">${esc(x.tm)}${x.real!=null?` · 실제 ${x.real}분 함 (수업 ${x.slotM}분)`:''}</span>
       ${x.done?'<span class="pill st-done">이날 보강 이미 기록됨</span>':!x.open.length?'<span class="pill st-closed">채울 결석이 앱에 없어요</span>':`<span class="pill st-booked">보강 전 ${x.open.length}건 · ${owe}분</span>${x.m>owe?` <span class="dd soon">${x.m-owe}분은 남아요</span>`:''}`}</div>`}).join('')||'<div class="empty">이날 보강 출석이 없어요.</div>';
     m.querySelector('#ohS').innerHTML=shorts.map((x,i)=>`<div class="row"><input type="checkbox" class="cbx" data-ss="${i}" ${x.on?'checked':''} ${x.ex?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" data-ssm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.ex?'disabled':''}>분<span class="sum">${x.t.map(esc).join(' / ')}</span>${x.ex?'<span class="pill st-closed">이날 기록 이미 있음</span>':'<span class="pill st-wait">수업 덜 함</span>'}</div>`).join('')||'<div class="empty">없어요.</div>';
-    m.querySelector('#ohV').innerHTML=overs.map((x,i)=>{const owe=remSum(x.open);return `<div class="row"><input type="checkbox" class="cbx" data-vv="${i}" ${x.on?'checked':''} ${x.done||!x.open.length?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" data-vvm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.done||!x.open.length?'disabled':''}>분<span class="sum">${x.t.map(esc).join(' / ')}</span>${x.done?'<span class="pill st-done">이날 이미 뺐음</span>':!x.open.length?'<span class="pill st-closed">뺄 못 한 시간 없음</span>':`<span class="pill st-booked">못 한 시간 ${owe}분에서 빼기</span>`}</div>`}).join('')||'<div class="empty">없어요.</div>';
+    m.querySelector('#ohV').innerHTML=overs.map((x,i)=>{const owe=remSum(x.open);return `<div class="row"><input type="checkbox" class="cbx" data-vv="${i}" ${x.on?'checked':''} ${x.done||!x.open.length?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" data-vvm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.done||!x.open.length?'disabled':''}>분<span class="sum">${x.t.map(esc).join(' / ')}</span>${x.done?'<span class="pill st-done">이날 이미 뺐음</span>':!x.open.length?'<span class="pill st-closed">뺄 못 한 시간 없음</span>':`<span class="pill st-booked">못 한 시간 ${owe}분에서 빼기</span>`}${x.sameDay&&!x.done?' <span class="dd soon" title="이날 이미 보강 기록이 있어요. 더 한 시간이 그 보강이면 체크하지 마세요">이날 보강 기록 있음</span>':''}</div>`}).join('')||'<div class="empty">없어요.</div>';
     const na=ab.filter(x=>x.on&&!x.ex).length,nm=mk.filter(x=>x.on&&!x.done&&x.open.length).length,ns=shorts.filter(x=>x.on&&!x.ex).length,nv=overs.filter(x=>x.on&&!x.done&&x.open.length).length;
     m.querySelector('#ohSum').textContent=`결석 ${na} · 덜 함 ${ns} · 더 함 ${nv} · 보강 ${nm}명 기록`;m.querySelector('#ohO').disabled=!(na+nm+ns+nv)}
   m.addEventListener('change',e=>{const t=e.target;if(t.dataset.ss!=null)shorts[+t.dataset.ss].on=t.checked;if(t.dataset.vv!=null)overs[+t.dataset.vv].on=t.checked;if(t.dataset.ab!=null)ab[+t.dataset.ab].on=t.checked;if(t.dataset.mk!=null)mk[+t.dataset.mk].on=t.checked;draw()});
@@ -778,7 +805,7 @@ function openSettings(){const m=openModal(`<h2>설정</h2><div class="sub">앱 �
   <div class="field"><label>노션 백업</label><div class="hrow"><button class="outline" id="stPush">못 보낸 기록 다시 보내기</button><a class="ghost" target="_blank" rel="noopener" href="${esc(S.set.dbUrl||'https://www.notion.so')}">노션 결석 캘린더 열기</a></div>
    <div class="sum" style="margin-top:4px">앱이 원본이고, 앱에서 바꾼 것은 노션 결석 캘린더에 바로 백업돼요. 노션에서 고친 것은 앱에 들어오지 않아요.</div>
    <details class="more" style="margin-top:6px"><summary>노션 백업에서 되살리기 (비상용)</summary><div class="sum" style="margin:6px 0">앱 서버 기록이 사라졌을 때만 쓰세요. 노션 내용으로 앱 기록을 덮어써요.</div><button class="danger" id="stPull">노션 백업에서 되살리기</button></details></div>
-  <div class="field"><label>온하이 연동</label><div class="sum">온하이 일별출석부 왼쪽 아래 "결석 캘린더로 보내기" 버튼(확장 프로그램)을 쓰세요. 결석·보강·덜 함·더 함이 미리보기로 열려요.</div></div>
+  <div class="field"><label>온하이 연동</label><div class="sum">온하이 일별출석부 왼쪽 아래 "결석·보강 캘린더로 보내기" 버튼(확장 프로그램)을 쓰세요. 결석·보강·덜 함·더 함이 미리보기로 열려요.</div></div>
   <div class="field"><label>지운 기록</label><div id="stTrash" class="rows"><button class="ghost" id="stTL">최근 지운 기록 보기</button></div></div>
   <div class="field"><label>내보내기</label><button class="ghost" id="stCsv">전체 기록 엑셀(CSV)로 받기</button></div>
   <div class="mfoot"><span class="sp"></span><button class="ghost" id="stC">닫기</button></div>`);
@@ -803,7 +830,7 @@ document.addEventListener('click',async e=>{
   const el=e.target.closest('[data-act]');if(!el)return;const a=el.dataset.act,id=el.dataset.id;
   if(a==='pick'){e.stopPropagation();if(el.checked)S.picked.add(id);else S.picked.delete(id);renderBulk();return}
   if(a==='pickGroup'){const rs=pendRows().filter(r=>r.n===el.dataset.n);rs.forEach(r=>el.checked?S.picked.add(r.id):S.picked.delete(r.id));refreshBody();return}
-  if(a==='dayAdd'){if(e.target.closest('.ev'))return;openAdd(el.dataset.d);return}
+  if(a==='dayAdd'){if(e.target.closest('.ev')||e.target.closest('.ln'))return;openAdd(el.dataset.d);return}
   e.stopPropagation();
   const stuCtx=el.closest('.modal')&&S.curStu&&$('modalRoot').querySelector('.stu-head')?S.curStu:null;
   try{
@@ -824,6 +851,7 @@ document.addEventListener('click',async e=>{
     else if(a==='calMove'){const v=+el.dataset.v;if(v===0){const t=today();S.calY=+t.slice(0,4);S.calM=+t.slice(5,7)}else{let m=S.calM+v,y=S.calY;if(m<1){m=12;y--}if(m>12){m=1;y++}S.calY=y;S.calM=m}render()}
     else if(a==='pf'){S.pf=el.dataset.v;S.picked.clear();render()}
     else if(a==='pt'){S.pt=el.dataset.v;S.picked.clear();render()}
+    else if(a==='cv'){const cv=cvGet();cv[el.dataset.v]=!cv[el.dataset.v];ls.set('absence.cv.v1',JSON.stringify(cv));render()}
     else if(a==='closeOne'){const r=S.byId.get(id);if(!confirm(`${r.n} ${md(r.d)} 소멸 기록을 지울까요?`))return;await closeGone([id])}
     else if(a==='closePicked'){const ids=[...S.picked];if(!confirm(`선택한 ${ids.length}건을 지울까요?`))return;await closeGone(ids)}
     else if(a==='closeAll'){const q=S.eq.trim();const ids=rowsBy(r=>info(r).key==='expired'&&match(r.n,q)).map(r=>r.id);if(!confirm(`소멸된 ${ids.length}건을 모두 지울까요? 노션 백업에서도 휴지통으로 옮겨져요.`))return;await closeGone(ids)}
