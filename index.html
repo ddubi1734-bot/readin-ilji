@@ -263,7 +263,7 @@ input[type=date].inp{width:150px}
         </div>
       </section>
 
-      <div class="tabs" id="tabs"><button class="tab on" data-tab="comment">코멘트</button><button class="tab" data-tab="balmun">발문</button></div>
+      <div class="tabs" id="tabs"><button class="tab on" data-tab="comment">코멘트</button><button class="tab" data-tab="balmun">발문</button><button class="tab" data-tab="history">내역 <span id="hCount" style="font-weight:600;color:var(--muted)"></span></button></div>
       <section class="card pad composer">
         <div id="tab-comment">
           <textarea class="ta c" id="cText" placeholder="오늘 수업 모습, 컨디션, 성격, 주의할 점 등 무엇이든 적어 주세요. (Ctrl+Enter로 저장)"></textarea>
@@ -273,11 +273,8 @@ input[type=date].inp{width:150px}
           <div class="pickrow"><div class="bookbar"><div class="combo"><input id="bookInput" autocomplete="off" spellcheck="false" placeholder="책 제목 (초성 가능, 최근 발문한 책이 위에)"><div class="menu" id="bookMenu"></div></div><button class="outline" id="btnEditBook">발문지 편집</button></div></div>
           <div id="bookArea"></div>
         </div>
+        <div id="tab-history" class="hidden"><div class="colhead"><h3>일지 · 코멘트와 발문</h3><span id="lCount"></span></div><p class="hint" style="font-size:12px;color:var(--muted);margin:-4px 0 10px">노션 학생 일지에 있는 기록이 최신순으로 보여요. 발문 기록은 '발문 탭에서 보기'를 눌러 고치고, 코멘트는 여기서 바로 수정·삭제할 수 있어요.</p><div id="leftList"></div></div>
       </section>
-
-      <div class="cols" style="grid-template-columns:1fr">
-        <section class="card pad"><div class="colhead"><h3>일지 · 코멘트와 발문</h3><span id="lCount"></span></div><div id="leftList"></div></section>
-      </div>
     </div>
   </main>
 </div>
@@ -307,7 +304,7 @@ input[type=date].inp{width:150px}
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-2';
+const APP_VER='2026-11-15-3';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
@@ -478,7 +475,7 @@ $('nsSave').onclick=async()=>{
 $('nsName').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('nsSave').click()});
 
 /* ---------- 탭 ---------- */
-function renderTabs(){if(S.tab!=='comment'&&S.tab!=='balmun')S.tab='comment';document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===S.tab));['comment','balmun'].forEach(k=>$('tab-'+k).classList.toggle('hidden',S.tab!==k))}
+function renderTabs(){if(!['comment','balmun','history'].includes(S.tab))S.tab='comment';document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===S.tab));['comment','balmun','history'].forEach(k=>$('tab-'+k).classList.toggle('hidden',S.tab!==k))}
 $('tabs').onclick=e=>{const t=e.target.closest('[data-tab]');if(!t)return;S.tab=t.dataset.tab;savePref();renderTabs();renderBalmun()};
 
 /* ---------- 오프라인 보관 ---------- */
@@ -530,9 +527,9 @@ function entHtml(b,col){
 function queuedEntries(col){if(!S.sel)return [];return S.queue.filter(q=>q.fn==='bm_add_entry'&&q.args.p_page===S.sel&&q.args.p_col===col).map(q=>'<div class="ent"><div class="top2"><span class="dt">'+dayLabel(q.args.p_day)+'</span><span class="sync wait">보내기 대기</span></div><div class="body">'+esc(q.args.p_text.replace(/^\n/,''))+'</div></div>').join('')}
 function renderTimeline(){
   if(!S.sel)return;
-  if(!S.page){$('leftList').innerHTML='<div class="empty">노션 학생 일지에서 불러오는 중이에요...</div>';$('lCount').textContent='';return}
+  if(!S.page){$('leftList').innerHTML='<div class="empty">노션 학생 일지에서 불러오는 중이에요...</div>';$('lCount').textContent='';$('hCount').textContent='';return}
   const L=S.page.left||[],R=S.page.right||[];
-  $('lCount').textContent=L.length+'개';
+  $('lCount').textContent=L.length+'개';$('hCount').textContent=L.length?L.length:'';
   $('leftList').innerHTML=queuedEntries(0)+(L.map(b=>entHtml(b,0)).join('')||'<div class="empty">아직 기록이 없어요.</div>');
   if(0)$('rightList').innerHTML=S.page.twoCols?(queuedEntries(1)+(R.map(b=>entHtml(b,1)).join('')||'<div class="empty">아직 렙코 기록이 없어요.</div>')):'<div class="empty">이 학생 노션 페이지는 칸이 하나라서 렙코 기록도 왼쪽에 함께 보여요.</div>';
 }
