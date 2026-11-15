@@ -231,7 +231,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-20';
+const APP_VER='2026-11-15-21';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -433,9 +433,9 @@ function vCal(){const y=S.calY,m=S.calM,t=today(),cv=cvGet();
     <button class="ghost" data-act="calMove" data-v="0">오늘</button>
     <span style="flex:1"></span>
     <input class="search" id="calQ" placeholder="학생 찾기 (초성 가능)" value="${esc(S.calQ)}" autocomplete="off"></div>
-    <div class="viewbar"><div class="vgroup"><span class="vlabel">보기</span>${tg('ab','결석','v-ab')}${tg('sh','덜 함','v-sh')}${tg('bk','보강 예약','v-bk')}${tg('mk','보강함','v-mk')}</div>
+    <div class="viewbar"><div class="vgroup"><span class="vlabel" title="버튼 숫자는 지금 캘린더에 보이는 건수예요">보기</span>${tg('ab','결석','v-ab')}${tg('sh','덜 함','v-sh')}${tg('bk','보강 예약','v-bk')}${tg('mk','보강함','v-mk')}</div>
       <button class="vswitch ${cv.done?'on':''}" data-act="cv" data-v="done"><span class="knob"></span>보강 끝난 결석·덜 함도 보기</button></div>
-    <div id="vbody"><div class="mstat"><span>${m}월</span><span class="ms">결석 <b>${mRows.filter(r=>!isShort(r)).length}</b>건 (남음 ${mRows.filter(r=>!isShort(r)&&OPEN.has(info(r).key)).length} · 끝남 ${mRows.filter(r=>!isShort(r)&&!OPEN.has(info(r).key)).length})</span><span class="ms">덜 함 <b>${mRows.filter(isShort).length}</b>건 (남음 ${mRows.filter(r=>isShort(r)&&OPEN.has(info(r).key)).length} · 끝남 ${mRows.filter(r=>isShort(r)&&!OPEN.has(info(r).key)).length})</span><span class="hint">보기 버튼 숫자는 지금 캘린더에 보이는 건수예요 · 빈 칸을 누르면 결석 기록</span></div>
+    <div id="vbody">
     <div class="cal">${[...DOW].map((w,i)=>`<div class="wd ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('')}${cells}</div>
     <div class="legend"><span class="ln st-wait lg"><span class="tg">결석</span>보강 전</span><span class="ln st-booked lg"><span class="tg">결석</span>예약됨</span><span class="ln st-done lg"><span class="tg">결석</span>완료</span><span class="ln sh st-wait lg"><span class="tg">덜</span>수업 덜 함</span><span class="ln bk lg"><span class="tg">보강</span>예약 (할 분)</span><span class="ln bk late lg"><span class="tg">확인</span>보강일 지남</span><span class="ln mk lg"><span class="tg">보강함</span>한 날 (+는 더 하고 감)</span></div></div>`}
 
