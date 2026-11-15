@@ -237,7 +237,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-16-1';
+const APP_VER='2026-11-16-2';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -295,7 +295,7 @@ function info(r){
   if(left<=0)return {...base,key:'expired',label:'소멸'};
   return {...base,key:'wait',label:'보강 전'};
 }
-function ddChip(i){if(i.left==null||!['wait','booked','check'].includes(i.key))return '';if(i.left<=0)return `<span class="dd urgent" title="소멸일 ${md(i.exp)}">기한 지남</span>`;const c=i.left<=7?'urgent':i.left<=14?'soon':'';return `<span class="dd ${c}" title="소멸일 ${kdate(i.exp)}">D-${i.left}</span>`}
+function ddChip(i){if(i.left==null||!['wait','check'].includes(i.key))return '';if(i.left<=0)return `<span class="dd urgent" title="소멸일 ${md(i.exp)}">기한 지남</span>`;const c=i.left<=7?'urgent':i.left<=14?'soon':'';return `<span class="dd ${c}" title="소멸일 ${kdate(i.exp)}">D-${i.left}</span>`}
 function pill(i){return `<span class="pill st-${i.key}">${esc(i.label)}</span>`}
 const OPEN=new Set(['wait','booked','check']);
 function rem(r){if(r.s==='완료'||r.s==='종료')return 0;return Math.max((+r.m||0)-(+r.dm||0),0)}
@@ -362,8 +362,9 @@ function setTab(t){S.tab=t;S.picked.clear();savePref();render();window.scrollTo(
 
 function rowLine(r,o={}){const i=info(r);const st=S.stuMap.get(r.n);
   const acts=[];
-  if(OPEN.has(i.key)||i.key==='expired'){acts.push(`<button class="mini b" data-act="book" data-id="${r.id}">${r.k?'날짜 바꾸기':'예약'}</button>`);acts.push(`<button class="mini g" data-act="makeup" data-id="${r.id}" title="보강한 시간 기록 (일부만 해도 돼요)">보강함</button>`)}
-  if(i.key==='expired')acts.push(`<button class="mini" data-act="closeOne" data-id="${r.id}" title="소멸된 기록 지우기">삭제</button>`);
+  if(OPEN.has(i.key)||i.key==='expired')acts.push(`<button class="mini b" data-act="book" data-id="${r.id}">${r.k?'날짜 바꾸기':'예약'}</button>`);
+  if(OPEN.has(i.key))acts.push(`<button class="mini g" data-act="makeup" data-id="${r.id}" title="보강한 시간 기록 (일부만 해도 돼요)">보강함</button>`);
+  if(i.key==='expired')acts.push(`<button class="mini" data-act="closeOne" data-id="${r.id}" title="확인하면 '종료'로 넘어가 이 목록에서 빠져요">확인</button>`);
   if(i.key==='done'||i.key==='closed')acts.push(`<button class="mini" data-act="reopen" data-id="${r.id}">되돌리기</button>`);
   return `<div class="row" data-id="${r.id}">
     ${o.check?`<input type="checkbox" class="cbx" data-act="pick" data-id="${r.id}" ${S.picked.has(r.id)?'checked':''}>`:''}
@@ -372,7 +373,7 @@ function rowLine(r,o={}){const i=info(r);const st=S.stuMap.get(r.n);
     <span class="mn">${r.m!=null?esc(r.m)+'분':'-'}</span>${subChip(r)}
     ${pill(i)} ${ddChip(i)}${(+r.dm||0)>0&&OPEN.has(i.key)?` <span class="dd part" title="보강한 시간 / 남은 시간">${r.dm}분 함 · ${rem(r)}분 남음</span>`:''}
     <span class="memo" data-act="edit" data-id="${r.id}" title="${esc(r.memo)}">${esc(r.memo)}${r.sync==='pending'?' <span class="dd soon" title="노션에 아직 못 보냈어요">노션 대기</span>':''}</span>
-    <span class="acts">${acts.join('')}<button class="mini" data-act="edit" data-id="${r.id}">수정</button></span></div>`}
+    <span class="acts">${acts.join('')}${i.key==='expired'?'':`<button class="mini" data-act="edit" data-id="${r.id}">수정</button>`}</span></div>`}
 
 /* 오늘 */
 function vHome(c){const t=today();
@@ -389,10 +390,10 @@ function vHome(c){const t=today();
   const missHtml=missed.length?`<div class="banner" style="background:#fff4f2;border-color:#f3cfc7;color:#8a3a2a"><b>온하이에서 아직 안 가져온 날 ${missed.length}일</b> ${missed.slice(-10).map(x=>`<span class="chip" style="cursor:default">${mdw(x)} <a href="#" data-act="onhiSkip" data-d="${x}" title="이날 수업이 없었으면 눌러 주세요" style="color:var(--muted);margin-left:4px">수업 없음</a></span>`).join(' ')}<span class="sum" style="flex-basis:100%">온하이 일별출석부에서 그 날짜를 고르고 "결석·보강 캘린더로 보내기"를 눌러 주세요.</span></div>`:'';
   return `${missHtml}
   <div class="stats">
-    <div class="card stat" data-tab="pend"><div class="l">보강 기다리는 결석</div><div class="v">${open.length}건</div><div class="s">${splitTxt(open)} · 학생 ${new Set(open.map(r=>r.n)).size}명</div></div>
+    <div class="card stat" data-tab="pend"><div class="l">보강 남은 기록</div><div class="v">${open.length}건</div><div class="s">결석 ${open.filter(r=>!isShort(r)).length}건 · 덜 함 ${open.filter(isShort).length}건 · 학생 ${new Set(open.map(r=>r.n)).size}명</div></div>
     <div class="card stat red" data-act="goSoon"><div class="l">2주 안에 소멸</div><div class="v">${soon.length}건</div><div class="s">${soon[0]?'가장 빠른 것 '+md(info(soon[0]).exp):'여유 있어요'}</div></div>
     <div class="card stat purple" data-act="goCheck"><div class="l">보강일 지남 · 완료 확인</div><div class="v">${check.length}건</div><div class="s">보강했으면 완료로 바꿔 주세요</div></div>
-    <div class="card stat blue" data-tab="cal"><div class="l">${+ym.slice(5)}월 결석</div><div class="v">${monthRows.length}건</div><div class="s">${mins(monthRows.reduce((a,r)=>a+(+r.m||0),0))} · 보강 완료 ${monthRows.filter(r=>r.s==='완료').length}건</div></div>
+    <div class="card stat blue" data-tab="cal"><div class="l">${+ym.slice(5)}월 결석</div><div class="v">${monthRows.filter(r=>!isShort(r)).length}건</div><div class="s">${mins(monthRows.filter(r=>!isShort(r)).reduce((a,r)=>a+(+r.m||0),0))} · 덜 함 ${monthRows.filter(isShort).length}건 (${mins(monthRows.filter(isShort).reduce((a,r)=>a+(+r.m||0),0))})</div></div>
   </div>
   <div class="grid2"><div>
     ${sec(`오늘 보강 <span class="n" style="font-weight:600">${kdate(t)}</span>`,'',todayMk,{empty:'오늘 잡힌 보강이 없어요.'})}
@@ -441,8 +442,7 @@ function vCal(){const y=S.calY,m=S.calM,t=today(),cv=cvGet();
   const mRows=S.rows.filter(r=>r.d&&r.d.startsWith(ym));
   return `<div class="calhead"><div class="calnav"><button class="nb" data-act="calMove" data-v="-1" title="지난 달">‹</button><h2>${y}년 ${m}월</h2><button class="nb" data-act="calMove" data-v="1" title="다음 달">›</button></div>
     <button class="ghost" data-act="calMove" data-v="0">오늘</button>
-    <span style="flex:1"></span>
-    <input class="search" id="calQ" placeholder="학생 찾기 (초성 가능)" value="${esc(S.calQ)}" autocomplete="off"></div>
+</div>
     <div class="viewbar"><div class="vgroup"><span class="vlabel" title="버튼 숫자는 지금 캘린더에 보이는 건수예요">보기</span>${tg('ab','결석','v-ab')}${tg('sh','덜 함','v-sh')}${tg('bk','보강 예약','v-bk')}${tg('mk','보강함','v-mk')}</div>
       <button class="vswitch ${cv.done?'on':''}" data-act="cv" data-v="done"><span class="knob"></span>보강 끝난 결석·덜 함도 보기</button></div>
     <div id="vbody">
@@ -492,15 +492,14 @@ function vDone(){const q=S.dq.trim();let list=rowsBy(r=>{const k=info(r).key;ret
 
 /* 소멸 */
 function vExp(){const q=S.eq.trim();const list=rowsBy(r=>info(r).key==='expired'&&match(r.n,q)).sort((a,b)=>a.n.localeCompare(b.n)||(a.d<b.d?-1:1));
-  return `<div class="toolbar"><input class="search" id="eq" placeholder="이름 검색 (초성 가능)" value="${esc(S.eq)}" autocomplete="off"><span class="sp"></span>${list.length?`<button class="danger" data-act="closeAll">${q?'검색된 ':'' }${list.length}건 모두 삭제</button>`:''}</div><div id="vbody">
-    <div class="sum" style="margin:-4px 0 6px">새로 소멸된 ${list.length}건 · ${splitTxt(list)}</div>
-    <p class="sum" style="margin:-4px 0 12px">결석일로부터 ${S.set.expireMonths||2}개월이 지나 보강 기한이 끝난 기록이에요. 삭제하면 앱과 노션에서 지워져요(노션은 휴지통으로, 설정 > 지운 기록에서 최근 것은 되살릴 수 있어요). 예외로 보강해 줄 때는 <b>예약</b>을 누르면 다시 '보강 전'으로 올라가요.</p>
+  return `<div class="toolbar"><input class="search" id="eq" placeholder="이름 검색 (초성 가능)" value="${esc(S.eq)}" autocomplete="off"><span class="sp"></span>${list.length?`<button class="danger" data-act="closeAll">${q?'검색된 ':'' }${list.length}건 모두 확인</button>`:''}</div><div id="vbody">
+    <div class="sum" style="margin:-4px 0 12px">새로 소멸된 ${list.length}건 · ${splitTxt(list)} | ${S.set.expireMonths||2}개월이 지난 기록이에요. <b>확인</b>하면 목록에서 빠지고, 예외로 보강해 줄 땐 <b>예약</b>을 눌러요.</div>
     <div class="card sec"><div class="rows">${list.map(r=>rowLine(r,{check:true})).join('')||'<div class="empty">새로 소멸된 기록이 없어요.</div>'}</div></div></div>`}
 async function closeGone(ids){if(!ids.length)return;
-  const r=await api('ab_delete_many',{p_token:S.token,p_ids:ids});const del=new Set(ids);S.rows=S.rows.filter(x=>!del.has(x.id));indexRows();S.picked.clear();S.pending=r.pending;render();
-  toast(`${r.deleted}건을 지웠어요. 노션 백업에서도 지우는 중이에요...`);
+  const r=await api('ab_close_expired',{p_token:S.token,p_ids:ids});const cl=new Set(ids);S.rows.forEach(x=>{if(cl.has(x.id)&&(x.s==='시작 전'||x.s==='예약 중')){x.s='종료';x.sync='pending'}});S.picked.clear();S.pending=r.pending;render();
+  toast(`${r.closed}건을 확인했어요. 노션 백업에도 '종료'로 바꾸는 중이에요...`);
   for(let i=0;i<40&&S.pending>0;i++){try{const p=await api('ab_push_pending',{p_token:S.token});S.pending=p.pending;syncPill(`노션 백업 중... 남은 ${p.pending}건`);if(!p.sent&&p.pending)break}catch(e){break}}
-  await load();toast(S.pending?`삭제는 끝났어요. 노션에 못 보낸 ${S.pending}건은 위쪽 버튼으로 다시 보내 주세요.`:'삭제를 마쳤고 노션에서도 지웠어요.',!!S.pending)}
+  await load();toast(S.pending?`확인은 끝났어요. 노션에 못 보낸 ${S.pending}건은 위쪽 버튼으로 다시 보내 주세요.`:'확인을 마쳤고 노션에도 반영했어요.',!!S.pending)}
 
 /* 학생별 */
 function stuStats(){const m=new Map();
@@ -557,7 +556,7 @@ function vStat(){const t=today();const months=[];for(let i=11;i>=0;i--)months.pu
 
 /* ---------- 선택 일괄 처리 ---------- */
 function renderBulk(){const el=$('bulk');if(!S.picked.size||(S.tab!=='pend'&&S.tab!=='exp')){el.classList.add('hidden');return}
-  if(S.tab==='exp'){const rs0=[...S.picked].map(id=>S.byId.get(id)).filter(Boolean);el.innerHTML=`<span><b>${rs0.length}건</b> 선택 · ${splitTxt(rs0)}</span><button class="w" data-act="closePicked">선택한 것 삭제</button><button class="x" data-act="bulkClear">선택 해제</button>`;el.classList.remove('hidden');return}
+  if(S.tab==='exp'){const rs0=[...S.picked].map(id=>S.byId.get(id)).filter(Boolean);el.innerHTML=`<span><b>${rs0.length}건</b> 선택 · ${splitTxt(rs0)}</span><button class="w" data-act="closePicked">선택한 것 확인</button><button class="x" data-act="bulkClear">선택 해제</button>`;el.classList.remove('hidden');return}
   const rs=[...S.picked].map(id=>S.byId.get(id)).filter(Boolean);const tot=remSum(rs);
   el.innerHTML=`<span><b>${rs.length}건</b> 선택 · ${splitTxt(rs)}</span><button class="w" data-act="bulkBook">한 번에 예약</button><button class="w" data-act="bulkDone">한 번에 완료</button><button class="w" data-act="bulkMsg">안내 문구</button><button class="x" data-act="bulkClear">선택 해제</button>`;
   el.classList.remove('hidden')}
@@ -838,21 +837,26 @@ function openOnhi(p){const d=p.d;
 function hasBatchim(s){const c=(s||'').charCodeAt((s||'').length-1)-0xAC00;return c>=0&&c<11172&&c%28!==0}
 function callName(n){const nm=String(n||'').replace(/\s*\(.*\)\s*$/,'');const g=nm.length>=3?nm.slice(1):nm;const b=hasBatchim(g);return {g,sub:g+(b?'이가':'가'),to:g+(b?'이에게':'에게'),is:g+(b?'이':'')}}
 function msgItem(r,useMin){const m=useMin!=null?useMin:rem(r);const what=isShort(r)?`수업 중 덜 한 ${mins(m)}`:`결석한 ${mins(m)}`;const sb=subOf(r)!=='리드인'?` (${subOf(r)})`:'';return `${kdate(r.d)}${sb} ${what}`}
+function msgLines(rs,mf){const out=[];const ab=rs.filter(r=>!isShort(r)),sh=rs.filter(isShort);ab.forEach(r=>out.push(msgItem(r,mf(r))));
+  const g=new Map();sh.forEach(r=>{const k=subOf(r);if(!g.has(k))g.set(k,[]);g.get(k).push(r)});
+  for(const [sb,x] of g){if(x.length===1){out.push(msgItem(x[0],mf(x[0])));continue}const tot=x.reduce((a,r)=>a+mf(r),0);const ms=[...new Set(x.map(r=>+r.d.slice(5,7)))];
+    const when=ms.length===1?`${ms[0]}월 중`:`${kdate(x[0].d).replace(/\(.\)$/,'')}~${kdate(x[x.length-1].d).replace(/\(.\)$/,'')}`;out.push(`${when}${sb!=='리드인'?' ('+sb+')':''} 수업 덜 한 시간 ${mins(tot)} (${x.length}번)`)}
+  return out}
 function msgFor(list){list=list.slice().sort((a,b)=>(a.d||'').localeCompare(b.d||''));const byN=new Map();list.forEach(r=>{if(!byN.has(r.n))byN.set(r.n,[]);byN.get(r.n).push(r)});
   const out=[];for(const [n,rs] of byN){const c=callName(n);
     const booked=rs.filter(r=>r.k&&r.s!=='완료'),wait=rs.filter(r=>!r.k&&r.s!=='완료'),done=rs.filter(r=>r.s==='완료');
-    const lines=['안녕하세요, 어머니! 리드인입니다 :)'];
+    const lines=['안녕하세요! 리드인입니다 :)'];
     if(booked.length){const g=new Map();booked.forEach(r=>{if(!g.has(r.k))g.set(r.k,[]);g.get(r.k).push(r)});
       lines.push('');lines.push(`${c.is} 보강 일정을 이렇게 잡아 두었어요.`);
-      for(const [k,x] of [...g.entries()].sort((a,b)=>a[0].localeCompare(b[0])))lines.push(`- ${kdate(k)}에 ${mins(x.reduce((a,r)=>a+plan(r),0))} (${x.map(r=>msgItem(r,plan(r))+' 보강').join(', ')})`);
+      for(const [k,x] of [...g.entries()].sort((a,b)=>a[0].localeCompare(b[0])))lines.push(`- ${kdate(k)}에 ${mins(x.reduce((a,r)=>a+plan(r),0))} (${msgLines(x,plan).join(', ')} 보강)`);
       lines.push('그날 차근차근 잘 채워 줄게요!')}
     if(wait.length){const exp=wait.map(r=>info(r).exp).filter(x=>x&&x>=today()).sort()[0];
-      lines.push('');lines.push(`${c.sub} 아직 보강하지 못한 시간이 있어서 알려 드려요.`);wait.forEach(r=>lines.push('- '+msgItem(r)));
+      lines.push('');lines.push(`${c.sub} 아직 보강하지 못한 시간이 있어서 알려 드려요.`);msgLines(wait,rem).forEach(s=>lines.push('- '+s));
       if(wait.length>1)lines.push(`모두 합하면 ${mins(remSum(wait))}이에요.`);
       lines.push('편하신 날짜를 알려 주시면 그에 맞춰 보강 일정을 잡아 드릴게요.');
       if(exp)lines.push(`보강은 빠진 날로부터 ${S.set.expireMonths||2}개월 안에 할 수 있어서, ${kdate(exp)} 전에는 꼭 챙겨 드리고 싶어요.`)}
     if(done.length&&!booked.length&&!wait.length){const ks=[...new Set(done.map(r=>r.k).filter(Boolean))].map(kdate);
-      lines.push('');lines.push(`${c.sub} 보강을 ${ks.length?ks.join(', ')+'에 ':''}모두 잘 마쳤어요.`);done.forEach(r=>lines.push('- '+msgItem(r,+r.m||0)));lines.push(`끝까지 집중해 준 ${c.to} 칭찬 많이 해 주세요!`)}
+      lines.push('');lines.push(`${c.sub} 보강을 ${ks.length?ks.join(', ')+'에 ':''}모두 잘 마쳤어요.`);msgLines(done,r=>+r.m||0).forEach(s=>lines.push('- '+s));lines.push(`끝까지 집중해 준 ${c.to} 칭찬 많이 해 주세요!`)}
     lines.push('');lines.push('늘 믿고 보내 주셔서 감사해요. 좋은 하루 보내세요!');out.push(lines.join('\n'))}
   return out.join('\n\n')}
 function openMsg(list){const m=openModal(`<h2>학부모 안내 문구</h2><div class="sub">고칠 부분은 고친 뒤 복사해서 문자·카톡에 붙여 넣으세요.</div>
@@ -926,9 +930,9 @@ document.addEventListener('click',async e=>{
     else if(a==='pt'){S.pt=el.dataset.v;S.picked.clear();render()}
     else if(a==='onhiSkip'){e.preventDefault();S.onhiDays=await api('ab_onhi_mark',{p_token:S.token,p_day:el.dataset.d,p_status:'skip'});render();toast(`${mdw(el.dataset.d)}은 수업 없는 날로 표시했어요.`)}
     else if(a==='cv'){const cv=cvGet();cv[el.dataset.v]=!cv[el.dataset.v];ls.set('absence.cv.v1',JSON.stringify(cv));render()}
-    else if(a==='closeOne'){const r=S.byId.get(id);if(!confirm(`${r.n} ${md(r.d)} 소멸 기록을 지울까요?`))return;await closeGone([id])}
-    else if(a==='closePicked'){const ids=[...S.picked];if(!confirm(`선택한 ${ids.length}건을 지울까요?`))return;await closeGone(ids)}
-    else if(a==='closeAll'){const q=S.eq.trim();const ids=rowsBy(r=>info(r).key==='expired'&&match(r.n,q)).map(r=>r.id);if(!confirm(`소멸된 ${ids.length}건을 모두 지울까요? 노션 백업에서도 휴지통으로 옮겨져요.`))return;await closeGone(ids)}
+    else if(a==='closeOne'){const r=S.byId.get(id);await closeGone([id])}
+    else if(a==='closePicked'){const ids=[...S.picked];await closeGone(ids)}
+    else if(a==='closeAll'){const q=S.eq.trim();const ids=rowsBy(r=>info(r).key==='expired'&&match(r.n,q)).map(r=>r.id);if(!confirm(`소멸된 ${ids.length}건을 모두 확인할까요? '종료'로 바뀌어 이 목록에서 빠져요.`))return;await closeGone(ids)}
     else if(a==='pg'){S.pg=!S.pg;savePref();render()}
     else if(a==='sfilter'){S.sfilter=el.dataset.v;render()}
     else if(a==='ssort'){S.ssort=el.dataset.v;render()}
