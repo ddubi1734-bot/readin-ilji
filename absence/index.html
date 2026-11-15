@@ -231,7 +231,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-21';
+const APP_VER='2026-11-15-22';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -585,27 +585,26 @@ function askBook(r){return new Promise(res=>{const left=rem(r);let pm=r.pm&&r.pm
   draw();setTimeout(()=>m.querySelector('#bkO').focus(),30)})}
 
 function nameOptions(){const names=new Set(S.students.filter(s=>s.s==='재원').map(s=>s.n));S.rows.forEach(r=>r.n&&names.add(r.n));S.students.forEach(s=>names.add(s.n));return [...names]}
-function lastMinutes(n){let best=null;for(const r of S.rows)if(r.n===n&&r.m!=null&&(!best||r.d>best.d))best=r;return best?best.m:60}
+function lastMinutes(n){let best=null;for(const r of S.rows)if(r.n===n&&r.m!=null&&r.memo!=='수업 덜 함'&&(!best||r.d>best.d))best=r;return best?best.m:60}
 
 /* 결석 기록 (여러 명) */
-function openAdd(day){const items=[];let d=day||today();let typ='';let sub='리드인';const QM=()=>typ?[10,15,20,30,40,50]:[30,50,60,90,120,180];const defM=n=>typ?20:lastMinutes(n);
+function openAdd(day){const items=[];let d=day||today();let typ='';let sub='리드인';const QM=()=>typ?[10,15,20,30,40,50]:[30,50,60,90,120,180];const defM=n=>typ?null:lastMinutes(n);
   const act=S.students.filter(s=>s.s==='재원').sort((a,b)=>a.n.localeCompare(b.n));
   const m=openModal(`<h2>결석 기록</h2><div class="sub">여러 학생을 한 번에 기록할 수 있어요. 기록하면 노션 결석 캘린더에도 바로 들어가요. 수업 시간을 다 못 채운 날은 '수업 덜 함'으로 남은 시간만 적어 주세요.</div>
     <div class="field"><label>수업</label><div class="seg" id="amU">${SUBS.map(s=>`<button data-u="${s}">${s}</button>`).join('')}</div></div>
     <div class="field"><label>구분</label><div class="seg" id="amT"><button data-t="">결석</button><button data-t="수업 덜 함">수업 덜 함 (남은 시간은 다음에)</button></div></div>
-    <div class="field"><label>결석 날짜</label><div class="hrow"><input class="inp" type="date" id="amD" value="${d}"><button class="ghost" data-q="0">오늘</button><button class="ghost" data-q="-1">어제</button><span id="amDW" class="sum"></span></div></div>
+    <div class="field"><label>결석 날짜</label><div class="hrow"><input class="inp" type="date" id="amD" value="${d}"><button class="ghost" data-q="0">오늘</button><span id="amDW" class="sum"></span></div></div>
     <div class="field"><label>학생</label><input class="inp" id="amQ" placeholder="이름 검색 (초성 가능) · Enter로 추가" autocomplete="off" spellcheck="false"><div class="sug" id="amSug"></div></div>
     <div class="am-list" id="amList"></div>
     <details class="more"><summary>재원생 명단에서 고르기 (${act.length}명)</summary><div class="sgrid" id="amGrid"></div></details>
     <div class="mfoot"><span class="sum" id="amSum"></span><span class="sp"></span><button class="ghost" id="amC">취소</button><button class="primary" id="amO">기록하기</button></div>`,'wide');
   const q=m.querySelector('#amQ');
   const isDup=n=>S.rows.some(r=>r.n===n&&r.d===d&&subOf(r)===sub);
-  function add(n){n=n.trim();if(!n)return;if(items.some(x=>x.n===n)){toast(n+' 학생은 이미 넣었어요.');return}items.push({n,m:defM(n)});q.value='';draw();q.focus()}
+  function add(n){n=n.trim();if(!n)return;if(items.some(x=>x.n===n)){toast(n+' 학생은 이미 넣었어요.');return}items.push({n,m:defM(n)});q.value='';draw();const ins=m.querySelectorAll('#amList input[data-i]');const last=ins[ins.length-1];if(last&&typ){last.focus();last.select()}else q.focus()}
   function draw(){
     m.querySelector('#amDW').textContent=d?kdate(d):'';m.querySelectorAll('#amU button').forEach(b=>b.classList.toggle('on',b.dataset.u===sub));m.querySelectorAll('#amT button').forEach(b=>b.classList.toggle('on',b.dataset.t===typ));
     m.querySelector('#amList').innerHTML=items.map((x,i)=>`<div class="am-item ${isDup(x.n)?'dup':''}"><span class="n">${esc(x.n)}</span>
       <input class="inp" type="number" min="0" step="5" value="${x.m??''}" data-i="${i}">분
-      <span class="seg small">${QM().map(v=>`<button data-i="${i}" data-m="${v}" class="${+x.m===v?'on':''}">${v}</button>`).join('')}</span>
       ${isDup(x.n)?`<span class="warn">이 날 ${sub} 결석이 이미 있어요 (건너뜀)</span>`:''}<button class="x" data-rm="${i}" title="빼기">×</button></div>`).join('')||'<div class="empty" style="padding:6px 2px">아직 고른 학생이 없어요.</div>';
     const v=items.filter(x=>!isDup(x.n));m.querySelector('#amSum').textContent=v.length?`${v.length}명 · ${mins(v.reduce((a,x)=>a+(+x.m||0),0))}`:'';
     m.querySelector('#amO').textContent=v.length?`${v.length}명 기록하기`:'기록하기';m.querySelector('#amO').disabled=!v.length;
