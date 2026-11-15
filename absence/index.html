@@ -198,7 +198,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-4';
+const APP_VER='2026-11-15-5';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -237,7 +237,7 @@ function match(name,q){if(!q)return true;q=q.replace(/\s/g,'');const n=String(na
 function shortGrade(g){if(!g)return '';return String(g).replace('초등학교 ','초').replace('중학교 ','중').replace('고등학교 ','고').replace('학년','')}
 
 /* ---------- 상태 ---------- */
-const S={token:ls.get(TOKEN_KEY),rows:[],allocs:[],students:[],stuMap:new Map(),set:{expireMonths:2},pending:0,pulledAt:null,
+const S={token:ls.get(TOKEN_KEY),rows:[],allocs:[],bal:new Map(),balLog:[],students:[],stuMap:new Map(),set:{expireMonths:2},pending:0,pulledAt:null,
   tab:'home',calY:0,calM:0,calQ:'',showMk:true,pq:'',pf:'all',pg:true,dq:'',dm:'',eq:'',sq:'',ssort:'owed',picked:new Set(),busy:false};
 try{const p=JSON.parse(ls.get(PREF_KEY)||'{}');if(p.tab)S.tab=p.tab;if(p.pg!=null)S.pg=p.pg;if(p.showMk!=null)S.showMk=p.showMk}catch(e){}
 function savePref(){ls.set(PREF_KEY,JSON.stringify({tab:S.tab,pg:S.pg,showMk:S.showMk}))}
@@ -261,6 +261,9 @@ function pill(i){return `<span class="pill st-${i.key}">${esc(i.label)}</span>`}
 const OPEN=new Set(['wait','booked','check']);
 function rem(r){if(r.s==='완료'||r.s==='종료')return 0;return Math.max((+r.m||0)-(+r.dm||0),0)}
 function remSum(list){return list.reduce((a,r)=>a+rem(r),0)}
+function setBal(x){if(!x||!x.bal)return;S.bal=new Map(x.bal.map(o=>[o.n,o.m]));S.balLog=x.balLog||[]}
+function bal(n){return S.bal.get(n)||0}
+function balTotal(){let t=0,c=0;for(const v of S.bal.values())if(v>0){t+=v;c++}return {t,c}}
 function plan(r){const x=rem(r);return r.pm&&r.pm<x?+r.pm:x}
 function rowsBy(fn){return S.rows.filter(fn)}
 function indexRows(){S.byId=new Map(S.rows.map(r=>[r.id,r]))}
@@ -276,7 +279,7 @@ async function load(){
   if(!S.token){show('login');return}
   if(!S.rows.length)show('loading');
   try{const b=await api('ab_bootstrap',{p_token:S.token});
-    S.rows=b.rows||[];S.allocs=b.allocs||[];S.students=b.students||[];S.set=b.settings||S.set;S.pending=b.pending||0;S.pulledAt=S.set.pulledAt||S.pulledAt;
+    S.rows=b.rows||[];S.allocs=b.allocs||[];setBal(b);S.students=b.students||[];S.set=b.settings||S.set;S.pending=b.pending||0;S.pulledAt=S.set.pulledAt||S.pulledAt;
     S.stuMap=new Map(S.students.map(s=>[s.n,s]));indexRows();show('app');render()}
   catch(e){if(String(e.message)!=='AUTH'){show(S.rows.length?'app':'login');$('loginErr').textContent=errText(e);toast(errText(e),true)}}
 }
@@ -337,7 +340,7 @@ function vHome(c){const t=today();
   const sec=(title,hint,list,o={})=>`<section class="card sec"><h3>${title} <span class="n">${list.length}건</span>${o.btn||''}</h3>${hint?`<p class="hint">${hint}</p>`:''}<div class="rows">${list.length?list.map(r=>rowLine(r)).join(''):`<div class="empty">${o.empty||'없어요.'}</div>`}</div></section>`;
   return `
   <div class="stats">
-    <div class="card stat" data-tab="pend"><div class="l">보강 기다리는 결석</div><div class="v">${open.length}건</div><div class="s">합계 ${mins(owed)} · 학생 ${new Set(open.map(r=>r.n)).size}명</div></div>
+    <div class="card stat" data-tab="pend"><div class="l">보강 기다리는 결석</div><div class="v">${open.length}건</div><div class="s">합계 ${mins(owed)} · 학생 ${new Set(open.map(r=>r.n)).size}명${balTotal().t?` · 못 한 시간 ${mins(balTotal().t)} 따로`:''}</div></div>
     <div class="card stat red" data-act="goSoon"><div class="l">2주 안에 소멸</div><div class="v">${soon.length}건</div><div class="s">${soon[0]?'가장 빠른 것 '+md(info(soon[0]).exp):'여유 있어요'}</div></div>
     <div class="card stat purple" data-act="goCheck"><div class="l">보강일 지남 · 완료 확인</div><div class="v">${check.length}건</div><div class="s">보강했으면 완료로 바꿔 주세요</div></div>
     <div class="card stat blue" data-tab="cal"><div class="l">${+ym.slice(5)}월 결석</div><div class="v">${monthRows.length}건</div><div class="s">${mins(monthRows.reduce((a,r)=>a+(+r.m||0),0))} · 보강 완료 ${monthRows.filter(r=>r.s==='완료').length}건</div></div>
@@ -393,7 +396,7 @@ function vPend(){const list=pendRows();const nod=rowsBy(r=>info(r).key==='nodate
       const minLeft=Math.min(...rs.filter(r=>info(r).key==='wait').map(r=>info(r).left));
       const allPicked=rs.every(r=>S.picked.has(r.id));
       return `<div class="card grp"><div class="gh"><input type="checkbox" class="cbx" data-act="pickGroup" data-n="${esc(n)}" ${allPicked?'checked':''} title="이 학생 기록 모두 선택">
-        <span class="gn" data-act="student" data-n="${esc(n)}">${esc(n)}</span><span class="gs">${st?esc([shortGrade(st.g),st.s!=='재원'?st.s:''].filter(Boolean).join(' · ')):''}</span>
+        <span class="gn" data-act="student" data-n="${esc(n)}">${esc(n)}</span>${bal(n)>0?`<span class="dd part" title="날짜 없이 쌓인 못 한 시간">+ 못 한 시간 ${bal(n)}분</span>`:''}<span class="gs">${st?esc([shortGrade(st.g),st.s!=='재원'?st.s:''].filter(Boolean).join(' · ')):''}</span>
         ${isFinite(minLeft)?ddChip({key:'wait',left:minLeft,exp:addDays(today(),minLeft)}):''}
         <button class="mini g" data-act="makeupStu" data-n="${esc(n)}" title="이 학생 보강한 시간 기록">보강 기록</button><button class="mini" data-act="msg" data-n="${esc(n)}" title="학부모 안내 문구 만들기">안내 문구</button>
         <span class="tot">${rs.length}건 · ${mins(tot)}</span></div>
@@ -401,9 +404,14 @@ function vPend(){const list=pendRows();const nod=rowsBy(r=>info(r).key==='nodate
   }else{body=`<div class="card sec"><div class="rows">${list.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.n.localeCompare(b.n)).map(r=>rowLine(r,{check:true})).join('')}</div></div>`}
   return `<div class="toolbar"><input class="search" id="pq" placeholder="이름 검색 (초성 가능)" value="${esc(S.pq)}" autocomplete="off">${chips}<span class="sp"></span>
     <button class="chip ${S.pg?'on':''}" data-act="pg">학생별로 묶기</button></div><div id="vbody">
+    ${balCard()}
     ${nod.length?`<div class="banner">이름이나 날짜가 비어 있는 기록이 ${nod.length}건 있어요 (노션의 '날짜 없음'). <button class="mini" data-act="showNodate">보기·정리</button></div>`:''}
     <div class="sum" style="margin-bottom:10px">${list.length}건 · 합계 <b>${mins(total)}</b> · 학생 ${new Set(list.map(r=>r.n)).size}명 &nbsp;|&nbsp; 여러 건을 체크하면 한 번에 예약·완료할 수 있어요.</div>
     ${body||'<div class="card sec"><div class="empty">해당하는 기록이 없어요.</div></div>'}</div>`}
+
+function balCard(){const q=S.pq.trim();const list=[...S.bal.entries()].filter(([n,v])=>v>0&&match(n,q)).sort((a,b)=>a[0].localeCompare(b[0]));
+  return `<div class="card sec" style="margin-bottom:12px"><h3>못 한 시간 <span class="n">날짜 없음 · 소멸 없음 · 학생마다 하나</span><button class="outline" style="margin-left:auto" data-act="balAdd" data-n="">+ 못 한 시간</button></h3>
+    <div class="rows">${list.map(([n,v])=>`<div class="row"><span class="nm" data-act="student" data-n="${esc(n)}">${esc(n)}</span><span class="mn" style="color:var(--amber)">${v}분</span><span class="memo"></span><span class="acts"><button class="mini" data-act="balAdd" data-n="${esc(n)}">더하기·빼기</button><button class="mini g" data-act="balMakeup" data-n="${esc(n)}">보강함</button></span></div>`).join('')||'<div class="empty" style="padding:6px 4px">쌓인 못 한 시간이 없어요. 날짜 없이 몇 분만 남길 때 쓰세요.</div>'}</div></div>`}
 
 /* 보강 완료 */
 function vDone(){const q=S.dq.trim();let list=rowsBy(r=>{const k=info(r).key;return (k==='done'||k==='closed')&&match(r.n,q)});
@@ -427,8 +435,9 @@ function vExp(){const q=S.eq.trim();const list=rowsBy(r=>info(r).key==='expired'
 
 /* 학생별 */
 function stuStats(){const m=new Map();
-  const get=n=>{if(!m.has(n))m.set(n,{n,total:0,owed:0,owedN:0,done:0,exp:0,last:'',expSoon:null});return m.get(n)};
+  const get=n=>{if(!m.has(n))m.set(n,{n,total:0,owed:0,owedN:0,done:0,exp:0,last:'',expSoon:null,bal:0});return m.get(n)};
   for(const s of S.students)if(s.s==='재원')get(s.n);
+  for(const [n,v] of S.bal.entries())if(v>0)get(n).bal=v;
   for(const r of S.rows){if(!r.n)continue;const x=get(r.n),i=info(r);x.total++;if(r.d&&r.d>x.last)x.last=r.d;
     if(OPEN.has(i.key)){x.owed+=rem(r);x.owedN++;if(i.key==='wait'&&(x.expSoon==null||i.left<x.expSoon))x.expSoon=i.left}
     if(i.key==='done')x.done++;if(i.key==='expired')x.exp++}
@@ -436,15 +445,15 @@ function stuStats(){const m=new Map();
 function vStu(){const q=S.sq.trim();let list=stuStats().filter(x=>match(x.n,q));
   const ac=r=>{const s=S.stuMap.get(r.n);return s?s.s:'기록만'};
   if(S.sfilter&&S.sfilter!=='all')list=list.filter(x=>ac(x)===S.sfilter);
-  const srt={owed:(a,b)=>b.owed-a.owed||a.n.localeCompare(b.n),name:(a,b)=>a.n.localeCompare(b.n),total:(a,b)=>b.total-a.total,last:(a,b)=>(b.last||'').localeCompare(a.last||''),exp:(a,b)=>b.exp-a.exp}[S.ssort]||((a,b)=>0);
+  const srt={owed:(a,b)=>(b.owed+b.bal)-(a.owed+a.bal)||a.n.localeCompare(b.n),bal:(a,b)=>b.bal-a.bal||a.n.localeCompare(b.n),name:(a,b)=>a.n.localeCompare(b.n),total:(a,b)=>b.total-a.total,last:(a,b)=>(b.last||'').localeCompare(a.last||''),exp:(a,b)=>b.exp-a.exp}[S.ssort]||((a,b)=>0);
   list.sort(srt);
   const th=(k,l,c='')=>`<th class="${c}" data-act="ssort" data-v="${k}">${l}${S.ssort===k?' ▾':''}</th>`;
   return `<div class="toolbar"><input class="search" id="sq" placeholder="이름 검색 (초성 가능)" value="${esc(S.sq)}" autocomplete="off">
     ${['all','재원','휴원','퇴원','기록만'].map(k=>`<button class="chip ${(S.sfilter||'all')===k?'on':''}" data-act="sfilter" data-v="${k}">${k==='all'?'전체':k==='기록만'?'명단에 없음':k}</button>`).join('')}
     </div><div id="vbody"><div class="sum" style="margin:-4px 0 8px">${list.length}명</div>
-    <div class="tw"><table class="t"><thead><tr>${th('name','이름')}<th>상태</th>${th('owed','보강 전','num')}${th('total','전체 결석','num')}<th class="num">완료</th>${th('exp','소멸','num')}${th('last','최근 결석')}<th>소멸 임박</th></tr></thead><tbody>
+    <div class="tw"><table class="t"><thead><tr>${th('name','이름')}<th>상태</th>${th('owed','보강 전','num')}${th('bal','못 한 시간','num')}${th('total','전체 결석','num')}<th class="num">완료</th>${th('exp','소멸','num')}${th('last','최근 결석')}<th>소멸 임박</th></tr></thead><tbody>
     ${list.map(x=>{const s=S.stuMap.get(x.n);return `<tr style="cursor:pointer" data-act="student" data-n="${esc(x.n)}"><td style="font-weight:800">${esc(x.n)}</td><td style="color:var(--muted)">${s?esc([s.s,shortGrade(s.g)].filter(Boolean).join(' · ')):'명단에 없음'}</td>
-      <td class="num" style="font-weight:800;color:${x.owed?'var(--amber)':'#b0bbb7'}">${x.owedN?x.owedN+'건 · '+mins(x.owed):'-'}</td><td class="num">${x.total||'-'}</td><td class="num">${x.done||'-'}</td><td class="num" style="color:${x.exp?'var(--red)':'#b0bbb7'}">${x.exp||'-'}</td><td>${x.last?ymd(x.last):'-'}</td><td>${x.expSoon!=null?ddChip({key:'wait',left:x.expSoon,exp:addDays(today(),x.expSoon)}):''}</td></tr>`}).join('')}
+      <td class="num" style="font-weight:800;color:${x.owed?'var(--amber)':'#b0bbb7'}">${x.owedN?x.owedN+'건 · '+mins(x.owed):'-'}</td><td class="num" style="font-weight:800;color:${x.bal?'var(--amber)':'#b0bbb7'}">${x.bal?x.bal+'분':'-'}</td><td class="num">${x.total||'-'}</td><td class="num">${x.done||'-'}</td><td class="num" style="color:${x.exp?'var(--red)':'#b0bbb7'}">${x.exp||'-'}</td><td>${x.last?ymd(x.last):'-'}</td><td>${x.expSoon!=null?ddChip({key:'wait',left:x.expSoon,exp:addDays(today(),x.expSoon)}):''}</td></tr>`}).join('')}
     </tbody></table></div></div>`}
 
 /* 통계 */
@@ -516,24 +525,50 @@ function askBook(r){return new Promise(res=>{const left=rem(r);let pm=r.pm&&r.pm
   m.addEventListener('keyup',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT')m.querySelector('#bkO').click()});
   draw();setTimeout(()=>m.querySelector('#bkO').focus(),30)})}
 
+function openBal(n,back){let name=n||'',sign=1,mv=10;
+  const m=openModal(`<h2>못 한 시간</h2><div class="sub">날짜 없이 학생마다 하나씩 쌓아 두는 시간이에요. 소멸되지 않아요.</div>
+    <div class="field"><label>학생</label><input class="inp" id="blN" value="${esc(name)}" placeholder="이름 (초성 가능)" autocomplete="off" spellcheck="false"><div class="sug" id="blSug"></div></div>
+    <div class="info" id="blNow"></div>
+    <div class="field"><div class="seg" id="blS"><button data-s="1">더하기 (못 한 시간 생김)</button><button data-s="-1">빼기 (보강했거나 잘못 넣음)</button></div></div>
+    <div class="field"><label>시간(분)</label><div class="hrow"><input class="inp" style="max-width:110px" type="number" min="1" step="5" id="blM" value="${mv}"><span class="seg small" id="blMs">${[5,10,15,20,30,60].map(v=>`<button data-m="${v}">${v}</button>`).join('')}</span></div></div>
+    <div class="field"><label>메모 (선택)</label><input class="inp" id="blMemo" placeholder="예: 수업 10분 일찍 끝남"></div>
+    <div class="mfoot"><span class="sp"></span><button class="ghost" id="blC">취소</button><button class="primary" id="blO">저장</button></div>`);
+  const draw=()=>{const v=bal(name);m.querySelector('#blNow').innerHTML=name?`지금 <b>${esc(name)}</b> 못 한 시간 <b>${v}분</b> → 저장하면 <b>${Math.max(0,v+sign*(+mv||0))}분</b>`:'학생을 골라 주세요.';
+    m.querySelectorAll('#blS button').forEach(b=>b.classList.toggle('on',+b.dataset.s===sign));m.querySelectorAll('#blMs button').forEach(b=>b.classList.toggle('on',+b.dataset.m===+mv));
+    m.querySelector('#blO').disabled=!(name&&+mv>0&&!(sign<0&&v<=0))};
+  const sug=()=>{const v=m.querySelector('#blN').value.trim();const el=m.querySelector('#blSug');if(!v||v===name){el.innerHTML='';return}
+    const c=nameOptions().filter(x=>match(x,v)).sort((a,b)=>a.localeCompare(b)).slice(0,10);el.innerHTML=c.map(x=>`<button class="chip" data-pickn="${esc(x)}">${esc(x)}${bal(x)?' · '+bal(x)+'분':''}</button>`).join('')+(c.includes(v)||/^[ㄱ-ㅎ\s]+$/.test(v)?'':`<button class="chip" data-pickn="${esc(v)}">"${esc(v)}" 그대로</button>`)};
+  m.querySelector('#blN').addEventListener('input',e=>{const v=e.target.value.trim();if(v!==name)name=nameOptions().includes(v)?v:'';sug();draw()});
+  m.querySelector('#blN').addEventListener('keyup',e=>{if(e.key==='Enter'){sug();const f=m.querySelector('#blSug [data-pickn]');if(f){name=f.dataset.pickn;m.querySelector('#blN').value=name;sug();draw()}}});
+  m.querySelector('#blM').oninput=e=>{mv=+e.target.value||0;draw()};
+  m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.s){sign=+b.dataset.s;draw()}else if(b.dataset.m){mv=+b.dataset.m;m.querySelector('#blM').value=mv;draw()}
+    else if(b.dataset.pickn!=null){name=b.dataset.pickn;m.querySelector('#blN').value=name;sug();draw()}});
+  m.querySelector('#blC').onclick=()=>{closeModal();if(back)openStudent(back)};
+  m.querySelector('#blO').onclick=async()=>{const b=m.querySelector('#blO');b.disabled=true;
+    try{const r=await api('ab_bal_add',{p_token:S.token,p:{items:[{n:name,m:sign*mv}],memo:m.querySelector('#blMemo').value}});setBal(r);closeModal();render();if(back)openStudent(back);
+      toast(`${name} 못 한 시간 ${sign>0?'+':'-'}${mv}분 → ${bal(name)}분${r.failed?' (노션 반영 실패)':''}`,!!r.failed)}catch(er){toast(errText(er),true);b.disabled=false}};
+  draw();sug();setTimeout(()=>m.querySelector(name?'#blM':'#blN').focus(),30)}
+
 function nameOptions(){const names=new Set(S.students.filter(s=>s.s==='재원').map(s=>s.n));S.rows.forEach(r=>r.n&&names.add(r.n));S.students.forEach(s=>names.add(s.n));return [...names]}
 function lastMinutes(n){let best=null;for(const r of S.rows)if(r.n===n&&r.m!=null&&(!best||r.d>best.d))best=r;return best?best.m:60}
 
 /* 결석 기록 (여러 명) */
-function openAdd(day){const items=[];let d=day||today();let typ='';const QM=()=>typ?[10,15,20,30,40,50]:[30,50,60,90,120,180];const defM=n=>typ?20:lastMinutes(n);
+function openAdd(day){const items=[];let d=day||today();let typ='';const QM=()=>typ==='__bal'?[5,10,15,20,30]:typ?[10,15,20,30,40,50]:[30,50,60,90,120,180];const defM=n=>typ==='__bal'?10:typ?20:lastMinutes(n);
   const act=S.students.filter(s=>s.s==='재원').sort((a,b)=>a.n.localeCompare(b.n));
   const m=openModal(`<h2>결석 기록</h2><div class="sub">여러 학생을 한 번에 기록할 수 있어요. 기록하면 노션 결석 캘린더에도 바로 들어가요. 수업 시간을 다 못 채운 날은 '수업 덜 함'으로 남은 시간만 적어 주세요.</div>
-    <div class="field"><label>구분</label><div class="seg" id="amT"><button data-t="">결석</button><button data-t="수업 덜 함">수업 덜 함 (남은 시간은 다음에)</button></div></div>
-    <div class="field"><label>결석 날짜</label><div class="hrow"><input class="inp" type="date" id="amD" value="${d}"><button class="ghost" data-q="0">오늘</button><button class="ghost" data-q="-1">어제</button><span id="amDW" class="sum"></span></div></div>
+    <div class="field"><label>구분</label><div class="seg" id="amT"><button data-t="">결석</button><button data-t="수업 덜 함">수업 덜 함 (남은 시간은 다음에)</button><button data-t="__bal">못 한 시간만 (날짜 없이)</button></div><div class="sum" id="amTH" style="margin-top:5px"></div></div>
+    <div class="field" id="amDF"><label>결석 날짜</label><div class="hrow"><input class="inp" type="date" id="amD" value="${d}"><button class="ghost" data-q="0">오늘</button><button class="ghost" data-q="-1">어제</button><span id="amDW" class="sum"></span></div></div>
     <div class="field"><label>학생</label><input class="inp" id="amQ" placeholder="이름 검색 (초성 가능) · Enter로 추가" autocomplete="off" spellcheck="false"><div class="sug" id="amSug"></div></div>
     <div class="am-list" id="amList"></div>
     <details class="more"><summary>재원생 명단에서 고르기 (${act.length}명)</summary><div class="sgrid" id="amGrid"></div></details>
     <div class="mfoot"><span class="sum" id="amSum"></span><span class="sp"></span><button class="ghost" id="amC">취소</button><button class="primary" id="amO">기록하기</button></div>`,'wide');
   const q=m.querySelector('#amQ');
-  const isDup=n=>S.rows.some(r=>r.n===n&&r.d===d);
+  const isDup=n=>typ!=='__bal'&&S.rows.some(r=>r.n===n&&r.d===d);
   function add(n){n=n.trim();if(!n)return;if(items.some(x=>x.n===n)){toast(n+' 학생은 이미 넣었어요.');return}items.push({n,m:defM(n)});q.value='';draw();q.focus()}
   function draw(){
-    m.querySelector('#amDW').textContent=d?kdate(d):'';m.querySelectorAll('#amT button').forEach(b=>b.classList.toggle('on',b.dataset.t===typ));
+    m.querySelector('#amDW').textContent=d?kdate(d):'';m.querySelectorAll('#amT button').forEach(b=>b.classList.toggle('on',b.dataset.t===typ));m.querySelector('#amDF').classList.toggle('hidden',typ==='__bal');
+    m.querySelector('#amTH').textContent=typ==='__bal'?'날짜 없이 학생마다 하나씩 쌓아 두는 시간이에요. 소멸되지 않고, 이미 있으면 더해져요.':typ?'그날 기록으로 남고, 결석처럼 2개월 뒤 소멸돼요.':'';
     m.querySelector('#amList').innerHTML=items.map((x,i)=>`<div class="am-item ${isDup(x.n)?'dup':''}"><span class="n">${esc(x.n)}</span>
       <input class="inp" type="number" min="0" step="5" value="${x.m??''}" data-i="${i}">분
       <span class="seg small">${QM().map(v=>`<button data-i="${i}" data-m="${v}" class="${+x.m===v?'on':''}">${v}</button>`).join('')}</span>
@@ -558,8 +593,9 @@ function openAdd(day){const items=[];let d=day||today();let typ='';const QM=()=>
   q.addEventListener('input',sug);
   q.addEventListener('keyup',e=>{if(e.key==='Enter'){sug();const f=m.querySelector('#amSug [data-add]');if(f)add(f.dataset.add)}});
   m.querySelector('#amC').onclick=closeModal;
-  m.querySelector('#amO').onclick=async()=>{const v=items.filter(x=>!isDup(x.n));if(!d){toast(ERR.EMPTYDAY,true);return}if(!v.length)return;
+  m.querySelector('#amO').onclick=async()=>{const v=items.filter(x=>!isDup(x.n));if(!d&&typ!=='__bal'){toast(ERR.EMPTYDAY,true);return}if(!v.length)return;
     const btn=m.querySelector('#amO');btn.disabled=true;btn.textContent='기록하는 중...';
+    if(typ==='__bal'){try{const r=await api('ab_bal_add',{p_token:S.token,p:{items:v.map(x=>({n:x.n,m:x.m})),memo:''}});setBal(r);closeModal();render();toast(`${v.length}명 못 한 시간을 더했어요 (${v.map(x=>x.n+' +'+x.m+'분').join(', ')}).${r.failed?' 노션 반영은 실패했어요.':''}`,!!r.failed)}catch(e){toast(errText(e),true);btn.disabled=false;draw()}return}
     try{const r=await api('ab_add_many',{p_token:S.token,p:{d,items:v.map(x=>({n:x.n,m:x.m,memo:typ}))}});
       (r.added||[]).forEach(upsertLocal);closeModal();if(r.failed){S.pending+=r.failed}render();
       toast(`${(r.added||[]).length}명 ${typ?'덜 한 수업':'결석'}을 기록했어요${r.dups&&r.dups.length?` (이미 있던 ${r.dups.length}명은 건너뜀)`:''}.${r.failed?' 노션에는 나중에 다시 보낼게요.':''}`,!!r.failed)}
@@ -618,53 +654,60 @@ function openStudent(n){S.curStu=n;const st=S.stuMap.get(n);const rs=S.rows.filt
     <button class="primary" style="padding:8px 12px;font-size:13px" data-act="makeupStu" data-n="${esc(n)}">+ 보강 기록</button><button class="outline" id="sAdd">+ 결석 기록</button>${open.length?'<button class="ghost" id="sMsg">안내 문구</button>':''}${st&&st.p?`<a class="ghost" href="../#${esc(st.p)}" target="_blank" rel="noopener">학생일지에서 보기</a>`:''}</div>
     <div class="kv"><div><span>보강 전</span><b style="color:var(--amber)">${open.length}건 · ${mins(remSum(open))}</b></div><div><span>전체 결석</span><b>${rs.length}건</b></div><div><span>보강 완료</span><b>${rs.filter(r=>r.s==='완료').length}건</b></div><div><span>소멸</span><b style="color:var(--red)">${rs.filter(r=>info(r).key==='expired').length}건</b></div></div>
     <div class="rows" style="max-height:48vh;overflow:auto">${rs.map(r=>rowLine(r,{noName:true})).join('')||'<div class="empty">결석 기록이 없어요.</div>'}</div>
+    ${stuBal(n)}
     ${stuSessions(n)}
     <div class="mfoot"><span class="sp"></span><button class="ghost" id="sC">닫기</button></div>`,'wide');
   m.querySelector('#sC').onclick=closeModal;m.querySelector('#sAdd').onclick=()=>{closeModal();openAdd();setTimeout(()=>{const q=document.querySelector('#amQ');if(q){q.value=n;q.dispatchEvent(new Event('input'));const b=document.querySelector('#amSug [data-add]');if(b)b.click()}},40)};
   const sm=m.querySelector('#sMsg');if(sm)sm.onclick=()=>openMsg(open)}
 
+function stuBal(n){const v=bal(n);const logs=S.balLog.filter(x=>x.n===n).slice().reverse();
+  return `<div class="info" style="margin-top:14px;margin-bottom:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>못 한 시간</b><span class="sum">(날짜 없음 · 소멸 없음)</span><b style="color:var(--amber);font-size:15px">${v}분</b><span style="flex:1"></span>
+    ${[10,20,30].map(x=>`<button class="mini" data-act="balQuick" data-n="${esc(n)}" data-v="${x}">+${x}</button>`).join('')}<button class="mini" data-act="balAdd" data-n="${esc(n)}">직접 입력·빼기</button>${v>0?`<button class="mini g" data-act="balMakeup" data-n="${esc(n)}">보강함</button>`:''}</div>
+    ${logs.length?`<div class="hist" style="max-height:110px">${logs.map(x=>`<div>${new Date(x.at).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})} · ${x.m>0?'+':''}${x.m}분${x.memo?' · '+esc(x.memo):''} <a href="#" data-act="balUndo" data-id="${x.id}" data-n="${esc(n)}" style="color:var(--muted)">취소</a></div>`).join('')}</div>`:''}</div>`}
+
 function stuSessions(n){const gs=new Map();S.allocs.filter(x=>x.n===n).forEach(x=>{if(!gs.has(x.g))gs.set(x.g,{g:x.g,d:x.d,m:0,items:[],memo:x.memo});const o=gs.get(x.g);o.m+=x.m;o.items.push(x)});
+  S.balLog.filter(x=>x.n===n&&x.g&&x.m<0).forEach(x=>{if(!gs.has(x.g))gs.set(x.g,{g:x.g,d:new Date(new Date(x.at).getTime()+9*3600e3).toISOString().slice(0,10),m:0,items:[],memo:''});const o=gs.get(x.g);o.m+=-x.m;o.items.push({bal:true,m:-x.m})});
   const sess=[...gs.values()].sort((a,b)=>b.d.localeCompare(a.d));if(!sess.length)return '';
-  return `<h3 style="font-size:14px;margin:16px 0 2px">보강한 기록 <span class="sum">(앱에서 '보강 기록'으로 남긴 것)</span></h3><div class="rows" style="max-height:22vh;overflow:auto">${sess.map(o=>`<div class="row"><span class="dt">${ymd(o.d)}</span><span class="mn">${o.m}분</span><span class="memo" title="${esc(o.memo)}">${o.items.map(x=>{const r=S.byId.get(x.a);return (r?md(r.d)+' 결석분 ':'')+x.m+'분'}).join(', ')}${o.memo?' · '+esc(o.memo):''}</span><span class="acts"><button class="mini" data-act="mkCancel" data-g="${o.g}" data-n="${esc(n)}">취소</button></span></div>`).join('')}</div>`}
+  return `<h3 style="font-size:14px;margin:16px 0 2px">보강한 기록 <span class="sum">(앱에서 '보강 기록'으로 남긴 것)</span></h3><div class="rows" style="max-height:22vh;overflow:auto">${sess.map(o=>`<div class="row"><span class="dt">${ymd(o.d)}</span><span class="mn">${o.m}분</span><span class="memo" title="${esc(o.memo)}">${o.items.map(x=>{if(x.bal)return '못 한 시간 '+x.m+'분';const r=S.byId.get(x.a);return (r?md(r.d)+' 결석분 ':'')+x.m+'분'}).join(', ')}${o.memo?' · '+esc(o.memo):''}</span><span class="acts"><button class="mini" data-act="mkCancel" data-g="${o.g}" data-n="${esc(n)}">취소</button></span></div>`).join('')}</div>`}
 
 /* 보강 기록: 보강한 시간을 오래된 결석부터 채움 (일부 보강, 여러 결석 한 번에) */
-function openMakeup(n,preIds,back){
-  let name=n||'',d=today(),touched=false,mval=null,showExp=false;let checked=new Set(preIds||[]);let firstDraw=true;
+function openMakeup(n,preIds,back,opts){
+  let name=n||'',d=today(),touched=false,mval=null,showExp=false,useBal=false;let balOnly=!!(opts&&opts.balOnly);let checked=new Set(preIds||[]);let firstDraw=true;
   const m=openModal(`<h2>보강 기록</h2><div class="sub">보강한 시간을 적으면 체크한 결석을 위에서부터(오래된 것부터) 채워요. 다 채운 결석은 '완료', 덜 채운 결석은 남은 시간만 줄어요.</div>
     <div class="grid2" style="gap:10px"><div class="field"><label>학생</label><input class="inp" id="mkN" value="${esc(name)}" placeholder="이름 (초성 가능)" autocomplete="off" spellcheck="false"><div class="sug" id="mkSug"></div></div>
     <div class="field"><label>보강한 날짜</label><div class="hrow"><input class="inp" type="date" id="mkD" value="${d}"><button class="ghost" data-q="0">오늘</button><button class="ghost" data-q="-1">어제</button></div></div></div>
     <div class="field"><label>보강한 시간(분)</label><div class="hrow"><input class="inp" style="max-width:110px" type="number" min="1" step="5" id="mkM"><span class="seg small" id="mkMs"></span></div></div>
-    <div class="field"><label>채울 결석 <span style="font-weight:600;color:var(--muted)">(체크한 것만, 위에서부터 채워요)</span> <label style="float:right;font-weight:600;color:var(--muted);cursor:pointer"><input type="checkbox" id="mkExp"> 소멸된 결석도 보기</label></label><div class="rows" id="mkList"></div></div>
+    <div class="field"><label>채울 결석 <span style="font-weight:600;color:var(--muted)">(체크한 것만, 위에서부터 채워요. 못 한 시간은 맨 마지막)</span> <label style="float:right;font-weight:600;color:var(--muted);cursor:pointer"><input type="checkbox" id="mkExp"> 소멸된 결석도 보기</label></label><div class="rows" id="mkList"></div></div>
     <div class="field"><label>메모 (선택)</label><input class="inp" id="mkMemo" placeholder="예: 10분씩 3번 빠진 것 한 번에"></div>
     <div class="info" id="mkPrev"></div>
     <div class="mfoot"><span class="sp"></span><button class="ghost" id="mkC">취소</button><button class="primary" id="mkO">보강 기록하기</button></div>`,'wide');
   const list=()=>S.rows.filter(r=>r.n===name&&(OPEN.has(info(r).key)||(showExp&&info(r).key==='expired'))&&rem(r)>0).sort((a,b)=>(a.d||'').localeCompare(b.d||''));
   const sel=()=>list().filter(r=>checked.has(r.id));
-  function allocPlan(){let left=+mval||0;const out=new Map();for(const r of sel()){const rm=rem(r);const use=Math.min(rm,left);left-=use;out.set(r.id,{use,rest:rm-use})}return {out,left}}
+  function allocPlan(){let left=+mval||0;const out=new Map();for(const r of sel()){const rm=rem(r);const use=Math.min(rm,left);left-=use;out.set(r.id,{use,rest:rm-use})}let bu=0;if(useBal){bu=Math.min(bal(name),left);left-=bu}return {out,left,bu}}
   function draw(){
-    const L=list();if(firstDraw&&!preIds){const tb=L.filter(r=>r.k&&r.k<=d&&r.k>=addDays(d,-7)&&OPEN.has(info(r).key));(tb.length?tb:L.filter(r=>OPEN.has(info(r).key))).forEach(r=>checked.add(r.id))}firstDraw=false;
-    if(!touched){mval=sel().reduce((a,r)=>a+(r.k?plan(r):rem(r)),0)||null;m.querySelector('#mkM').value=mval??''}
-    const all=remSum(sel());
+    const L=list();if(firstDraw){if(balOnly){useBal=bal(name)>0}else if(!preIds){const tb=L.filter(r=>r.k&&r.k<=d&&r.k>=addDays(d,-7)&&OPEN.has(info(r).key));(tb.length?tb:L.filter(r=>OPEN.has(info(r).key))).forEach(r=>checked.add(r.id));useBal=!tb.length&&bal(name)>0}}firstDraw=false;
+    if(!touched){mval=(sel().reduce((a,r)=>a+(r.k?plan(r):rem(r)),0)+(useBal?bal(name):0))||null;m.querySelector('#mkM').value=mval??''}
+    const all=remSum(sel())+(useBal?bal(name):0);
     m.querySelector('#mkMs').innerHTML=(all?`<button data-m="${all}" class="${+mval===all?'on':''}">남은 전부 ${all}분</button>`:'')+[10,20,30,40,50,60,90].map(v=>`<button data-m="${v}" class="${+mval===v?'on':''}">${v}</button>`).join('');
     const p=allocPlan();
     m.querySelector('#mkList').innerHTML=!name?'<div class="empty">학생을 먼저 골라 주세요.</div>':L.map(r=>{const i=info(r),x=p.out.get(r.id);
       return `<div class="row"><input type="checkbox" class="cbx" data-ck="${r.id}" ${checked.has(r.id)?'checked':''}><span class="dt">${ymd(r.d)}</span><span class="mn">${r.m}분</span>${(+r.dm||0)>0?`<span class="dd part">${r.dm}분 함 · ${rem(r)}분 남음</span>`:''}${pill(i)} ${ddChip(i)}
-        <span style="margin-left:auto;font-weight:800;font-size:12.5px;color:${x&&x.use?(x.rest?'var(--blue)':'#1d7a4a'):'#b0bbb7'}">${x&&x.use?(x.rest?`→ ${x.use}분 채움 (${x.rest}분 남음)`:`→ ${x.use}분 채움 · 완료`):(checked.has(r.id)?'→ 시간이 모자라요':'')}</span></div>`}).join('')||'<div class="empty">보강할 결석이 없어요.</div>';
+        <span style="margin-left:auto;font-weight:800;font-size:12.5px;color:${x&&x.use?(x.rest?'var(--blue)':'#1d7a4a'):'#b0bbb7'}">${x&&x.use?(x.rest?`→ ${x.use}분 채움 (${x.rest}분 남음)`:`→ ${x.use}분 채움 · 완료`):(checked.has(r.id)?'→ 시간이 모자라요':'')}</span></div>`}).join('')+(bal(name)>0?`<div class="row"><input type="checkbox" class="cbx" data-ck="__bal" ${useBal?'checked':''}><span class="dt" style="font-weight:800">못 한 시간</span><span class="mn">${bal(name)}분</span><span class="sum">날짜 없음 · 소멸 없음</span><span style="margin-left:auto;font-weight:800;font-size:12.5px;color:${p.bu?'#1d7a4a':'#b0bbb7'}">${p.bu?`→ ${p.bu}분 줄임${bal(name)-p.bu?` (${bal(name)-p.bu}분 남음)`:' · 다 함'}`:(useBal?'→ 시간이 모자라요':'')}</span></div>`:'')||'<div class="empty">보강할 결석이 없어요.</div>';
     const done=[...p.out.values()].filter(x=>x.use&&!x.rest).length,part=[...p.out.values()].filter(x=>x.use&&x.rest).length;
-    m.querySelector('#mkPrev').innerHTML=name&&+mval?`<b>${esc(name)}</b> ${kdate(d)} 보강 ${mins(+mval)} → 완료 ${done}건${part?`, 일부 보강 ${part}건`:''}${p.left>0?` · <span style="color:var(--red)">남는 ${p.left}분은 채울 결석이 없어 기록되지 않아요</span>`:''}`:'학생, 날짜, 보강한 시간을 넣어 주세요.';
-    const b=m.querySelector('#mkO');b.disabled=!(name&&+mval>0&&(done+part)>0)}
+    m.querySelector('#mkPrev').innerHTML=name&&+mval?`<b>${esc(name)}</b> ${kdate(d)} 보강 ${mins(+mval)} → 완료 ${done}건${part?`, 일부 보강 ${part}건`:''}${p.bu?`, 못 한 시간 ${p.bu}분 줄임`:''}${p.left>0?` · <span style="color:var(--red)">남는 ${p.left}분은 채울 결석이 없어 기록되지 않아요</span>`:''}`:'학생, 날짜, 보강한 시간을 넣어 주세요.';
+    const b=m.querySelector('#mkO');b.disabled=!(name&&+mval>0&&(done+part+(p.bu?1:0))>0)}
   function sug(){const v=m.querySelector('#mkN').value.trim();const el=m.querySelector('#mkSug');if(!v||v===name){el.innerHTML='';return}
-    const owe=new Map();S.rows.forEach(r=>{if(OPEN.has(info(r).key)&&rem(r)>0)owe.set(r.n,(owe.get(r.n)||0)+rem(r))});
+    const owe=new Map();S.rows.forEach(r=>{if(OPEN.has(info(r).key)&&rem(r)>0)owe.set(r.n,(owe.get(r.n)||0)+rem(r))});for(const [k2,v2] of S.bal.entries())if(v2>0)owe.set(k2,(owe.get(k2)||0)+v2);
     const c=[...owe.keys()].filter(x=>match(x,v)).sort((a,b)=>a.localeCompare(b)).slice(0,10);
     el.innerHTML=c.map(x=>`<button class="chip" data-pickn="${esc(x)}">${esc(x)} · ${mins(owe.get(x))}</button>`).join('')||'<span class="sum">보강할 결석이 있는 학생 중에 없어요.</span>'}
-  function setName(x){name=x;m.querySelector('#mkN').value=x;checked=new Set();firstDraw=true;preIds=null;touched=false;sug();draw()}
-  m.querySelector('#mkN').addEventListener('input',e=>{const v=e.target.value.trim();if(S.rows.some(r=>r.n===v)&&v!==name){setName(v);return}if(v!==name){name='';checked=new Set();draw()}sug()});
+  function setName(x){name=x;m.querySelector('#mkN').value=x;checked=new Set();firstDraw=true;preIds=null;balOnly=false;useBal=false;touched=false;sug();draw()}
+  m.querySelector('#mkN').addEventListener('input',e=>{const v=e.target.value.trim();if((S.rows.some(r=>r.n===v)||bal(v)>0)&&v!==name){setName(v);return}if(v!==name){name='';checked=new Set();draw()}sug()});
   m.querySelector('#mkN').addEventListener('keyup',e=>{if(e.key==='Enter'){sug();const f=m.querySelector('#mkSug [data-pickn]');if(f)setName(f.dataset.pickn)}});
   m.querySelector('#mkD').onchange=e=>{d=e.target.value;draw()};
   m.querySelector('#mkM').oninput=e=>{touched=true;mval=e.target.value===''?null:+e.target.value;draw()};
   m.querySelector('#mkExp').onchange=e=>{showExp=e.target.checked;draw()};
   m.addEventListener('click',e=>{const t=e.target;
-    if(t.dataset&&t.dataset.ck){if(t.checked)checked.add(t.dataset.ck);else checked.delete(t.dataset.ck);draw();return}
+    if(t.dataset&&t.dataset.ck){if(t.dataset.ck==='__bal')useBal=t.checked;else if(t.checked)checked.add(t.dataset.ck);else checked.delete(t.dataset.ck);draw();return}
     const b=t.closest('button');if(!b)return;
     if(b.dataset.q!=null){d=addDays(today(),+b.dataset.q);m.querySelector('#mkD').value=d;draw()}
     else if(b.dataset.m!=null){touched=true;mval=+b.dataset.m;m.querySelector('#mkM').value=mval;draw()}
@@ -672,10 +715,10 @@ function openMakeup(n,preIds,back){
   m.querySelector('#mkC').onclick=()=>{closeModal();if(back)openStudent(back)};
   m.querySelector('#mkO').onclick=async()=>{const ids=sel().map(r=>r.id);if(!d){toast(ERR.EMPTYDAY,true);return}
     const b=m.querySelector('#mkO');b.disabled=true;b.textContent='기록하는 중...';
-    try{const x=await api('ab_makeup',{p_token:S.token,p:{d,m:+mval,ids,memo:m.querySelector('#mkMemo').value}});
-      (x.rows||[]).forEach(upsertLocal);S.allocs.push(...(x.allocs||[]));if(x.failed)S.pending+=x.failed;closeModal();render();if(back)openStudent(back);
+    try{const x=await api('ab_makeup',{p_token:S.token,p:{d,m:+mval,ids,memo:m.querySelector('#mkMemo').value,n:name,bal:useBal}});
+      (x.rows||[]).forEach(upsertLocal);setBal(x);S.allocs.push(...(x.allocs||[]));if(x.failed)S.pending+=x.failed;closeModal();render();if(back)openStudent(back);
       const done=(x.rows||[]).filter(r=>r.s==='완료').length,left=remSum(S.rows.filter(r=>r.n===name&&OPEN.has(info(r).key)));
-      toast(`${name} ${md(d)} 보강 ${x.used}분 기록 · 완료 ${done}건 · 남은 보강 ${mins(left)}${x.failed?' (노션에는 나중에 보낼게요)':''}`,!!x.failed)}
+      toast(`${name} ${md(d)} 보강 ${x.used}분 기록 · 완료 ${done}건${x.balUsed?` · 못 한 시간 ${x.balUsed}분 줄임`:''} · 남은 보강 ${mins(left+bal(name))}${x.failed?' (노션에는 나중에 보낼게요)':''}`,!!x.failed)}
     catch(e){toast(errText(e),true);b.disabled=false;b.textContent='보강 기록하기'}};
   draw();sug();setTimeout(()=>m.querySelector(name?'#mkM':'#mkN').focus(),30)}
 
@@ -690,6 +733,7 @@ function msgFor(list){list=list.slice().sort((a,b)=>(a.d||'').localeCompare(b.d|
       lines.push(`${nm} 학생 ${wait.map(r=>kdate(r.d)).join(', ')} 결석분 중 ${mins(remSum(wait))} 보강이 남아 있습니다. 가능하신 날짜를 알려 주시면 보강 일정을 잡아 드리겠습니다.`);
       if(exp)lines.push(`(보강은 결석일로부터 ${S.set.expireMonths||2}개월 안에 가능하며, 가장 빠른 기한은 ${kdate(exp)}입니다.)`)}
     if(done.length&&!booked.length&&!wait.length)lines.push(`${nm} 학생 ${done.map(r=>kdate(r.d)).join(', ')} 결석분 보강을 ${[...new Set(done.map(r=>r.k).filter(Boolean))].map(kdate).join(', ')||'모두'} 마쳤습니다.`);
+    if(bal(n)>0)lines.push(`그 밖에 수업 시간을 다 채우지 못한 ${mins(bal(n))}도 보강해 드릴 예정입니다.`);
     lines.push('감사합니다.');out.push(lines.join('\n'))}
   return out.join('\n\n')}
 function openMsg(list){const m=openModal(`<h2>학부모 안내 문구</h2><div class="sub">고칠 부분은 고친 뒤 복사해서 문자·카톡에 붙여 넣으세요.</div>
@@ -741,10 +785,15 @@ document.addEventListener('click',async e=>{
   try{
     if(a==='add')openAdd();
     else if(a==='edit')openEdit(id);
+    else if(a==='balAdd')openBal(el.dataset.n||'',stuCtx);
+    else if(a==='balMakeup')openMakeup(el.dataset.n,[],stuCtx,{balOnly:true});
+    else if(a==='balQuick'){const n=el.dataset.n,v=+el.dataset.v;const r=await api('ab_bal_add',{p_token:S.token,p:{items:[{n,m:v}],memo:''}});setBal(r);render();if(stuCtx)openStudent(stuCtx);toast(`${n} 못 한 시간 +${v}분 → ${bal(n)}분`)}
+    else if(a==='balUndo'){e.preventDefault();const x=S.balLog.find(y=>String(y.id)===String(el.dataset.id));if(!x)return;if(!confirm(x.g?`이 기록은 ${x.memo||'보강 기록'}으로 생겼어요. 그 보강 기록 전체를 취소할까요?`:`못 한 시간 ${x.m>0?'+':''}${x.m}분 기록을 취소할까요?`))return;
+      const r=await api('ab_bal_undo',{p_token:S.token,p_id:+x.id});(r.rows||[]).forEach(upsertLocal);if(x.g)S.allocs=S.allocs.filter(y=>y.g!==x.g);setBal(r);render();openStudent(el.dataset.n);toast('취소했어요.')}
     else if(a==='makeup'){const r=S.byId.get(id);openMakeup(r.n,[id],stuCtx)}
     else if(a==='makeupStu')openMakeup(el.dataset.n||'',null,stuCtx||(el.closest('.modal')?el.dataset.n:null))
     else if(a==='mkCancel'){const g=el.dataset.g;const items=S.allocs.filter(x=>x.g===g);if(!confirm(`${ymd(items[0].d)} 보강 ${items.reduce((s,x)=>s+x.m,0)}분 기록을 취소할까요? 채웠던 결석의 남은 시간이 되돌아가요.`))return;
-      const x=await api('ab_makeup_cancel',{p_token:S.token,p_grp:g});(x.rows||[]).forEach(upsertLocal);S.allocs=S.allocs.filter(y=>y.g!==g);render();openStudent(el.dataset.n);toast('보강 기록을 취소했어요.')}
+      const x=await api('ab_makeup_cancel',{p_token:S.token,p_grp:g});(x.rows||[]).forEach(upsertLocal);setBal(x);S.allocs=S.allocs.filter(y=>y.g!==g);render();openStudent(el.dataset.n);toast('보강 기록을 취소했어요.')}
     else if(a==='student')openStudent(el.dataset.n);
     else if(a==='msg')openMsg(pendRows().filter(r=>r.n===el.dataset.n));
     else if(a==='book'){const r=S.byId.get(id);const b=await askBook(r);if(!b)return;
