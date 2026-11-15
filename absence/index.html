@@ -196,7 +196,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-2';
+const APP_VER='2026-11-15-3';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -249,7 +249,7 @@ function info(r){
   const base={exp,left};
   if(r.s==='완료')return {...base,key:'done',label:'완료'+(r.k?' '+md(r.k):'')};
   if(r.s==='종료')return {...base,key:'closed',label:'종료'};
-  if(r.k){if(r.k<t)return {...base,key:'check',label:'보강일 지남 '+md(r.k)};return {...base,key:'booked',label:(r.k===t?'오늘 보강':'예약 '+md(r.k))}}
+  if(r.k){if(r.k<t)return {...base,key:'check',label:'보강일 지남 '+md(r.k)};const pl=plan(r);return {...base,key:'booked',label:(r.k===t?'오늘 보강':'예약 '+md(r.k))+(pl?' · '+pl+'분':'')}}
   if(r.s==='예약 중')return {...base,key:'booked',label:'예약 중'};
   if(left<=0)return {...base,key:'expired',label:'소멸'};
   return {...base,key:'wait',label:'보강 전'};
@@ -259,6 +259,7 @@ function pill(i){return `<span class="pill st-${i.key}">${esc(i.label)}</span>`}
 const OPEN=new Set(['wait','booked','check']);
 function rem(r){if(r.s==='완료'||r.s==='종료')return 0;return Math.max((+r.m||0)-(+r.dm||0),0)}
 function remSum(list){return list.reduce((a,r)=>a+rem(r),0)}
+function plan(r){const x=rem(r);return r.pm&&r.pm<x?+r.pm:x}
 function rowsBy(fn){return S.rows.filter(fn)}
 function indexRows(){S.byId=new Map(S.rows.map(r=>[r.id,r]))}
 
@@ -364,7 +365,7 @@ function vCal(){const y=S.calY,m=S.calM,t=today();
     cells+=`<div class="cell ${d.slice(0,7)!==ym?'out':''} ${d===t?'today':''} ${wd===0?'sun':''}" data-act="dayAdd" data-d="${d}">
       <div class="dn"><span>${+d.slice(8)===1||d===start?(+d.slice(5,7))+'월 '+(+d.slice(8))+'일':+d.slice(8)}</span>${list.length?`<span class="ds">${list.length}명</span>`:''}</div>
       ${list.map(r=>{const i=info(r);return `<div class="ev st-${i.key} ${q&&!match(r.n,q)?'dim':''}" data-act="edit" data-id="${r.id}" title="${esc(r.n)} · ${r.m!=null?r.m+'분':''} · ${esc(i.label)}${r.memo?' · '+esc(r.memo):''}"><span class="en">${esc(r.n||'(이름 없음)')}</span><span class="em">${r.memo==='수업 덜 함'?'덜 ':''}${r.m!=null?r.m:''}</span></div>`}).join('')}
-      ${mk.map(r=>`<div class="ev mk ${r.s==='완료'?'done':r.k<t?'late':''} ${q&&!match(r.n,q)?'dim':''}" data-act="edit" data-id="${r.id}" title="보강: ${esc(r.n)} (${mdw(r.d)} 결석분 ${r.m!=null?r.m+'분':''})"><span class="en">↺ ${esc(r.n)}</span><span class="em">${r.s==='완료'?'완료':r.k<t?'확인':'보강'}</span></div>`).join('')}
+      ${mk.map(r=>`<div class="ev mk ${r.s==='완료'?'done':r.k<t?'late':''} ${q&&!match(r.n,q)?'dim':''}" data-act="edit" data-id="${r.id}" title="보강 예약: ${esc(r.n)} ${plan(r)?plan(r)+'분':''} (${mdw(r.d)} 결석분${r.pm&&r.pm<rem(r)?', 남은 '+rem(r)+'분 중':''})"><span class="en">↺ ${esc(r.n)}</span><span class="em">${r.s==='완료'?'완료':(r.k<t?'확인 ':'')+(plan(r)?plan(r)+'분':'보강')}</span></div>`).join('')}
       ${(agDay.get(d)||[]).map(o=>`<div class="ev mk done ${q&&!match(o.n,q)?'dim':''}" data-act="student" data-n="${esc(o.n)}" title="보강함: ${esc(o.n)} ${o.m}분 (결석 ${o.c}건에 나눠 채움)"><span class="en">↺ ${esc(o.n)}</span><span class="em">${o.m}분</span></div>`).join('')}
     </div>`}
   return `<div class="calhead"><h2>${y}년 ${m}월</h2>
@@ -496,6 +497,23 @@ function askDate(title,sub,def,okLabel){return new Promise(res=>{const m=openMod
   m.querySelector('#adC').onclick=()=>fin(null);m.querySelector('#adO').onclick=()=>{const v=m.querySelector('#adD').value;if(!v){toast('날짜를 골라 주세요.',true);return}fin(v)};
   m.querySelector('#adD').addEventListener('keydown',e=>{if(e.key==='Enter')m.querySelector('#adO').click()});setTimeout(()=>m.querySelector('#adO').focus(),30)})}
 
+function askBook(r){return new Promise(res=>{const left=rem(r);let pm=r.pm&&r.pm<left?+r.pm:left;
+  const m=openModal(`<h2>보강 예약</h2><div class="sub">${esc(r.n)} ${mdw(r.d)} 결석분 · 남은 시간 ${left}분${(+r.dm||0)>0?` (${r.dm}분은 이미 보강함)`:''}</div>
+  <div class="field"><label>보강 날짜</label><div class="hrow"><input class="inp" type="date" id="bkD" value="${r.k&&r.k>=today()?r.k:addDays(today(),1)}"><button class="ghost" data-q="0">오늘</button><button class="ghost" data-q="1">내일</button><button class="ghost" data-q="2">모레</button></div></div>
+  <div class="field"><label>그날 할 시간(분) <span style="font-weight:600;color:var(--muted)">(일부만 할 때만 바꾸세요)</span></label><div class="hrow"><input class="inp" style="max-width:110px" type="number" min="1" step="5" id="bkM" value="${pm}"><span class="seg small" id="bkMs"></span></div>
+    <div class="sum" id="bkInfo" style="margin-top:6px"></div></div>
+  <div class="mfoot"><span class="sp"></span><button class="ghost" id="bkC">취소</button><button class="primary" id="bkO">예약하기</button></div>`);
+  let done=false;const fin=v=>{if(done)return;done=true;modalClose=null;closeModal();res(v)};modalClose=()=>{if(!done){done=true;res(null)}};
+  const draw=()=>{m.querySelector('#bkMs').innerHTML=[`<button data-m="${left}" class="${pm===left?'on':''}">남은 전부 ${left}분</button>`,...[10,20,30,40,50,60].filter(v=>v<left).map(v=>`<button data-m="${v}" class="${pm===v?'on':''}">${v}</button>`)].join('');
+    m.querySelector('#bkInfo').textContent=pm&&pm<left?`이날 ${pm}분 하고, ${left-pm}분은 남아요. 보강한 날 '보강함'을 누르면 ${pm}분이 미리 채워져 있어요.`:'이날 남은 시간을 모두 보강해요.'};
+  m.querySelector('#bkMs').onclick=e=>{const b=e.target.closest('button');if(!b)return;pm=+b.dataset.m;m.querySelector('#bkM').value=pm;draw()};
+  m.querySelector('#bkM').oninput=e=>{pm=+e.target.value||0;if(pm>left)pm=left;draw()};
+  m.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{m.querySelector('#bkD').value=addDays(today(),+b.dataset.q)});
+  m.querySelector('#bkC').onclick=()=>fin(null);
+  m.querySelector('#bkO').onclick=()=>{const k=m.querySelector('#bkD').value;if(!k){toast('날짜를 골라 주세요.',true);return}if(!(pm>0)){toast('그날 할 시간을 적어 주세요.',true);return}fin({k,pm:pm>=left?null:pm})};
+  m.addEventListener('keyup',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT')m.querySelector('#bkO').click()});
+  draw();setTimeout(()=>m.querySelector('#bkO').focus(),30)})}
+
 function nameOptions(){const names=new Set(S.students.filter(s=>s.s==='재원').map(s=>s.n));S.rows.forEach(r=>r.n&&names.add(r.n));S.students.forEach(s=>names.add(s.n));return [...names]}
 function lastMinutes(n){let best=null;for(const r of S.rows)if(r.n===n&&r.m!=null&&(!best||r.d>best.d))best=r;return best?best.m:60}
 
@@ -548,20 +566,22 @@ function openAdd(day){const items=[];let d=day||today();let typ='';const QM=()=>
 
 /* 기록 수정 */
 function openEdit(id){const r=S.byId.get(id);if(!r)return;const st=S.stuMap.get(r.n);
-  const v={n:r.n,d:r.d||'',m:r.m,s:r.s,k:r.k||'',memo:r.memo||''};
+  const v={n:r.n,d:r.d||'',m:r.m,s:r.s,k:r.k||'',memo:r.memo||'',pm:r.pm||''};
   const m=openModal(`<h2>${esc(r.n||'(이름 없음)')} <span id="edPill"></span></h2><div class="sub">${r.d?kdate(r.d)+' 결석':''}${st?' · '+esc([st.s,shortGrade(st.g)].filter(Boolean).join(' · ')):''}</div>
     <div class="info" id="edInfo"></div>
     <div class="grid2" style="gap:10px"><div class="field"><label>이름</label><input class="inp" id="edN" list="edNL" value="${esc(v.n)}" autocomplete="off"><datalist id="edNL">${nameOptions().map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div>
     <div class="field"><label>결석 날짜</label><input class="inp" type="date" id="edD" value="${v.d}"></div></div>
     <div class="field"><label>빠진 시간(분)</label><div class="hrow"><input class="inp" style="max-width:110px" type="number" min="0" step="5" id="edM" value="${v.m??''}"><span class="seg small" id="edMs">${[30,50,60,90,120,180].map(x=>`<button data-m="${x}">${x}</button>`).join('')}</span></div></div>
     <div class="field"><label>보강 여부</label><div class="seg" id="edS">${ST_LIST.map(x=>`<button data-s="${x}">${x}</button>`).join('')}</div></div>
-    <div class="field"><label>보강 날짜 <span style="font-weight:600;color:var(--muted)">(노션 비고 맨 앞에 '26/11/16'처럼 적혀요)</span></label><div class="hrow"><input class="inp" type="date" id="edK" value="${v.k}"><button class="ghost" data-k="0">오늘</button><button class="ghost" data-k="1">내일</button><button class="ghost" data-k="x">지우기</button></div></div>
+    <div class="field"><label>보강 날짜 <span style="font-weight:600;color:var(--muted)">(노션 비고 맨 앞에 '26/11/16'처럼 적혀요)</span></label><div class="hrow"><input class="inp" type="date" id="edK" value="${v.k}"><button class="ghost" data-k="0">오늘</button><button class="ghost" data-k="1">내일</button><button class="ghost" data-k="x">지우기</button></div>
+      <div class="hrow" id="edPmRow" style="margin-top:7px;font-size:13px;color:#536560">그날 할 시간 <input class="inp" type="number" min="1" step="5" id="edPm" style="max-width:90px;flex:none" value="${v.pm}" placeholder="남은 전부">분 <span class="sum">(비우면 남은 시간 전부)</span></div></div>
     <div class="field"><label>메모</label><input class="inp" id="edMemo" value="${esc(v.memo)}" placeholder="예: 남은 시간 채움, 나눠서"></div>
     <div class="mfoot"><button class="danger" id="edDel">삭제</button>${r.nid?`<a class="ghost" target="_blank" rel="noopener" href="https://www.notion.so/${r.nid.replace(/-/g,'')}">노션에서 열기</a>`:''}<button class="ghost" id="edMsg">안내 문구</button><span class="sp"></span><button class="ghost" id="edC">닫기</button><button class="primary" id="edO">저장</button></div>
     <div class="hist" id="edHist">변경 기록 불러오는 중...</div>`);
   function draw(){const i=info({...r,...v,k:v.k||null,d:v.d||null});m.querySelector('#edPill').innerHTML=pill(i)+' '+ddChip(i);
     m.querySelectorAll('#edS button').forEach(b=>b.classList.toggle('on',b.dataset.s===v.s));
     m.querySelectorAll('#edMs button').forEach(b=>b.classList.toggle('on',+b.dataset.m===+v.m));
+    m.querySelector('#edPmRow').classList.toggle('hidden',!(v.k&&v.s!=='완료'&&v.s!=='종료'));
     const lines=[];if(v.d){lines.push(`소멸일 <b>${kdate(i.exp)}</b> (결석일 + ${S.set.expireMonths||2}개월)${i.left>0?` · 앞으로 ${i.left}일`:' · 기한이 지났어요'}`)}
     if((+r.dm||0)>0)lines.push(`보강한 시간 <b>${r.dm}분</b>${rem(r)?` · 남은 시간 <b>${rem(r)}분</b>`:''} (학생 화면의 '보강한 기록'에서 취소할 수 있어요)`);
     const others=S.rows.filter(x=>x.n===v.n&&x.id!==r.id&&OPEN.has(info(x).key));if(others.length)lines.push(`이 학생의 다른 보강 전 기록 ${others.length}건 (${mins(remSum(others))} 남음)`);
@@ -572,16 +592,17 @@ function openEdit(id){const r=S.byId.get(id);if(!r)return;const st=S.stuMap.get(
   m.querySelector('#edM').oninput=e=>{v.m=e.target.value===''?null:+e.target.value;draw()};
   m.querySelector('#edMs').onclick=e=>{const b=e.target.closest('button');if(!b)return;v.m=+b.dataset.m;m.querySelector('#edM').value=v.m;draw()};
   m.querySelector('#edS').onclick=e=>{const b=e.target.closest('button');if(!b)return;v.s=b.dataset.s;if(v.s==='완료'&&!v.k){v.k=today();m.querySelector('#edK').value=v.k}draw()};
-  const setK=k=>{v.k=k;m.querySelector('#edK').value=k;if(k&&v.s==='시작 전'&&k>=today())v.s='예약 중';if(!k&&v.s==='예약 중')v.s='시작 전';draw()};
+  const setK=k=>{v.k=k;m.querySelector('#edK').value=k;if(!k){v.pm='';m.querySelector('#edPm').value=''}if(k&&v.s==='시작 전'&&k>=today())v.s='예약 중';if(!k&&v.s==='예약 중')v.s='시작 전';draw()};
   m.querySelector('#edK').onchange=e=>setK(e.target.value);
   m.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>setK(b.dataset.k==='x'?'':addDays(today(),+b.dataset.k)));
   m.querySelector('#edMemo').oninput=e=>{v.memo=e.target.value};
+  m.querySelector('#edPm').oninput=e=>{v.pm=e.target.value===''?'':+e.target.value};
   m.querySelector('#edC').onclick=closeModal;
   m.querySelector('#edMsg').onclick=()=>openMsg([{...r,...v,k:v.k||null}]);
   m.querySelector('#edDel').onclick=async()=>{if(!confirm(`${r.n} ${r.d?md(r.d):''} 결석 기록을 지울까요?\n노션에서도 휴지통으로 옮겨져요. (설정 > 지운 기록에서 되살릴 수 있어요)`))return;
     try{await delRow(r.id);closeModal();toast('지웠어요.')}catch(e){toast(errText(e),true)}};
   const save=async(force)=>{const b=m.querySelector('#edO');b.disabled=true;b.textContent='저장하는 중...';
-    try{await saveRow({id:r.id,n:v.n,d:v.d,m:v.m,s:v.s,k:v.k,memo:v.memo,force:!!force});closeModal();toast('저장했어요. 노션에도 반영했어요.')}
+    try{await saveRow({id:r.id,n:v.n,d:v.d,m:v.m,s:v.s,k:v.k,memo:v.memo,pm:(v.k&&v.s!=='완료'&&v.s!=='종료'&&v.pm)?v.pm:'',force:!!force});closeModal();toast('저장했어요. 노션에도 반영했어요.')}
     catch(e){if(String(e.message)==='DUP'&&confirm('같은 날 같은 학생의 기록이 이미 있어요. 그래도 저장할까요?'))return save(true);toast(errText(e),true);b.disabled=false;b.textContent='저장'}};
   m.querySelector('#edO').onclick=()=>save(false);
   m.addEventListener('keyup',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.id!=='edN')save(false)});
@@ -617,13 +638,13 @@ function openMakeup(n,preIds,back){
     <div class="mfoot"><span class="sp"></span><button class="ghost" id="mkC">취소</button><button class="primary" id="mkO">보강 기록하기</button></div>`,'wide');
   const list=()=>S.rows.filter(r=>r.n===name&&(OPEN.has(info(r).key)||(showExp&&info(r).key==='expired'))&&rem(r)>0).sort((a,b)=>(a.d||'').localeCompare(b.d||''));
   const sel=()=>list().filter(r=>checked.has(r.id));
-  function plan(){let left=+mval||0;const out=new Map();for(const r of sel()){const rm=rem(r);const use=Math.min(rm,left);left-=use;out.set(r.id,{use,rest:rm-use})}return {out,left}}
+  function allocPlan(){let left=+mval||0;const out=new Map();for(const r of sel()){const rm=rem(r);const use=Math.min(rm,left);left-=use;out.set(r.id,{use,rest:rm-use})}return {out,left}}
   function draw(){
-    const L=list();if(firstDraw&&!preIds){L.filter(r=>OPEN.has(info(r).key)).forEach(r=>checked.add(r.id))}firstDraw=false;
-    if(!touched){mval=remSum(sel())||null;m.querySelector('#mkM').value=mval??''}
+    const L=list();if(firstDraw&&!preIds){const tb=L.filter(r=>r.k&&r.k<=d&&r.k>=addDays(d,-7)&&OPEN.has(info(r).key));(tb.length?tb:L.filter(r=>OPEN.has(info(r).key))).forEach(r=>checked.add(r.id))}firstDraw=false;
+    if(!touched){mval=sel().reduce((a,r)=>a+(r.k?plan(r):rem(r)),0)||null;m.querySelector('#mkM').value=mval??''}
     const all=remSum(sel());
     m.querySelector('#mkMs').innerHTML=(all?`<button data-m="${all}" class="${+mval===all?'on':''}">남은 전부 ${all}분</button>`:'')+[10,20,30,40,50,60,90].map(v=>`<button data-m="${v}" class="${+mval===v?'on':''}">${v}</button>`).join('');
-    const p=plan();
+    const p=allocPlan();
     m.querySelector('#mkList').innerHTML=!name?'<div class="empty">학생을 먼저 골라 주세요.</div>':L.map(r=>{const i=info(r),x=p.out.get(r.id);
       return `<div class="row"><input type="checkbox" class="cbx" data-ck="${r.id}" ${checked.has(r.id)?'checked':''}><span class="dt">${ymd(r.d)}</span><span class="mn">${r.m}분</span>${(+r.dm||0)>0?`<span class="dd part">${r.dm}분 함 · ${rem(r)}분 남음</span>`:''}${pill(i)} ${ddChip(i)}
         <span style="margin-left:auto;font-weight:800;font-size:12.5px;color:${x&&x.use?(x.rest?'var(--blue)':'#1d7a4a'):'#b0bbb7'}">${x&&x.use?(x.rest?`→ ${x.use}분 채움 (${x.rest}분 남음)`:`→ ${x.use}분 채움 · 완료`):(checked.has(r.id)?'→ 시간이 모자라요':'')}</span></div>`}).join('')||'<div class="empty">보강할 결석이 없어요.</div>';
@@ -662,7 +683,7 @@ function msgFor(list){list=list.slice().sort((a,b)=>(a.d||'').localeCompare(b.d|
     const booked=rs.filter(r=>r.k&&r.s!=='완료'),wait=rs.filter(r=>!r.k&&r.s!=='완료'),done=rs.filter(r=>r.s==='완료');
     const lines=[`안녕하세요, 리드인 황남1점입니다.`];
     if(booked.length){const g=new Map();booked.forEach(r=>{if(!g.has(r.k))g.set(r.k,[]);g.get(r.k).push(r)});
-      for(const [k,x] of g)lines.push(`${nm} 학생 ${x.map(r=>kdate(r.d)).join(', ')} 결석분 보강(${mins(remSum(x))})을 ${kdate(k)}에 진행할 예정입니다.`)}
+      for(const [k,x] of g)lines.push(`${nm} 학생 ${x.map(r=>kdate(r.d)).join(', ')} 결석분 보강(${mins(x.reduce((a,r)=>a+plan(r),0))})을 ${kdate(k)}에 진행할 예정입니다.`)}
     if(wait.length){const exp=wait.map(r=>info(r).exp).filter(x=>x&&x>=today()).sort()[0];
       lines.push(`${nm} 학생 ${wait.map(r=>kdate(r.d)).join(', ')} 결석분 중 ${mins(remSum(wait))} 보강이 남아 있습니다. 가능하신 날짜를 알려 주시면 보강 일정을 잡아 드리겠습니다.`);
       if(exp)lines.push(`(보강은 결석일로부터 ${S.set.expireMonths||2}개월 안에 가능하며, 가장 빠른 기한은 ${kdate(exp)}입니다.)`)}
@@ -724,8 +745,8 @@ document.addEventListener('click',async e=>{
       const x=await api('ab_makeup_cancel',{p_token:S.token,p_grp:g});(x.rows||[]).forEach(upsertLocal);S.allocs=S.allocs.filter(y=>y.g!==g);render();openStudent(el.dataset.n);toast('보강 기록을 취소했어요.')}
     else if(a==='student')openStudent(el.dataset.n);
     else if(a==='msg')openMsg(pendRows().filter(r=>r.n===el.dataset.n));
-    else if(a==='book'){const r=S.byId.get(id);const k=await askDate('보강 예약',`${r.n} ${mdw(r.d)} 결석분 ${r.m!=null?r.m+'분':''} 보강 날짜를 골라 주세요.`,r.k&&r.k>=today()?r.k:addDays(today(),1),'예약하기');if(!k)return;
-      await setStatus(id,'예약 중',k);render();if(stuCtx)openStudent(stuCtx);toast(`${r.n} ${md(k)} 보강으로 예약했어요.`)}
+    else if(a==='book'){const r=S.byId.get(id);const b=await askBook(r);if(!b)return;
+      const x=await api('ab_book',{p_token:S.token,p_id:id,p_day:b.k,p_min:b.pm});upsertLocal(x.row);afterSync(x.synced);render();if(stuCtx)openStudent(stuCtx);toast(`${r.n} ${md(b.k)} ${plan(x.row)}분 보강으로 예약했어요.`)}
     else if(a==='complete'){const r=S.byId.get(id);const k=await askDate('보강 완료',`${r.n} ${mdw(r.d)} 결석분 ${r.m!=null?r.m+'분':''} 보강한 날짜예요.`,r.k&&r.k<=today()?r.k:today(),'완료 처리');if(!k)return;
       await setStatus(id,'완료',k);render();if(stuCtx)openStudent(stuCtx);toast(`${r.n} 보강 완료로 바꿨어요.`)}
     else if(a==='reopen'){const r=S.byId.get(id);if(!confirm(`${r.n} ${md(r.d)} 기록을 다시 '보강 전'으로 돌릴까요? (보강 날짜와 보강한 시간도 지워져요)`))return;
