@@ -312,7 +312,7 @@ const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
 const LEVELS=['기초','1레벨','2레벨','3레벨','4레벨','5레벨','6레벨','7레벨'];
 const GRADE={ok:'○ 맞음',part:'△ 부분 이해',re:'× 다시 확인'},MARK={ok:'○',part:'△',re:'×'};
-const ERR={BADLOGIN:'비밀번호가 맞지 않아요.',NETWORK:'인터넷 연결을 확인해 주세요.',AUTH:'로그인이 끝났어요. 다시 로그인해 주세요.',NOSTUDENT:'노션 학생 일지에 없는 학생이에요.',NOBOOK:'등록되지 않은 책이에요.',EMPTY:'내용을 적어 주세요.',MANAGED:'발문 기록은 발문 탭에서 고쳐 주세요.',DUPBOOK:'같은 제목의 책이 이미 있어요.',BOOKUSED:'이 책으로 남긴 발문 기록이 있어서 지울 수 없어요. 지난 기록을 지키기 위해서예요.',NOEDIT:'이 줄은 앱에서 고칠 수 없어요. 노션에서 고쳐 주세요.',BADVALUE:'값이 올바르지 않아요.',NOSESSION:'먼저 답을 하나 이상 기록해 주세요.'};
+const ERR={BADLOGIN:'비밀번호가 맞지 않아요.',NETWORK:'인터넷 연결을 확인해 주세요.',AUTH:'로그인이 끝났어요. 다시 로그인해 주세요.',NOSTUDENT:'노션 학생 일지에 없는 학생이에요.',NOBOOK:'등록되지 않은 책이에요.',EMPTY:'내용을 적어 주세요.',MANAGED:'발문 기록은 발문 탭에서 고쳐 주세요.',DUPBOOK:'같은 제목의 책이 이미 있어요.',BOOKUSED:'이 책으로 남긴 발문 기록이 있어서 지울 수 없어요. 지난 기록을 지키기 위해서예요.',NOEDIT:'이 줄은 앱에서 고칠 수 없어요. 노션에서 고쳐 주세요.',BADVALUE:'값이 올바르지 않아요.',NOSESSION:'먼저 답을 하나 이상 기록해 주세요.',NORECORD:'이미 지워진 기록이에요.'};
 const $=id=>document.getElementById(id);
 const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -335,7 +335,7 @@ function errText(e){const m=String(e&&e.message||e);if(/^NOTION/.test(m))return 
 
 /* ---------- 상태 ---------- */
 const S={token:ls.get(TOKEN_KEY),students:[],books:[],unsynced:0,warn:null,filter:'재원',sort:'name',q:'',
-  sel:null,page:null,pageLoading:false,pendingScore:{},tab:'comment',bookId:null,cur:0,grade:'',queue:[],editing:null};
+  sel:null,page:null,pageLoading:false,pendingScore:{},recEdit:null,tab:'comment',bookId:null,cur:0,grade:'',queue:[],editing:null};
 try{S.queue=JSON.parse(ls.get(QUEUE_KEY)||'[]')}catch(e){S.queue=[]}
 try{const p=JSON.parse(ls.get(PREF_KEY)||'{}');S.filter=p.filter||'재원';S.sort=p.sort||'name';S.bookId=p.bookId||null;S.tab=p.tab||'comment'}catch(e){}
 function savePref(){ls.set(PREF_KEY,JSON.stringify({filter:S.filter,sort:S.sort,bookId:S.bookId,tab:S.tab}))}
@@ -626,7 +626,9 @@ function renderBalmun(){
   h+='<div class="crow" style="margin:0 0 12px"><label class="score" style="font-size:13px;color:var(--ink);font-weight:700">리드인 진단 점수 <input type="number" min="0" max="100" step="10" id="todayScore" style="width:70px;padding:5px 7px" value="'+(tScore==null?'':tScore)+'">점</label><span class="hint">오늘 이 책 기록의 노션 제목 옆에 들어가요 (예: &lt;'+esc(b.title)+'&gt; 70점)'+(tSess?'':' · 첫 답을 저장할 때 같이 기록돼요')+'</span></div>';
   if(b.source==='책 소개')h+='<div class="banner" style="margin:0 0 12px">리드인 책 소개를 바탕으로 자동으로 만든 질문이에요. 수업 전에 한 번 훑어보고, 고칠 곳은 \'발문지 편집\'에서 고쳐 주세요. 한 번 저장하면 이 안내는 사라져요.</div>';
   if(free)h+='<div class="qtype">직접 질문</div><input class="tin" id="freeQ" placeholder="발문지에 없는 질문을 적어 주세요"><textarea class="ta small" id="freeA" placeholder="모범 답안 (없으면 비워 두세요)" style="margin-bottom:10px"></textarea>';
-  else h+='<div class="qtype">'+esc(x.kind||'')+'</div><p class="question">'+esc(x.q)+'</p><div class="answerbox"><div class="cap">모범 답안</div><p>'+esc(x.a||'(모범 답안 없음)')+'</p></div>';
+  else{h+='<div class="qtype">'+esc(x.kind||'')+'</div><p class="question">'+esc(x.q)+'</p><div class="answerbox"><div class="cap">모범 답안</div><p>'+esc(x.a||'(모범 답안 없음)')+'</p></div>';
+    const done=S.page?S.page.records.filter(r=>r.bookId===b.id&&r.day===kstDay()&&(r.qid?r.qid===x.id:r.question===x.q)).pop():null;
+    if(done)h+='<div class="banner" style="margin:0 0 10px">오늘 이미 기록한 답이 있어요: '+GRADE[done.grade]+' · '+esc(done.answer)+'<button data-editrec="'+done.id+'">이 답 고치기</button></div>'}
   h+='<textarea class="ta c" id="childAnswer" placeholder="아이의 답을 적어 주세요."></textarea><div class="grade" id="grades">'+['ok','part','re'].map(g=>'<button data-grade="'+g+'" class="'+(S.grade===g?'on':'')+'">'+GRADE[g]+' <small style="opacity:.55;font-weight:600">Alt+'+({ok:1,part:2,re:3}[g])+'</small></button>').join('')+'</div>';
   h+='<div class="crow"><span class="hint">아이 답을 적고 ○△×를 누르면 바로 저장되고 다음 질문으로 넘어가요. 키보드는 Alt+1(○) Alt+2(△) Alt+3(×). 잘못 누른 건 아래 기록에서 지우면 돼요.</span></div>';
   h+=bookRecordsHtml(b);
@@ -635,6 +637,13 @@ function renderBalmun(){
   $('childAnswer').value=keep.a;if(free){$('freeQ').value=keep.fq;$('freeA').value=keep.fa}
 }
 function todaySession(bookId){if(!S.page)return null;return (S.page.sessions||[]).find(x=>x.bookId===bookId&&x.day===kstDay())||null}
+function recHtml(r){
+  if(S.recEdit&&S.recEdit.id===r.id){const g=S.recEdit.grade;
+    return '<div class="rec"><div class="rt"><small>'+(r.qn?'질문 '+r.qn+' · ':'')+esc(r.kind||'')+' · 고치는 중</small></div><p class="eq">'+esc(r.question)+'</p>'
+      +'<textarea class="ta small" id="recAns">'+esc(r.answer)+'</textarea><div class="grade" style="margin-top:8px">'+['ok','part','re'].map(x=>'<button data-recgrade="'+x+'" class="'+(g===x?'on':'')+'">'+GRADE[x]+'</button>').join('')+'</div>'
+      +'<div class="crow" style="margin-top:8px"><span class="hint">고친 내용은 노션 학생 일지에도 바로 반영돼요</span><button class="ghost" data-reccancel="1" style="margin-left:auto">취소</button><button class="primary" data-recsave="'+r.id+'">저장</button></div></div>'}
+  return '<div class="rec"><div class="rt"><span class="badge '+r.grade+'">'+GRADE[r.grade]+'</span><small>'+(r.qn?'질문 '+r.qn+' · ':'')+esc(r.kind||'')+'</small><button class="lnk" data-editrec="'+r.id+'" style="margin-left:auto">수정</button><button class="lnk del" data-delrec="'+r.id+'" style="margin-left:10px">삭제</button></div><p class="eq">'+esc(r.question)+'</p><p><b class="lab">아이 답</b>'+esc(r.answer)+'</p>'+(r.model?'<p class="em"><b class="lab">모범 답안</b>'+esc(r.model)+'</p>':'')+'</div>';
+}
 function bookRecordsHtml(b){
   if(!S.page)return '';
   const rs=S.page.records.filter(r=>r.bookId===b.id);if(!rs.length)return '';
@@ -643,9 +652,16 @@ function bookRecordsHtml(b){
   return days.map(d=>{const dr=rs.filter(r=>r.day===d).sort((a,b)=>a.ts<b.ts?-1:1),x=sess[b.id+'|'+d]||{},c={ok:0,part:0,re:0};dr.forEach(r=>c[r.grade]++);
     return '<div class="bookcard"><div class="bchead"><strong>&lt;'+esc(b.title)+'&gt;</strong><span class="bdate">'+dayLabel(d)+'</span><label class="score">진단 점수 <input type="number" min="0" max="100" step="10" data-score="'+d+'" value="'+(x.score==null?'':x.score)+'">점</label>'
       +(x.sync==='ok'?'<span class="sync ok">노션 ✓</span>':x.sync?'<span class="sync err" title="'+esc(x.error||'')+'">노션 기록 실패</span>':'')+'<span class="tally">○'+c.ok+' △'+c.part+' ×'+c.re+'</span></div>'
-      +dr.map(r=>'<div class="rec"><div class="rt"><span class="badge '+r.grade+'">'+GRADE[r.grade]+'</span><small>'+(r.qn?'질문 '+r.qn+' · ':'')+esc(r.kind||'')+'</small><button class="lnk del" data-delrec="'+r.id+'">삭제</button></div><p class="eq">'+esc(r.question)+'</p><p><b class="lab">아이 답</b>'+esc(r.answer)+'</p>'+(r.model?'<p class="em"><b class="lab">모범 답안</b>'+esc(r.model)+'</p>':'')+'</div>').join('')+'</div>'}).join('');
+      +dr.map(recHtml).join('')+'</div>'}).join('');
 }
 $('bookArea').addEventListener('click',async e=>{
+  const er=e.target.closest('[data-editrec]'),rg=e.target.closest('[data-recgrade]'),rs=e.target.closest('[data-recsave]'),rc=e.target.closest('[data-reccancel]');
+  if(er){const r=S.page.records.find(x=>x.id===er.dataset.editrec);if(!r)return;S.recEdit={id:r.id,grade:r.grade};renderBalmun();const t=$('recAns');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length);t.scrollIntoView({block:'center'})}return}
+  if(rg){S.recEdit.grade=rg.dataset.recgrade;document.querySelectorAll('[data-recgrade]').forEach(x=>x.classList.toggle('on',x.dataset.recgrade===S.recEdit.grade));return}
+  if(rc){S.recEdit=null;renderBalmun();return}
+  if(rs){const ans=$('recAns').value.trim();if(!ans){toast('아이 답을 적어 주세요');return}rs.disabled=true;
+    try{const r=await api('bm_update_record',{p_token:S.token,p_id:rs.dataset.recsave,p_answer:ans,p_grade:S.recEdit.grade});S.unsynced=r.unsynced;S.recEdit=null;await loadPage();renderBanners();toast(r.sync&&r.sync.status==='error'?'고쳤는데 노션에 못 넣었어요. 위의 \'다시 보내기\'를 눌러 주세요':'고쳐서 노션에도 반영했어요',r.sync&&r.sync.status==='error')}
+    catch(err){if(!onAuthFail(err))toast(errText(err),true);rs.disabled=false}return}
   const qb=e.target.closest('[data-q]'),gb=e.target.closest('[data-grade]'),sv=e.target.closest('#aSave'),dr=e.target.closest('[data-delrec]');
   if(qb){S.cur=qb.dataset.q==='free'?'free':+qb.dataset.q;S.grade='';renderBalmun();const f=S.cur==='free'?$('freeQ'):$('childAnswer');if(f)f.focus();return}
   if(gb){await gradeAndSave(gb.dataset.grade);return}
