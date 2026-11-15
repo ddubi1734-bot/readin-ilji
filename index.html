@@ -20,6 +20,20 @@ button,select,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 button:disabled{opacity:.55;cursor:default}
 .hidden{display:none!important}
+.drop{border:2px dashed #b9cbc3;border-radius:14px;padding:22px 16px;text-align:center;color:#536560;font-size:13px;line-height:1.7;cursor:pointer;background:#fafcfb}
+.drop.over{border-color:var(--green);background:var(--mint)}
+.drop b{color:var(--green)}
+.upl{margin-top:12px;max-height:46vh;overflow:auto}
+.upb{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.upb .r{display:flex;gap:6px;align-items:center}
+.upb .r .inp{flex:1;min-width:0}.upb .r .lvi{flex:none;width:90px}
+.upb .meta{font-size:12px;color:var(--muted);margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.upb .meta .bad{color:var(--red);font-weight:700}
+.upb ol{margin:6px 0 0;padding-left:20px;font-size:12px;color:#33433f;line-height:1.55}
+.upb ol li span{color:var(--muted)}
+.upb .x{border:0;background:none;color:#8a9a95;font-size:18px;cursor:pointer;padding:0 4px}
+.pastebox{width:100%;min-height:120px;box-sizing:border-box;border:1px solid #dce5e0;border-radius:10px;padding:9px 11px;font:inherit;font-size:12.5px;margin-top:6px}
+details.paste{margin-top:10px;font-size:13px}details.paste summary{cursor:pointer;color:var(--green);font-weight:750}
 .rp{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:900px){.rp{grid-template-columns:1fr}}
 .rpc{border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;background:#fff}
@@ -340,7 +354,7 @@ input[type=date].inp{width:150px}
           <div class="crow"><input type="date" class="inp" id="cDate"><span class="hint">노션 학생 일지 왼쪽 칸 맨 위에 날짜와 함께 들어가요</span><button class="primary" id="cSave">코멘트 저장</button></div>
         </div>
         <div id="tab-balmun" class="hidden">
-          <div class="pickrow"><div class="bookbar"><div class="combo"><input id="bookInput" autocomplete="off" spellcheck="false" placeholder="책 제목 (초성 가능, 최근 발문한 책이 위에)"><div class="menu" id="bookMenu"></div></div><button class="outline" id="btnEditBook">발문지 편집</button></div></div>
+          <div class="pickrow"><div class="bookbar"><div class="combo"><input id="bookInput" autocomplete="off" spellcheck="false" placeholder="책 제목 (초성 가능, 최근 발문한 책이 위에)"><div class="menu" id="bookMenu"></div></div><button class="outline" id="btnEditBook">발문지 편집</button><button class="outline" id="btnUpload">발문지 올리기</button></div></div>
           <div id="bookArea"></div>
         </div>
         <div id="tab-history" class="hidden"><div class="colhead"><h3>일지 · 코멘트와 발문</h3><span id="lCount"></span></div><p class="hint" style="font-size:12px;color:var(--muted);margin:-4px 0 10px">노션 학생 일지에 있는 기록이 최신순으로 보여요. 발문 기록은 '발문 탭에서 보기'를 눌러 고치고, 코멘트는 여기서 바로 수정·삭제할 수 있어요.</p><div id="leftList"></div></div>
@@ -366,6 +380,18 @@ input[type=date].inp{width:150px}
 </div></div>
 <datalist id="lvlist"><option>기초</option><option>1레벨</option><option>2레벨</option><option>3레벨</option><option>4레벨</option><option>5레벨</option><option>6레벨</option><option>7레벨</option></datalist>
 <datalist id="kindlist"><option>사실 질문</option><option>추론 질문</option><option>적용 질문</option><option>어휘</option><option>비판 질문</option><option>생각 나누기</option></datalist>
+<div class="modalback" id="upModal"><div class="modal edmodal" style="width:min(720px,100%)">
+  <div class="edhead"><h3 style="margin:0 0 4px">발문지 올리기</h3><p class="desc" style="margin:0">Word(.docx) 발문지를 여러 개 한꺼번에 올릴 수 있어요. 파일 하나가 책 한 권이에요. 올리기 전에 제목·레벨·질문을 확인하고 고칠 수 있어요.</p></div>
+  <div class="edbody">
+    <label class="drop" id="upDrop"><input type="file" id="upFile" accept=".docx,.txt" multiple hidden><b>여기를 눌러 파일 고르기</b><br>또는 파일을 이 칸에 끌어다 놓으세요<br><small>Word(.docx), 메모장(.txt) · 한글(.hwp)은 한글에서 "다른 이름으로 저장 → Word 문서(.docx)"로 바꿔서 올려 주세요</small></label>
+    <details class="paste"><summary>파일 없이 글로 붙여넣기</summary>
+      <div style="display:flex;gap:6px;margin-top:8px"><input class="inp" id="upPTitle" placeholder="책 제목" style="flex:1"><input class="inp" id="upPLevel" placeholder="레벨" list="lvlist" style="width:100px"></div>
+      <textarea class="pastebox" id="upPText" placeholder="■ 사실 질문&#10;1. 주인공의 이름은 무엇인가요?&#10;-> 도하&#10;2. ...&#10;■ 추론 질문&#10;3. ..."></textarea>
+      <button class="outline" id="upPAdd" style="margin-top:6px">목록에 넣기</button></details>
+    <div class="upl" id="upList"></div>
+  </div>
+  <div class="edfoot"><label style="font-size:12.5px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="upReplace"> 같은 제목의 책이 있으면 새 발문지로 바꾸기</label><span class="grow"></span><button id="upCancel">닫기</button><button class="primary" id="upSave" disabled>올리기</button></div>
+</div></div>
 <div class="modalback" id="reqModal"><div class="modal" style="width:min(580px,100%)"><div id="reqModalBody"></div></div></div>
 <div class="modalback" id="stuModal"><div class="modal"><h3>새 학생 추가</h3>
   <p class="desc">노션 학생 일지에 새 페이지가 만들어져요. 노션 템플릿(코멘트 추가, 렙코 기록 버튼)이 그대로 들어가요.</p>
@@ -376,7 +402,7 @@ input[type=date].inp{width:150px}
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-11';
+const APP_VER='2026-11-15-12';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
@@ -560,6 +586,87 @@ $('nsSave').onclick=async()=>{
 };
 $('nsName').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('nsSave').click()});
 
+
+/* ---------- 발문지 올리기 ---------- */
+async function zipEntry(buf,name){
+  const dv=new DataView(buf),dec=new TextDecoder();let e=-1;
+  for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-70000);i--){if(dv.getUint32(i,true)===0x06054b50){e=i;break}}
+  if(e<0)throw new Error('NOTDOCX');
+  const n=dv.getUint16(e+10,true);let p=dv.getUint32(e+16,true);
+  for(let k=0;k<n;k++){
+    if(dv.getUint32(p,true)!==0x02014b50)break;
+    const method=dv.getUint16(p+10,true),cs=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),el=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),off=dv.getUint32(p+42,true);
+    const fn=dec.decode(new Uint8Array(buf,p+46,nl));
+    if(fn===name){const ln=dv.getUint16(off+26,true),le=dv.getUint16(off+28,true);const data=new Uint8Array(buf,off+30+ln+le,cs);
+      if(method===0)return dec.decode(data);
+      const out=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();return dec.decode(out)}
+    p+=46+nl+el+cl}
+  throw new Error('NOTDOCX')}
+async function docxLines(buf){
+  const xml=await zipEntry(buf,'word/document.xml'),W='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const doc=new DOMParser().parseFromString(xml,'application/xml'),out=[];
+  for(const p of doc.getElementsByTagNameNS(W,'p')){
+    let t='';const walk=n=>{for(const c of n.childNodes){if(c.namespaceURI!==W)continue;const ln=c.localName;if(ln==='t')t+=c.textContent;else if(ln==='tab')t+=' ';else if(ln==='br'||ln==='cr')t+='\n';else if(ln!=='p'&&ln!=='pPr')walk(c)}};walk(p);
+    const np=p.getElementsByTagNameNS(W,'numPr')[0];let lv=null;
+    if(np){const il=np.getElementsByTagNameNS(W,'ilvl')[0];lv=il?(parseInt(il.getAttributeNS(W,'val')||il.getAttribute('w:val')||'0',10)||0):0}
+    t.split('\n').forEach((s,i)=>out.push({t:s,num:i===0?lv:null}))}
+  return out}
+function upKind(s){s=String(s).replace(/\s/g,'');if(/글쓰기|쓰기활동|독후활동|활동지|논술/.test(s))return 'SKIP';if(/사실/.test(s))return '사실 질문';if(/추론/.test(s))return '추론 질문';if(/적용|적응/.test(s))return '적용 질문';if(/비판|평가/.test(s))return '비판 질문';if(/어휘|낱말/.test(s))return '어휘 질문';if(/생각나누|토론|대화거리|이야기나누/.test(s))return '생각 나누기';return null}
+function upHeader(t){const s=t.trim();if(s.length>30||/[?？]\s*$/.test(s))return null;const k=upKind(s);if(!k)return null;
+  if(/^[■□◆◇●○▶▷★☆#※【\[<〈(]/.test(s)||/(문제|질문|활동|영역)\s*[\]】>〉):]?\s*$/.test(s))return k;return null}
+function upLevel(s){const m=String(s).match(/기초|(\d{1,2})\s*레벨|레벨\s*(\d{1,2})|(\d{1,2})\s*단계/);if(!m)return '';if(m[0]==='기초')return '기초';return (m[1]||m[2]||m[3])+'레벨'}
+function upTitle(s){return String(s).replace(/\.(docx|txt)$/i,'').replace(/^[\s\d_().\-]+(?=\S)/,'').replace(/[<>〈〉《》『』「」\[\]]/g,' ').replace(/발문지|발문|\(?\s*(기초|\d{1,2}\s*레벨|레벨\s*\d{1,2})\s*\)?/g,' ').replace(/_+/g,' ').replace(/\s+/g,' ').trim()}
+function parseBalmun(lines,fname){
+  const Q=/^(?:Q\s*)?(\d{1,2})\s*[.)．、]\s*(.*)$/i,A=/^(?:->|→|=>|⇒|➡|-|–|—|ㄴ|└|답\s*[:：)]|A\s*[:：.]|(?:예시|모범)\s*답(?:안)?\s*[:：]?|정답\s*[:：]?)\s*/,KQ=/^\(\s*(사실|추론|적용|비판|어휘)\s*\d*\s*\)\s*/;
+  let kind='질문',skip=false,cur=null,title='',level=upLevel(fname||'');const qs=[];
+  const push=(q,k)=>{const m=q.match(KQ);if(m){k=upKind(m[1])||k;q=q.replace(KQ,'')}cur={kind:k,q:q.trim(),a:''};qs.push(cur)};
+  for(const ln of lines){const t=String(ln.t==null?ln:ln.t).replace(/\u00a0/g,' ').trim();if(!t)continue;
+    const h=upHeader(t);if(h){if(h==='SKIP')skip=true;else{skip=false;kind=h}cur=null;continue}
+    if(!qs.length&&!level){const lv=upLevel(t);if(lv)level=lv}
+    if(skip)continue;
+    const m=t.match(Q),isA=A.test(t);
+    if(m&&m[2]){push(m[2],kind);continue}
+    if(ln.num===0&&!isA){push(t,kind);continue}
+    if(KQ.test(t)){push(t,kind);continue}
+    if(cur&&(isA||(ln.num!=null&&ln.num>0))){const a=t.replace(A,'').trim();if(a)cur.a+=(cur.a?' ':'')+a;continue}
+    if(cur){if(/[?？]\s*$/.test(t)&&cur.a){push(t,kind);continue}if(!cur.a)cur.q+=' '+t;else cur.a+=' '+t;continue}
+    if(/[?？]\s*$/.test(t)&&title){push(t,kind);continue}
+    if(!title)title=upTitle(t)}
+  const ft=upTitle(fname||'');
+  if(!title||title.length>40)title=ft||title;
+  return {title:title.slice(0,80),level,questions:qs.filter(x=>x.q).map(x=>({kind:x.kind,q:x.q,a:x.a}))}}
+S.up=[];
+function openUpload(){S.up=[];$('upFile').value='';$('upPText').value='';$('upPTitle').value='';$('upPLevel').value='';renderUp();$('upModal').classList.add('open')}
+function kindCount(qs){const c={};qs.forEach(q=>{c[q.kind]=(c[q.kind]||0)+1});return Object.entries(c).map(([k,n])=>k.replace(' 질문','')+' '+n).join(' · ')}
+function renderUp(){
+  $('upList').innerHTML=S.up.map((b,i)=>'<div class="upb" data-i="'+i+'"><div class="r"><input class="inp" data-f="title" value="'+esc(b.title)+'" placeholder="책 제목"><input class="inp lvi" data-f="level" list="lvlist" value="'+esc(b.level)+'" placeholder="레벨"><button class="x" data-rm="'+i+'" title="빼기">×</button></div>'
+    +'<div class="meta">'+(b.err?'<span class="bad">'+esc(b.err)+'</span>':(b.questions.length?'<b>'+b.questions.length+'문항</b> · '+esc(kindCount(b.questions)):'<span class="bad">질문을 못 찾았어요. 번호(1. 2. …)가 붙은 질문인지 확인해 주세요.</span>'))+(b.file?'<span>· '+esc(b.file)+'</span>':'')+(b.questions.length?'<button class="lnk" data-tg="'+i+'">'+(b.open?'접기':'질문 보기')+'</button>':'')+'</div>'
+    +(b.open?'<ol>'+b.questions.map(q=>'<li><span>['+esc(q.kind)+']</span> '+esc(q.q)+(q.a?'<br><span>→ '+esc(q.a)+'</span>':'')+'</li>').join('')+'</ol>':'')+'</div>').join('')
+    ||'<p style="color:var(--muted);font-size:12.5px;text-align:center;margin:14px 0">고른 파일이 여기에 나와요.</p>';
+  const ok=S.up.filter(b=>!b.err&&b.questions.length&&b.title.trim()).length;$('upSave').disabled=!ok;$('upSave').textContent=ok?ok+'권 올리기':'올리기'}
+async function addUpFiles(files){
+  for(const f of files){const ext=(f.name.split('.').pop()||'').toLowerCase();
+    if(ext==='hwp'||ext==='hwpx'){S.up.push({title:upTitle(f.name),level:upLevel(f.name),questions:[],file:f.name,err:'한글 파일이에요. 한글에서 Word(.docx)로 저장해서 올려 주세요.'});continue}
+    try{const lines=ext==='txt'?(await f.text()).split(/\r?\n/).map(t=>({t,num:null})):await docxLines(await f.arrayBuffer());
+      const b=parseBalmun(lines,f.name);b.file=f.name;S.up.push(b)}
+    catch(e){S.up.push({title:upTitle(f.name),level:'',questions:[],file:f.name,err:'파일을 읽지 못했어요. Word(.docx) 파일이 맞는지 확인해 주세요.'})}}
+  renderUp()}
+$('upFile').onchange=()=>addUpFiles([...$('upFile').files]);
+['dragenter','dragover'].forEach(ev=>$('upDrop').addEventListener(ev,e=>{e.preventDefault();$('upDrop').classList.add('over')}));
+['dragleave','drop'].forEach(ev=>$('upDrop').addEventListener(ev,e=>{e.preventDefault();$('upDrop').classList.remove('over')}));
+$('upDrop').addEventListener('drop',e=>{if(e.dataTransfer&&e.dataTransfer.files)addUpFiles([...e.dataTransfer.files])});
+$('upPAdd').onclick=()=>{const t=$('upPText').value;if(!t.trim()){toast('발문지 내용을 붙여넣어 주세요');return}
+  const b=parseBalmun(t.split(/\r?\n/).map(x=>({t:x,num:null})),'');if($('upPTitle').value.trim())b.title=$('upPTitle').value.trim();if($('upPLevel').value.trim())b.level=$('upPLevel').value.trim();
+  b.file='붙여넣기';S.up.push(b);$('upPText').value='';$('upPTitle').value='';$('upPLevel').value='';renderUp()};
+$('upList').oninput=e=>{const box=e.target.closest('[data-i]'),f=e.target.dataset.f;if(box&&f){S.up[+box.dataset.i][f]=e.target.value;const ok=S.up.filter(b=>!b.err&&b.questions.length&&b.title.trim()).length;$('upSave').disabled=!ok;$('upSave').textContent=ok?ok+'권 올리기':'올리기'}};
+$('upList').onclick=e=>{const rm=e.target.closest('[data-rm]');if(rm){S.up.splice(+rm.dataset.rm,1);renderUp();return}const tg=e.target.closest('[data-tg]');if(tg){const b=S.up[+tg.dataset.tg];b.open=!b.open;renderUp()}};
+$('upCancel').onclick=()=>$('upModal').classList.remove('open');
+$('upSave').onclick=async()=>{const books=S.up.filter(b=>!b.err&&b.questions.length&&b.title.trim()).map(b=>({title:b.title.trim(),level:b.level.trim(),questions:b.questions}));if(!books.length)return;
+  $('upSave').disabled=true;try{const r=await api('bm_import_books',{p_token:S.token,p:{books,replace:$('upReplace').checked}});S.books=r.books;
+    const sk=r.skipped||[];$('upModal').classList.remove('open');if(!bookById(S.bookId)&&S.books.length)S.bookId=S.books[S.books.length-1].id;savePref();renderBalmun();
+    toast('발문지 '+(r.added+r.updated)+'권을 올렸어요'+(r.updated?' (바꾼 책 '+r.updated+'권)':'')+(sk.length?' · 못 올린 책 '+sk.length+'권: '+sk.slice(0,3).join(', '):''),!!sk.length)}
+  catch(e){if(!onAuthFail(e))toast(errText(e),true)}finally{$('upSave').disabled=false}};
+$('btnUpload').onclick=openUpload;
 /* ---------- 레포트 요청 ---------- */
 const RK={vocab:{n:'어휘 레포트',src:'문해력마당 어휘마당 기록을 바로 불러와요',out:'레포트 PDF'},
   training:{n:'트레이닝 레포트',src:'읽쓰 학습 결과는 요청하면 Aside가 모아요',out:'Word 초안 → 검토 → PDF'},
