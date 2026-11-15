@@ -208,7 +208,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-16';
+const APP_VER='2026-11-15-17';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -435,7 +435,7 @@ function vPend(){const list=pendRows();const nod=rowsBy(r=>info(r).key==='nodate
         <div class="rows">${rs.map(r=>rowLine(r,{check:true,noName:true})).join('')}</div></div>`}).join('');
   }else{body=`<div class="card sec"><div class="rows">${list.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.n.localeCompare(b.n)).map(r=>rowLine(r,{check:true})).join('')}</div></div>`}
   return `<div class="toolbar"><input class="search" id="pq" placeholder="이름 검색 (초성 가능)" value="${esc(S.pq)}" autocomplete="off">${chips}<span class="sp"></span>
-    <button class="chip ${S.pg?'on':''}" data-act="pg">학생별로 묶기</button></div><div class="toolbar" style="margin-top:-4px"><span class="sum">종류</span>${tchips}</div><div id="vbody">
+    <button class="chip ${S.pg?'on':''}" data-act="pg">학생별로 묶기</button></div><div id="vbody">
     ${nod.length?`<div class="banner">이름이나 날짜가 비어 있는 기록이 ${nod.length}건 있어요 (노션의 '날짜 없음'). <button class="mini" data-act="showNodate">보기·정리</button></div>`:''}
     <div class="sum" style="margin-bottom:10px">${list.length}건 · 합계 <b>${mins(total)}</b>${splitSum(list).s&&splitSum(list).a?` (결석 ${mins(splitSum(list).a)} · 덜 함 ${mins(splitSum(list).s)})`:''} · 학생 ${new Set(list.map(r=>r.n)).size}명 &nbsp;|&nbsp; 여러 건을 체크하면 한 번에 예약·완료할 수 있어요.</div>
     ${body||'<div class="card sec"><div class="empty">해당하는 기록이 없어요.</div></div>'}</div>`}
