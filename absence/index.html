@@ -237,7 +237,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-26';
+const APP_VER='2026-11-16-1';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -576,7 +576,7 @@ function openModal(html,cls=''){closeModal();const d=document.createElement('div
   d.addEventListener('mousedown',e=>{if(e.target===d)closeModal()});$('modalRoot').appendChild(d);return d.firstElementChild}
 function closeModal(){$('modalRoot').innerHTML='';if(modalClose){const f=modalClose;modalClose=null;f()}}
 function askDate(title,sub,def,okLabel){return new Promise(res=>{const m=openModal(`<h2>${esc(title)}</h2><div class="sub">${esc(sub)}</div>
-  <div class="field"><div class="hrow"><input class="inp" type="date" id="adD" value="${def||''}"><button class="ghost" data-q="0">오늘</button><button class="ghost" data-q="1">내일</button><button class="ghost" data-q="-1">어제</button></div></div>
+  <div class="field"><div class="hrow"><input class="inp" type="date" id="adD" value="${def||''}"><button class="ghost" data-q="0">오늘</button><button class="ghost" data-q="1">내일</button></div></div>
   <div class="mfoot"><span class="sp"></span><button class="ghost" id="adC">취소</button><button class="primary" id="adO">${esc(okLabel||'확인')}</button></div>`);
   let done=false;const fin=v=>{if(done)return;done=true;modalClose=null;closeModal();res(v)};modalClose=()=>{if(!done){done=true;res(null)}};
   m.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{m.querySelector('#adD').value=addDays(today(),+b.dataset.q)});
@@ -725,7 +725,7 @@ function openMakeup(n,preIds,back,opts){
   let name=n||'',d=(opts&&opts.date)||today(),touched=false,mval=null,showExp=false;let checked=new Set(preIds||[]);let firstDraw=true;
   const m=openModal(`<h2>보강 기록</h2><div class="sub">보강한 시간을 적으면 체크한 결석을 위에서부터(오래된 것부터) 채워요. 다 채운 결석은 '완료', 덜 채운 결석은 남은 시간만 줄어요.</div>
     <div class="grid2" style="gap:10px"><div class="field"><label>학생</label><input class="inp" id="mkN" value="${esc(name)}" placeholder="이름 (초성 가능)" autocomplete="off" spellcheck="false"><div class="sug" id="mkSug"></div></div>
-    <div class="field"><label>보강한 날짜</label><div class="hrow"><input class="inp" type="date" id="mkD" value="${d}"><button class="ghost" data-q="0">오늘</button><button class="ghost" data-q="-1">어제</button></div></div></div>
+    <div class="field"><label>보강한 날짜</label><div class="hrow"><input class="inp" type="date" id="mkD" value="${d}"><button class="ghost" data-q="0">오늘</button></div></div></div>
     <div class="field"><label>수업</label><div class="seg" id="mkU">${SUBS.map(s=>`<button data-u="${s}">${s}</button>`).join('')}</div></div>
     <div class="field"><label>보강한 시간(분)</label><div class="hrow"><input class="inp" style="max-width:110px" type="number" min="1" step="5" id="mkM">분 <span class="sum" id="mkAll"></span></div></div>
     <div class="field"><label>채울 결석 <span style="font-weight:600;color:var(--muted)">(체크한 것만, 위에서부터 채워요)</span> <label style="float:right;font-weight:600;color:var(--muted);cursor:pointer"><input type="checkbox" id="mkExp"> 소멸된 결석도 보기</label></label><div class="rows" id="mkList"></div></div>
@@ -835,17 +835,25 @@ function openOnhi(p){const d=p.d;
   draw()}
 
 /* 학부모 안내 문구 */
+function hasBatchim(s){const c=(s||'').charCodeAt((s||'').length-1)-0xAC00;return c>=0&&c<11172&&c%28!==0}
+function callName(n){const nm=String(n||'').replace(/\s*\(.*\)\s*$/,'');const g=nm.length>=3?nm.slice(1):nm;const b=hasBatchim(g);return {g,sub:g+(b?'이가':'가'),to:g+(b?'이에게':'에게'),is:g+(b?'이':'')}}
+function msgItem(r,useMin){const m=useMin!=null?useMin:rem(r);const what=isShort(r)?`수업 중 덜 한 ${mins(m)}`:`결석한 ${mins(m)}`;const sb=subOf(r)!=='리드인'?` (${subOf(r)})`:'';return `${kdate(r.d)}${sb} ${what}`}
 function msgFor(list){list=list.slice().sort((a,b)=>(a.d||'').localeCompare(b.d||''));const byN=new Map();list.forEach(r=>{if(!byN.has(r.n))byN.set(r.n,[]);byN.get(r.n).push(r)});
-  const out=[];for(const [n,rs] of byN){const nm=n.replace(/\(\d+\)$/,'');
+  const out=[];for(const [n,rs] of byN){const c=callName(n);
     const booked=rs.filter(r=>r.k&&r.s!=='완료'),wait=rs.filter(r=>!r.k&&r.s!=='완료'),done=rs.filter(r=>r.s==='완료');
-    const lines=[`안녕하세요, 리드인 황남1점입니다.`];
+    const lines=['안녕하세요, 어머니! 리드인입니다 :)'];
     if(booked.length){const g=new Map();booked.forEach(r=>{if(!g.has(r.k))g.set(r.k,[]);g.get(r.k).push(r)});
-      for(const [k,x] of g)lines.push(`${nm} 학생 ${x.map(r=>kdate(r.d)).join(', ')} 결석분 보강(${mins(x.reduce((a,r)=>a+plan(r),0))})을 ${kdate(k)}에 진행할 예정입니다.`)}
+      lines.push('');lines.push(`${c.is} 보강 일정을 이렇게 잡아 두었어요.`);
+      for(const [k,x] of [...g.entries()].sort((a,b)=>a[0].localeCompare(b[0])))lines.push(`- ${kdate(k)}에 ${mins(x.reduce((a,r)=>a+plan(r),0))} (${x.map(r=>msgItem(r,plan(r))+' 보강').join(', ')})`);
+      lines.push('그날 차근차근 잘 채워 줄게요!')}
     if(wait.length){const exp=wait.map(r=>info(r).exp).filter(x=>x&&x>=today()).sort()[0];
-      lines.push(`${nm} 학생 ${wait.map(r=>kdate(r.d)).join(', ')} 결석분 중 ${mins(remSum(wait))} 보강이 남아 있습니다. 가능하신 날짜를 알려 주시면 보강 일정을 잡아 드리겠습니다.`);
-      if(exp)lines.push(`(보강은 결석일로부터 ${S.set.expireMonths||2}개월 안에 가능하며, 가장 빠른 기한은 ${kdate(exp)}입니다.)`)}
-    if(done.length&&!booked.length&&!wait.length)lines.push(`${nm} 학생 ${done.map(r=>kdate(r.d)).join(', ')} 결석분 보강을 ${[...new Set(done.map(r=>r.k).filter(Boolean))].map(kdate).join(', ')||'모두'} 마쳤습니다.`);
-    lines.push('감사합니다.');out.push(lines.join('\n'))}
+      lines.push('');lines.push(`${c.sub} 아직 보강하지 못한 시간이 있어서 알려 드려요.`);wait.forEach(r=>lines.push('- '+msgItem(r)));
+      if(wait.length>1)lines.push(`모두 합하면 ${mins(remSum(wait))}이에요.`);
+      lines.push('편하신 날짜를 알려 주시면 그에 맞춰 보강 일정을 잡아 드릴게요.');
+      if(exp)lines.push(`보강은 빠진 날로부터 ${S.set.expireMonths||2}개월 안에 할 수 있어서, ${kdate(exp)} 전에는 꼭 챙겨 드리고 싶어요.`)}
+    if(done.length&&!booked.length&&!wait.length){const ks=[...new Set(done.map(r=>r.k).filter(Boolean))].map(kdate);
+      lines.push('');lines.push(`${c.sub} 보강을 ${ks.length?ks.join(', ')+'에 ':''}모두 잘 마쳤어요.`);done.forEach(r=>lines.push('- '+msgItem(r,+r.m||0)));lines.push(`끝까지 집중해 준 ${c.to} 칭찬 많이 해 주세요!`)}
+    lines.push('');lines.push('늘 믿고 보내 주셔서 감사해요. 좋은 하루 보내세요!');out.push(lines.join('\n'))}
   return out.join('\n\n')}
 function openMsg(list){const m=openModal(`<h2>학부모 안내 문구</h2><div class="sub">고칠 부분은 고친 뒤 복사해서 문자·카톡에 붙여 넣으세요.</div>
   <textarea class="inp" id="msgT">${esc(msgFor(list))}</textarea><div class="mfoot"><span class="sp"></span><button class="ghost" id="mC">닫기</button><button class="primary" id="mO">복사하기</button></div>`);
