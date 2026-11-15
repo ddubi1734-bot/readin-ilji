@@ -127,6 +127,28 @@ button{cursor:pointer}button:disabled{opacity:.55;cursor:default}
 .ln.bk{background:#fff;border:1.5px dashed #9fb7e3;color:#2f5fb3}.ln.bk .tg{background:#2f5fb3}.ln.bk.late{border-color:#c9a6e0;color:#7a3fa3}.ln.bk.late .tg{background:#7a3fa3}
 .ln.mk{background:#fff;border:1.5px dashed #a8d5ba;color:#1d7a4a}.ln.mk .tg{background:#1d7a4a}
 .legend .ln.lg{margin:0;font-size:11.5px}
+.calnav{display:flex;align-items:center;gap:2px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:3px}
+.calnav h2{margin:0 8px;font-size:19px;min-width:128px;text-align:center}
+.calnav .nb{border:0;background:none;width:34px;height:34px;border-radius:9px;font-size:22px;line-height:1;color:#536560}.calnav .nb:hover{background:#eef3f0}
+.viewbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px 10px;margin-bottom:10px}
+.vgroup{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1}
+.vlabel{font-size:12px;font-weight:800;color:var(--muted);margin-right:2px}
+.vt{display:inline-flex;align-items:center;gap:6px;border:1.5px solid #e3e9e6;background:#f7f9f8;border-radius:10px;padding:6px 11px;font-size:13px;font-weight:700;color:#8a9a95}
+.vt b{font-weight:800;font-size:12px;background:#eef1ef;border-radius:99px;padding:0 7px;color:#8a9a95}
+.vt .sw{width:10px;height:10px;border-radius:3px;border:2px solid #b8c3bf;background:#fff}
+.vt.on{background:#fff;color:var(--ink)}.vt.on b{color:#fff}
+.vt.v-ab.on{border-color:#e7c88f}.vt.v-ab.on .sw{background:#94620b;border-color:#94620b}.vt.v-ab.on b{background:#94620b}
+.vt.v-sh.on{border-color:#f0d6a8}.vt.v-sh.on .sw{background:#c27c0e;border-color:#c27c0e}.vt.v-sh.on b{background:#c27c0e}
+.vt.v-bk.on{border-color:#9fb7e3}.vt.v-bk.on .sw{background:#2f5fb3;border-color:#2f5fb3}.vt.v-bk.on b{background:#2f5fb3}
+.vt.v-mk.on{border-color:#a8d5ba}.vt.v-mk.on .sw{background:#1d7a4a;border-color:#1d7a4a}.vt.v-mk.on b{background:#1d7a4a}
+.vswitch{display:inline-flex;align-items:center;gap:8px;border:0;background:none;font-size:12.5px;font-weight:700;color:#6b7c79;padding:4px 6px;border-left:1px solid var(--line);padding-left:14px}
+.vswitch .knob{width:32px;height:18px;border-radius:99px;background:#d5ddd9;position:relative;transition:.15s;flex:none}
+.vswitch .knob::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0003;transition:.15s}
+.vswitch.on{color:var(--green)}.vswitch.on .knob{background:var(--green)}.vswitch.on .knob::after{left:16px}
+.mstat{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;font-size:12.5px;color:var(--muted)}
+.mstat>span:first-child{font-weight:800;color:var(--ink);margin-right:2px}
+.mstat .ms{background:#fff;border:1px solid var(--line);border-radius:99px;padding:3px 10px}.mstat .ms b{color:var(--ink)}
+.mstat .hint{margin-left:auto;font-size:12px}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px;align-items:center}
 .legend .pill{font-size:11px}
 /* table */
@@ -208,7 +230,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-17';
+const APP_VER='2026-11-15-18';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -401,14 +423,15 @@ function vCal(){const y=S.calY,m=S.calM,t=today(),cv=cvGet();
     const nAb=o.ab.filter(r=>!isDone(r)).length;
     cells+=`<div class="cell ${d.slice(0,7)!==ym?'out':''} ${d===t?'today':''} ${wd===0?'sun':''}" data-act="dayAdd" data-d="${d}">
       <div class="dn"><span>${+d.slice(8)===1||d===start?(+d.slice(5,7))+'월 '+(+d.slice(8))+'일':+d.slice(8)}</span></div>${body}</div>`}
-  const tg=(k,l)=>`<button class="chip ${cv[k]?'on':''}" data-act="cv" data-v="${k}">${l}${cnt[k]!=null?` <b>${cnt[k]}</b>`:''}</button>`;
+  const tg=(k,l,cls)=>`<button class="vt ${cls} ${cv[k]?'on':''}" data-act="cv" data-v="${k}" title="${cv[k]?'누르면 숨겨요':'누르면 보여요'}"><span class="sw"></span>${l}<b>${cnt[k]}</b></button>`;
   const mRows=S.rows.filter(r=>r.d&&r.d.startsWith(ym));
-  return `<div class="calhead"><h2>${y}년 ${m}월</h2>
-    <button class="ghost" data-act="calMove" data-v="-1">◀ 지난 달</button><button class="ghost" data-act="calMove" data-v="0">오늘</button><button class="ghost" data-act="calMove" data-v="1">다음 달 ▶</button>
+  return `<div class="calhead"><div class="calnav"><button class="nb" data-act="calMove" data-v="-1" title="지난 달">‹</button><h2>${y}년 ${m}월</h2><button class="nb" data-act="calMove" data-v="1" title="다음 달">›</button></div>
+    <button class="ghost" data-act="calMove" data-v="0">오늘</button>
     <span style="flex:1"></span>
     <input class="search" id="calQ" placeholder="학생 찾기 (초성 가능)" value="${esc(S.calQ)}" autocomplete="off"></div>
-    <div class="toolbar" style="margin:-2px 0 8px"><span class="sum">보기</span>${tg('ab','결석')}${tg('sh','덜 함')}${tg('bk','보강 예약')}${tg('mk','보강함')}<span style="width:8px"></span>${tg('done','보강 끝난 결석·덜 함도 보기')}</div>
-    <div id="vbody"><div class="sum" style="margin-bottom:8px">${m}월 결석 <b>${mRows.filter(r=>!isShort(r)).length}건</b> · 덜 함 <b>${mRows.filter(isShort).length}건</b> · 보강 완료 <b>${mRows.filter(r=>r.s==='완료').length}</b> · 보강 전 <b>${mRows.filter(r=>OPEN.has(info(r).key)).length}</b> &nbsp;|&nbsp; 빈 칸을 누르면 그날 결석을 기록해요.</div>
+    <div class="viewbar"><div class="vgroup"><span class="vlabel">보기</span>${tg('ab','결석','v-ab')}${tg('sh','덜 함','v-sh')}${tg('bk','보강 예약','v-bk')}${tg('mk','보강함','v-mk')}</div>
+      <button class="vswitch ${cv.done?'on':''}" data-act="cv" data-v="done"><span class="knob"></span>보강 끝난 결석·덜 함도 보기</button></div>
+    <div id="vbody"><div class="mstat"><span>${m}월</span><span class="ms">결석 <b>${mRows.filter(r=>!isShort(r)).length}</b>건</span><span class="ms">덜 함 <b>${mRows.filter(isShort).length}</b>건</span><span class="ms">보강 전 <b>${mRows.filter(r=>OPEN.has(info(r).key)).length}</b></span><span class="ms">보강 완료 <b>${mRows.filter(r=>r.s==='완료').length}</b></span><span class="hint">빈 칸을 누르면 그날 결석을 기록해요</span></div>
     <div class="cal">${[...DOW].map((w,i)=>`<div class="wd ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('')}${cells}</div>
     <div class="legend"><span class="ln st-wait lg"><span class="tg">결석</span>보강 전</span><span class="ln st-booked lg"><span class="tg">결석</span>예약됨</span><span class="ln st-done lg"><span class="tg">결석</span>완료</span><span class="ln sh st-wait lg"><span class="tg">덜</span>수업 덜 함</span><span class="ln bk lg"><span class="tg">보강</span>예약 (할 분)</span><span class="ln bk late lg"><span class="tg">확인</span>보강일 지남</span><span class="ln mk lg"><span class="tg">보강함</span>한 날 (+는 더 하고 감)</span></div></div>`}
 
