@@ -231,7 +231,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-19';
+const APP_VER='2026-11-15-20';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -507,10 +507,10 @@ function vStu(){const q=S.sq.trim();let list=stuStats().filter(x=>match(x.n,q));
   list.sort(srt);
   const th=(k,l,c='')=>`<th class="${c}" data-act="ssort" data-v="${k}">${l}${S.ssort===k?' ▾':''}</th>`;
   return `<div class="toolbar"><input class="search" id="sq" placeholder="이름 검색 (초성 가능)" value="${esc(S.sq)}" autocomplete="off">
-    ${['all','재원','휴원','퇴원','기록만'].map(k=>`<button class="chip ${(S.sfilter||'all')===k?'on':''}" data-act="sfilter" data-v="${k}">${k==='all'?'전체':k==='기록만'?'학생일지에 없는 이름':k}</button>`).join('')}
+    ${['all','재원','휴원','퇴원','기록만'].map(k=>`<button class="chip ${(S.sfilter||'all')===k?'on':''}" data-act="sfilter" data-v="${k}">${k==='all'?'전체':k==='기록만'?'온하이에 없는 이름':k}</button>`).join('')}
     </div><div id="vbody"><div class="sum" style="margin:-4px 0 8px">${list.length}명</div>
     <div class="tw"><table class="t"><thead><tr>${th('name','이름')}<th>상태</th>${th('owed','보강 전 (결석)','num')}${th('owedS','덜 함','num')}${th('total','전체 결석','num')}<th class="num">완료</th>${th('exp','소멸','num')}${th('last','최근 결석')}<th>소멸 임박</th></tr></thead><tbody>
-    ${list.map(x=>{const s=S.stuMap.get(x.n);return `<tr style="cursor:pointer" data-act="student" data-n="${esc(x.n)}"><td style="font-weight:800">${esc(x.n)}</td><td style="color:var(--muted)">${s?esc([s.s,shortGrade(s.g)].filter(Boolean).join(' · ')):'<span title="노션 학생 일지에 이 이름이 없어요(이름이 다르게 적혔거나 학생일지에 아직 없는 학생)">학생일지에 없음</span>'}</td>
+    ${list.map(x=>{const s=S.stuMap.get(x.n);return `<tr style="cursor:pointer" data-act="student" data-n="${esc(x.n)}"><td style="font-weight:800">${esc(x.n)}</td><td style="color:var(--muted)">${s?esc([s.s,shortGrade(s.g)].filter(Boolean).join(' · ')):'<span title="온하이 원생 명단에 이 이름이 없어요(이름이 다르게 적혔거나 온하이에 없는 학생)">온하이에 없음</span>'}</td>
       <td class="num" style="font-weight:800;color:${x.owed?'var(--amber)':'#b0bbb7'}">${x.owedN?x.owedN+'건 · '+mins(x.owed):'-'}</td><td class="num" style="font-weight:800;color:${x.owedS?'var(--amber)':'#b0bbb7'}">${x.owedSN?x.owedSN+'건 · '+mins(x.owedS):'-'}</td><td class="num">${x.total||'-'}</td><td class="num">${x.done||'-'}</td><td class="num" style="color:${x.exp?'var(--red)':'#b0bbb7'}">${x.exp||'-'}</td><td>${x.last?ymd(x.last):'-'}</td><td>${x.expSoon!=null?ddChip({key:'wait',left:x.expSoon,exp:addDays(today(),x.expSoon)}):''}</td></tr>`}).join('')}
     </tbody></table></div></div>`}
 
@@ -686,7 +686,7 @@ function openEdit(id){const r=S.byId.get(id);if(!r)return;const st=S.stuMap.get(
 /* 학생 한 명 */
 function openStudent(n){S.curStu=n;const st=S.stuMap.get(n);const rs=S.rows.filter(r=>r.n===n).sort((a,b)=>(b.d||'').localeCompare(a.d||''));
   const open=rs.filter(r=>OPEN.has(info(r).key));
-  const m=openModal(`<div class="stu-head"><h2 style="margin:0">${esc(n)}</h2>${st?`<span class="pill st-closed">${esc(st.s)}</span><span class="sum">${esc(st.g||'')}</span>`:'<span class="sum">학생일지 명단에 없는 이름</span>'}<span class="sp" style="flex:1"></span>
+  const m=openModal(`<div class="stu-head"><h2 style="margin:0">${esc(n)}</h2>${st?`<span class="pill st-closed">${esc(st.s)}</span><span class="sum">${esc(st.g||'')}</span>`:'<span class="sum">온하이 원생 명단에 없는 이름</span>'}<span class="sp" style="flex:1"></span>
     <button class="primary" style="padding:8px 12px;font-size:13px" data-act="makeupStu" data-n="${esc(n)}">+ 보강 기록</button><button class="outline" id="sAdd">+ 결석 기록</button>${open.length?'<button class="ghost" id="sMsg">안내 문구</button>':''}${st&&st.p?`<a class="ghost" href="../#${esc(st.p)}" target="_blank" rel="noopener">학생일지에서 보기</a>`:''}</div>
     <div class="kv"><div><span>보강 전</span><b style="color:var(--amber)">${open.length}건 · ${splitTxt(open)}</b></div><div><span>전체 결석</span><b>${rs.length}건</b></div><div><span>보강 완료</span><b>${rs.filter(r=>r.s==='완료').length}건</b></div><div><span>소멸</span><b style="color:var(--red)">${rs.filter(isGone).length}건</b></div></div>
     <div class="rows" style="max-height:48vh;overflow:auto">${rs.map(r=>rowLine(r,{noName:true})).join('')||'<div class="empty">결석 기록이 없어요.</div>'}</div>
@@ -756,6 +756,7 @@ function checkOnhi(){const h=location.hash;if(!h.startsWith('#onhi='))return;let
   history.replaceState(null,'',location.pathname+location.search);if(!p||!p.d){toast('온하이 데이터를 읽지 못했어요.',true);return}
   if(!S.token){S.onhiWait=p;toast('먼저 로그인해 주세요. 로그인하면 온하이 결석을 보여 드릴게요.');return}openOnhi(p)}
 function openOnhi(p){const d=p.d;
+  if(p.ro&&p.ro.length){api('ab_set_roster',{p_token:S.token,p:p.ro}).then(r=>{if(r&&r.students){S.students=r.students;S.stuMap=new Map(S.students.map(s=>[s.n,s]))}}).catch(()=>{})}
   const ab=(p.ab||[]).map(([n,m,tm,lec])=>{const sub='리드인';const ex=S.rows.find(r=>r.n===n&&r.d===d&&subOf(r)===sub);return {n,m,tm,lec:lec||'',sub,ex,on:!ex,known:S.stuMap.has(n)||S.rows.some(r=>r.n===n)}});
   const mk=(p.mk||[]).map(([n,m,tm])=>{const done=S.allocs.some(x=>x.n===n&&x.d===d)||S.rows.some(r=>r.n===n&&r.s==='완료'&&r.k===d);
     const open=S.rows.filter(r=>r.n===n&&OPEN.has(info(r).key)&&rem(r)>0&&r.d!==d).sort((a,b)=>((a.k===d?0:1)-(b.k===d?0:1))||(a.d||'').localeCompare(b.d||''));
@@ -780,7 +781,7 @@ function openOnhi(p){const d=p.d;
     <div class="mfoot"><span class="sum" id="ohSum"></span><span class="sp"></span><button class="ghost" id="ohC">닫기</button><button class="primary" id="ohO">기록하기</button></div>`,'wide');
   function draw(){
     m.querySelector('#ohAb').innerHTML=ab.map((x,i)=>`<div class="row"><input type="checkbox" class="cbx" data-ab="${i}" ${x.on?'checked':''} ${x.ex?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" step="5" data-abm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.ex?'disabled':''}>분<select class="inp" data-abs="${i}" ${x.ex?'disabled':''} style="width:auto">${SUBS.map(s=>`<option ${s===x.sub?'selected':''}>${s}</option>`).join('')}</select><span class="sum">${esc(x.tm)}${x.lec?' · '+esc(x.lec):''}</span>
-      ${x.ex?`<span class="pill st-closed">이미 기록됨 (${x.ex.m}분)</span>`:'<span class="pill st-wait">새로 기록</span>'}${x.known?'':' <span class="dd soon">학생일지에 없는 이름</span>'}</div>`).join('')||'<div class="empty">이날 결석이 없어요.</div>';
+      ${x.ex?`<span class="pill st-closed">이미 기록됨 (${x.ex.m}분)</span>`:'<span class="pill st-wait">새로 기록</span>'}${x.known?'':' <span class="dd soon">온하이에 없는 이름</span>'}</div>`).join('')||'<div class="empty">이날 결석이 없어요.</div>';
     m.querySelector('#ohMk').innerHTML=mk.map((x,i)=>{const owe=remSum(x.open);return `<div class="row"><input type="checkbox" class="cbx" data-mk="${i}" ${x.on?'checked':''} ${x.done||!x.open.length?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" step="5" data-mkm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.done||!x.open.length?'disabled':''}>분<span class="sum">${esc(x.tm)}${x.real!=null?` · 실제 ${x.real}분 함 (수업 ${x.slotM}분)`:''}</span>
       ${x.done?'<span class="pill st-done">이날 보강 이미 기록됨</span>':!x.open.length?'<span class="pill st-closed">채울 결석이 앱에 없어요</span>':`<span class="pill st-booked">보강 전 ${x.open.length}건 · ${owe}분</span>${x.m>owe?` <span class="dd soon">${x.m-owe}분은 남아요</span>`:''}`}</div>`}).join('')||'<div class="empty">이날 보강 출석이 없어요.</div>';
     m.querySelector('#ohS').innerHTML=shorts.map((x,i)=>`<div class="row"><input type="checkbox" class="cbx" data-ss="${i}" ${x.on?'checked':''} ${x.ex?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" data-ssm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.ex?'disabled':''}>분<span class="sum">${x.t.map(esc).join(' / ')}</span>${x.ex?'<span class="pill st-closed">이날 기록 이미 있음</span>':'<span class="pill st-wait">수업 덜 함</span>'}</div>`).join('')||'<div class="empty">없어요.</div>';
