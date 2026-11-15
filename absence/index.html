@@ -55,7 +55,8 @@ button{cursor:pointer}button:disabled{opacity:.55;cursor:default}
 .st-wait{background:#fff4e0;color:#94620b}.st-booked{background:#e7effc;color:#2f5fb3}.st-check{background:#f3e8fb;color:#7a3fa3}
 .st-done{background:#e3f4ea;color:#1d7a4a}.st-closed{background:#eef1ef;color:#6b7c79}.st-expired{background:#fbeaea;color:#a33f3f}.st-nodate{background:#eef1ef;color:#6b7c79}
 .dd{font-size:11px;font-weight:800;border-radius:6px;padding:1px 6px;white-space:nowrap;background:#f1f4f2;color:#6b7c79}
-.dd.soon{background:#fff1e0;color:#b45d12}.dd.part{background:#e7effc;color:#2f5fb3}.dd.urgent{background:#fbeaea;color:#a33f3f}
+.dd.soon{background:#fff1e0;color:#b45d12}.dd.subj{background:#fdf0e6;color:#b45d12}.dd.subj.s-t{background:#e9f1fb;color:#2f5fb3}
+.dd.part{background:#e7effc;color:#2f5fb3}.dd.urgent{background:#fbeaea;color:#a33f3f}
 /* home */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
 .stat{padding:14px 16px;cursor:pointer}.stat .l{font-size:12px;color:var(--muted);font-weight:700}.stat .v{font-size:24px;font-weight:850;margin-top:4px}.stat .s{font-size:12px;color:var(--muted);margin-top:2px}
@@ -230,7 +231,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-18';
+const APP_VER='2026-11-15-19';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -294,6 +295,9 @@ const OPEN=new Set(['wait','booked','check']);
 function rem(r){if(r.s==='완료'||r.s==='종료')return 0;return Math.max((+r.m||0)-(+r.dm||0),0)}
 function remSum(list){return list.reduce((a,r)=>a+rem(r),0)}
 function isGone(r){const k=info(r).key;return k==='expired'||k==='closed'}
+const SUBS=['리드인','한국사','트레이닝'];
+function subOf(r){return r.sub||'리드인'}
+function subChip(r){const s=subOf(r);return s==='리드인'?'':` <span class="dd subj s-${s==='한국사'?'h':'t'}">${s}</span>`}
 function isShort(r){return r.memo==='수업 덜 함'}
 function splitSum(list){let a=0,s=0;for(const r of list){if(isShort(r))s+=rem(r);else a+=rem(r)}return {a,s}}
 function splitTxt(list){const x=splitSum(list);return x.s?`결석 ${mins(x.a)} · 덜 함 ${mins(x.s)}`:mins(x.a)}
@@ -357,7 +361,7 @@ function rowLine(r,o={}){const i=info(r);const st=S.stuMap.get(r.n);
     ${o.check?`<input type="checkbox" class="cbx" data-act="pick" data-id="${r.id}" ${S.picked.has(r.id)?'checked':''}>`:''}
     ${o.noName?'':`<span class="nm" data-act="student" data-n="${esc(r.n)}">${esc(r.n||'(이름 없음)')}${st&&st.s!=='재원'?` <small style="color:var(--muted);font-weight:600">${esc(st.s)}</small>`:''}</span>`}
     <span class="dt" data-act="edit" data-id="${r.id}">${r.d?ymd(r.d):'날짜 없음'}</span>
-    <span class="mn">${r.m!=null?esc(r.m)+'분':'-'}</span>
+    <span class="mn">${r.m!=null?esc(r.m)+'분':'-'}</span>${subChip(r)}
     ${pill(i)} ${ddChip(i)}${(+r.dm||0)>0&&OPEN.has(i.key)?` <span class="dd part" title="보강한 시간 / 남은 시간">${r.dm}분 함 · ${rem(r)}분 남음</span>`:''}
     <span class="memo" data-act="edit" data-id="${r.id}" title="${esc(r.memo)}">${esc(r.memo)}${r.sync==='pending'?' <span class="dd soon" title="노션에 아직 못 보냈어요">노션 대기</span>':''}</span>
     <span class="acts">${acts.join('')}<button class="mini" data-act="edit" data-id="${r.id}">수정</button></span></div>`}
@@ -412,7 +416,7 @@ function vCal(){const y=S.calY,m=S.calM,t=today(),cv=cvGet();
   let cells='';for(let d=start;d<=end;d=addDays(d,1)){
     const o=day.get(d)||{ab:[],sh:[],bk:[],mk:[]};const wd=pd(d).getUTCDay();let body='';
     if(cv.ab){const by={};o.ab.sort((a,b)=>a.n.localeCompare(b.n)).forEach(r=>{const k=info(r).key;(by[k]=by[k]||[]).push(r)});
-      for(const k of ['wait','booked','check','expired','done','closed'])if(by[k])body+=line('st-'+k,'결석',by[k].map(r=>nm(r.n,r.m,`data-act="edit" data-id="${r.id}" title="${esc(r.n)} ${r.m}분 · ${esc(info(r).label)}"`)))}
+      for(const k of ['wait','booked','check','expired','done','closed'])if(by[k])body+=line('st-'+k,'결석',by[k].map(r=>nm(r.n+(subOf(r)==='리드인'?'':'('+subOf(r).slice(0,1)+')'),r.m,`data-act="edit" data-id="${r.id}" title="${esc(r.n)} ${r.m}분 · ${esc(info(r).label)}"`)))}
     if(cv.sh){const by={};o.sh.sort((a,b)=>a.n.localeCompare(b.n)).forEach(r=>{const k=info(r).key;(by[k]=by[k]||[]).push(r)});
       for(const k of ['wait','booked','check','expired','done','closed'])if(by[k])body+=line('sh st-'+k,'덜',by[k].map(r=>nm(r.n,r.m,`data-act="edit" data-id="${r.id}" title="${esc(r.n)} 수업 덜 함 ${r.m}분 · ${esc(info(r).label)}"`)))}
     if(cv.bk&&o.bk.length){const late=o.bk.filter(r=>r.k<t),up=o.bk.filter(r=>r.k>=t);
@@ -431,7 +435,7 @@ function vCal(){const y=S.calY,m=S.calM,t=today(),cv=cvGet();
     <input class="search" id="calQ" placeholder="학생 찾기 (초성 가능)" value="${esc(S.calQ)}" autocomplete="off"></div>
     <div class="viewbar"><div class="vgroup"><span class="vlabel">보기</span>${tg('ab','결석','v-ab')}${tg('sh','덜 함','v-sh')}${tg('bk','보강 예약','v-bk')}${tg('mk','보강함','v-mk')}</div>
       <button class="vswitch ${cv.done?'on':''}" data-act="cv" data-v="done"><span class="knob"></span>보강 끝난 결석·덜 함도 보기</button></div>
-    <div id="vbody"><div class="mstat"><span>${m}월</span><span class="ms">결석 <b>${mRows.filter(r=>!isShort(r)).length}</b>건</span><span class="ms">덜 함 <b>${mRows.filter(isShort).length}</b>건</span><span class="ms">보강 전 <b>${mRows.filter(r=>OPEN.has(info(r).key)).length}</b></span><span class="ms">보강 완료 <b>${mRows.filter(r=>r.s==='완료').length}</b></span><span class="hint">빈 칸을 누르면 그날 결석을 기록해요</span></div>
+    <div id="vbody"><div class="mstat"><span>${m}월</span><span class="ms">결석 <b>${mRows.filter(r=>!isShort(r)).length}</b>건 (남음 ${mRows.filter(r=>!isShort(r)&&OPEN.has(info(r).key)).length} · 끝남 ${mRows.filter(r=>!isShort(r)&&!OPEN.has(info(r).key)).length})</span><span class="ms">덜 함 <b>${mRows.filter(isShort).length}</b>건 (남음 ${mRows.filter(r=>isShort(r)&&OPEN.has(info(r).key)).length} · 끝남 ${mRows.filter(r=>isShort(r)&&!OPEN.has(info(r).key)).length})</span><span class="hint">보기 버튼 숫자는 지금 캘린더에 보이는 건수예요 · 빈 칸을 누르면 결석 기록</span></div>
     <div class="cal">${[...DOW].map((w,i)=>`<div class="wd ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('')}${cells}</div>
     <div class="legend"><span class="ln st-wait lg"><span class="tg">결석</span>보강 전</span><span class="ln st-booked lg"><span class="tg">결석</span>예약됨</span><span class="ln st-done lg"><span class="tg">결석</span>완료</span><span class="ln sh st-wait lg"><span class="tg">덜</span>수업 덜 함</span><span class="ln bk lg"><span class="tg">보강</span>예약 (할 분)</span><span class="ln bk late lg"><span class="tg">확인</span>보강일 지남</span><span class="ln mk lg"><span class="tg">보강함</span>한 날 (+는 더 하고 감)</span></div></div>`}
 
@@ -503,10 +507,10 @@ function vStu(){const q=S.sq.trim();let list=stuStats().filter(x=>match(x.n,q));
   list.sort(srt);
   const th=(k,l,c='')=>`<th class="${c}" data-act="ssort" data-v="${k}">${l}${S.ssort===k?' ▾':''}</th>`;
   return `<div class="toolbar"><input class="search" id="sq" placeholder="이름 검색 (초성 가능)" value="${esc(S.sq)}" autocomplete="off">
-    ${['all','재원','휴원','퇴원','기록만'].map(k=>`<button class="chip ${(S.sfilter||'all')===k?'on':''}" data-act="sfilter" data-v="${k}">${k==='all'?'전체':k==='기록만'?'명단에 없음':k}</button>`).join('')}
+    ${['all','재원','휴원','퇴원','기록만'].map(k=>`<button class="chip ${(S.sfilter||'all')===k?'on':''}" data-act="sfilter" data-v="${k}">${k==='all'?'전체':k==='기록만'?'학생일지에 없는 이름':k}</button>`).join('')}
     </div><div id="vbody"><div class="sum" style="margin:-4px 0 8px">${list.length}명</div>
     <div class="tw"><table class="t"><thead><tr>${th('name','이름')}<th>상태</th>${th('owed','보강 전 (결석)','num')}${th('owedS','덜 함','num')}${th('total','전체 결석','num')}<th class="num">완료</th>${th('exp','소멸','num')}${th('last','최근 결석')}<th>소멸 임박</th></tr></thead><tbody>
-    ${list.map(x=>{const s=S.stuMap.get(x.n);return `<tr style="cursor:pointer" data-act="student" data-n="${esc(x.n)}"><td style="font-weight:800">${esc(x.n)}</td><td style="color:var(--muted)">${s?esc([s.s,shortGrade(s.g)].filter(Boolean).join(' · ')):'명단에 없음'}</td>
+    ${list.map(x=>{const s=S.stuMap.get(x.n);return `<tr style="cursor:pointer" data-act="student" data-n="${esc(x.n)}"><td style="font-weight:800">${esc(x.n)}</td><td style="color:var(--muted)">${s?esc([s.s,shortGrade(s.g)].filter(Boolean).join(' · ')):'<span title="노션 학생 일지에 이 이름이 없어요(이름이 다르게 적혔거나 학생일지에 아직 없는 학생)">학생일지에 없음</span>'}</td>
       <td class="num" style="font-weight:800;color:${x.owed?'var(--amber)':'#b0bbb7'}">${x.owedN?x.owedN+'건 · '+mins(x.owed):'-'}</td><td class="num" style="font-weight:800;color:${x.owedS?'var(--amber)':'#b0bbb7'}">${x.owedSN?x.owedSN+'건 · '+mins(x.owedS):'-'}</td><td class="num">${x.total||'-'}</td><td class="num">${x.done||'-'}</td><td class="num" style="color:${x.exp?'var(--red)':'#b0bbb7'}">${x.exp||'-'}</td><td>${x.last?ymd(x.last):'-'}</td><td>${x.expSoon!=null?ddChip({key:'wait',left:x.expSoon,exp:addDays(today(),x.expSoon)}):''}</td></tr>`}).join('')}
     </tbody></table></div></div>`}
 
@@ -584,9 +588,10 @@ function nameOptions(){const names=new Set(S.students.filter(s=>s.s==='재원').
 function lastMinutes(n){let best=null;for(const r of S.rows)if(r.n===n&&r.m!=null&&(!best||r.d>best.d))best=r;return best?best.m:60}
 
 /* 결석 기록 (여러 명) */
-function openAdd(day){const items=[];let d=day||today();let typ='';const QM=()=>typ?[10,15,20,30,40,50]:[30,50,60,90,120,180];const defM=n=>typ?20:lastMinutes(n);
+function openAdd(day){const items=[];let d=day||today();let typ='';let sub='리드인';const QM=()=>typ?[10,15,20,30,40,50]:[30,50,60,90,120,180];const defM=n=>typ?20:lastMinutes(n);
   const act=S.students.filter(s=>s.s==='재원').sort((a,b)=>a.n.localeCompare(b.n));
   const m=openModal(`<h2>결석 기록</h2><div class="sub">여러 학생을 한 번에 기록할 수 있어요. 기록하면 노션 결석 캘린더에도 바로 들어가요. 수업 시간을 다 못 채운 날은 '수업 덜 함'으로 남은 시간만 적어 주세요.</div>
+    <div class="field"><label>수업</label><div class="seg" id="amU">${SUBS.map(s=>`<button data-u="${s}">${s}</button>`).join('')}</div></div>
     <div class="field"><label>구분</label><div class="seg" id="amT"><button data-t="">결석</button><button data-t="수업 덜 함">수업 덜 함 (남은 시간은 다음에)</button></div></div>
     <div class="field"><label>결석 날짜</label><div class="hrow"><input class="inp" type="date" id="amD" value="${d}"><button class="ghost" data-q="0">오늘</button><button class="ghost" data-q="-1">어제</button><span id="amDW" class="sum"></span></div></div>
     <div class="field"><label>학생</label><input class="inp" id="amQ" placeholder="이름 검색 (초성 가능) · Enter로 추가" autocomplete="off" spellcheck="false"><div class="sug" id="amSug"></div></div>
@@ -594,14 +599,14 @@ function openAdd(day){const items=[];let d=day||today();let typ='';const QM=()=>
     <details class="more"><summary>재원생 명단에서 고르기 (${act.length}명)</summary><div class="sgrid" id="amGrid"></div></details>
     <div class="mfoot"><span class="sum" id="amSum"></span><span class="sp"></span><button class="ghost" id="amC">취소</button><button class="primary" id="amO">기록하기</button></div>`,'wide');
   const q=m.querySelector('#amQ');
-  const isDup=n=>S.rows.some(r=>r.n===n&&r.d===d);
+  const isDup=n=>S.rows.some(r=>r.n===n&&r.d===d&&subOf(r)===sub);
   function add(n){n=n.trim();if(!n)return;if(items.some(x=>x.n===n)){toast(n+' 학생은 이미 넣었어요.');return}items.push({n,m:defM(n)});q.value='';draw();q.focus()}
   function draw(){
-    m.querySelector('#amDW').textContent=d?kdate(d):'';m.querySelectorAll('#amT button').forEach(b=>b.classList.toggle('on',b.dataset.t===typ));
+    m.querySelector('#amDW').textContent=d?kdate(d):'';m.querySelectorAll('#amU button').forEach(b=>b.classList.toggle('on',b.dataset.u===sub));m.querySelectorAll('#amT button').forEach(b=>b.classList.toggle('on',b.dataset.t===typ));
     m.querySelector('#amList').innerHTML=items.map((x,i)=>`<div class="am-item ${isDup(x.n)?'dup':''}"><span class="n">${esc(x.n)}</span>
       <input class="inp" type="number" min="0" step="5" value="${x.m??''}" data-i="${i}">분
       <span class="seg small">${QM().map(v=>`<button data-i="${i}" data-m="${v}" class="${+x.m===v?'on':''}">${v}</button>`).join('')}</span>
-      ${isDup(x.n)?'<span class="warn">이 날 이미 기록돼 있어요 (건너뜀)</span>':''}<button class="x" data-rm="${i}" title="빼기">×</button></div>`).join('')||'<div class="empty" style="padding:6px 2px">아직 고른 학생이 없어요.</div>';
+      ${isDup(x.n)?`<span class="warn">이 날 ${sub} 결석이 이미 있어요 (건너뜀)</span>`:''}<button class="x" data-rm="${i}" title="빼기">×</button></div>`).join('')||'<div class="empty" style="padding:6px 2px">아직 고른 학생이 없어요.</div>';
     const v=items.filter(x=>!isDup(x.n));m.querySelector('#amSum').textContent=v.length?`${v.length}명 · ${mins(v.reduce((a,x)=>a+(+x.m||0),0))}`:'';
     m.querySelector('#amO').textContent=v.length?`${v.length}명 기록하기`:'기록하기';m.querySelector('#amO').disabled=!v.length;
     m.querySelector('#amGrid').innerHTML=act.map(s=>`<button data-pick="${esc(s.n)}" class="${items.some(x=>x.n===s.n)?'on':''}">${esc(s.n)}<small>${esc(shortGrade(s.g))}</small></button>`).join('');
@@ -613,6 +618,7 @@ function openAdd(day){const items=[];let d=day||today();let typ='';const QM=()=>
   m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
     if(b.dataset.q!=null){d=addDays(today(),+b.dataset.q);m.querySelector('#amD').value=d;draw()}
     else if(b.dataset.t!=null){typ=b.dataset.t;items.forEach(x=>x.m=defM(x.n));draw()}
+    else if(b.dataset.u!=null){sub=b.dataset.u;draw()}
     else if(b.dataset.add!=null)add(b.dataset.add);
     else if(b.dataset.pick!=null){const n=b.dataset.pick;const i=items.findIndex(x=>x.n===n);if(i>=0)items.splice(i,1);else items.push({n,m:defM(n)});draw()}
     else if(b.dataset.rm!=null){items.splice(+b.dataset.rm,1);draw()}
@@ -624,7 +630,7 @@ function openAdd(day){const items=[];let d=day||today();let typ='';const QM=()=>
   m.querySelector('#amC').onclick=closeModal;
   m.querySelector('#amO').onclick=async()=>{const v=items.filter(x=>!isDup(x.n));if(!d){toast(ERR.EMPTYDAY,true);return}if(!v.length)return;
     const btn=m.querySelector('#amO');btn.disabled=true;btn.textContent='기록하는 중...';
-    try{const r=await api('ab_add_many',{p_token:S.token,p:{d,items:v.map(x=>({n:x.n,m:x.m,memo:typ}))}});
+    try{const r=await api('ab_add_many',{p_token:S.token,p:{d,items:v.map(x=>({n:x.n,m:x.m,memo:typ,sub}))}});
       (r.added||[]).forEach(upsertLocal);closeModal();if(r.failed){S.pending+=r.failed}render();
       toast(`${(r.added||[]).length}명 ${typ?'덜 한 수업':'결석'}을 기록했어요${r.dups&&r.dups.length?` (이미 있던 ${r.dups.length}명은 건너뜀)`:''}.${r.failed?' 노션에는 나중에 다시 보낼게요.':''}`,!!r.failed)}
     catch(e){toast(errText(e),true);btn.disabled=false;draw()}};
@@ -632,12 +638,13 @@ function openAdd(day){const items=[];let d=day||today();let typ='';const QM=()=>
 
 /* 기록 수정 */
 function openEdit(id){const r=S.byId.get(id);if(!r)return;const st=S.stuMap.get(r.n);
-  const v={n:r.n,d:r.d||'',m:r.m,s:r.s,k:r.k||'',memo:r.memo||'',pm:r.pm||''};
+  const v={n:r.n,d:r.d||'',m:r.m,s:r.s,k:r.k||'',memo:r.memo||'',pm:r.pm||'',sub:subOf(r)};
   const m=openModal(`<h2>${esc(r.n||'(이름 없음)')} <span id="edPill"></span></h2><div class="sub">${r.d?kdate(r.d)+' 결석':''}${st?' · '+esc([st.s,shortGrade(st.g)].filter(Boolean).join(' · ')):''}</div>
     <div class="info" id="edInfo"></div>
     <div class="grid2" style="gap:10px"><div class="field"><label>이름</label><input class="inp" id="edN" list="edNL" value="${esc(v.n)}" autocomplete="off"><datalist id="edNL">${nameOptions().map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div>
     <div class="field"><label>결석 날짜</label><input class="inp" type="date" id="edD" value="${v.d}"></div></div>
     <div class="field"><label>빠진 시간(분)</label><div class="hrow"><input class="inp" style="max-width:110px" type="number" min="0" step="5" id="edM" value="${v.m??''}"><span class="seg small" id="edMs">${[30,50,60,90,120,180].map(x=>`<button data-m="${x}">${x}</button>`).join('')}</span></div></div>
+    <div class="field"><label>수업</label><div class="seg" id="edU">${SUBS.map(x=>`<button data-u="${x}">${x}</button>`).join('')}</div></div>
     <div class="field"><label>보강 여부</label><div class="seg" id="edS">${ST_LIST.map(x=>`<button data-s="${x}">${x}</button>`).join('')}</div></div>
     <div class="field"><label>보강 날짜 <span style="font-weight:600;color:var(--muted)">(노션 비고 맨 앞에 '26/11/16'처럼 적혀요)</span></label><div class="hrow"><input class="inp" type="date" id="edK" value="${v.k}"><button class="ghost" data-k="0">오늘</button><button class="ghost" data-k="1">내일</button><button class="ghost" data-k="x">지우기</button></div>
       <div class="hrow" id="edPmRow" style="margin-top:7px;font-size:13px;color:#536560">그날 할 시간 <input class="inp" type="number" min="1" step="5" id="edPm" style="max-width:90px;flex:none" value="${v.pm}" placeholder="남은 전부">분 <span class="sum">(비우면 남은 시간 전부)</span></div></div>
@@ -645,7 +652,7 @@ function openEdit(id){const r=S.byId.get(id);if(!r)return;const st=S.stuMap.get(
     <div class="mfoot"><button class="danger" id="edDel">삭제</button>${r.nid?`<a class="ghost" target="_blank" rel="noopener" href="https://www.notion.so/${r.nid.replace(/-/g,'')}">노션에서 열기</a>`:''}<button class="ghost" id="edMsg">안내 문구</button><span class="sp"></span><button class="ghost" id="edC">닫기</button><button class="primary" id="edO">저장</button></div>
     <div class="hist" id="edHist">변경 기록 불러오는 중...</div>`);
   function draw(){const i=info({...r,...v,k:v.k||null,d:v.d||null});m.querySelector('#edPill').innerHTML=pill(i)+' '+ddChip(i);
-    m.querySelectorAll('#edS button').forEach(b=>b.classList.toggle('on',b.dataset.s===v.s));
+    m.querySelectorAll('#edS button').forEach(b=>b.classList.toggle('on',b.dataset.s===v.s));m.querySelectorAll('#edU button').forEach(b=>b.classList.toggle('on',b.dataset.u===v.sub));
     m.querySelectorAll('#edMs button').forEach(b=>b.classList.toggle('on',+b.dataset.m===+v.m));
     m.querySelector('#edPmRow').classList.toggle('hidden',!(v.k&&v.s!=='완료'&&v.s!=='종료'));
     const lines=[];if(v.d){lines.push(`소멸일 <b>${kdate(i.exp)}</b> (결석일 + ${S.set.expireMonths||2}개월)${i.left>0?` · 앞으로 ${i.left}일`:' · 기한이 지났어요'}`)}
@@ -657,6 +664,7 @@ function openEdit(id){const r=S.byId.get(id);if(!r)return;const st=S.stuMap.get(
   m.querySelector('#edD').onchange=e=>{v.d=e.target.value;draw()};
   m.querySelector('#edM').oninput=e=>{v.m=e.target.value===''?null:+e.target.value;draw()};
   m.querySelector('#edMs').onclick=e=>{const b=e.target.closest('button');if(!b)return;v.m=+b.dataset.m;m.querySelector('#edM').value=v.m;draw()};
+  m.querySelector('#edU').onclick=e=>{const b=e.target.closest('button');if(!b)return;v.sub=b.dataset.u;draw()};
   m.querySelector('#edS').onclick=e=>{const b=e.target.closest('button');if(!b)return;v.s=b.dataset.s;if(v.s==='완료'&&!v.k){v.k=today();m.querySelector('#edK').value=v.k}draw()};
   const setK=k=>{v.k=k;m.querySelector('#edK').value=k;if(!k){v.pm='';m.querySelector('#edPm').value=''}if(k&&v.s==='시작 전'&&k>=today())v.s='예약 중';if(!k&&v.s==='예약 중')v.s='시작 전';draw()};
   m.querySelector('#edK').onchange=e=>setK(e.target.value);
@@ -668,7 +676,7 @@ function openEdit(id){const r=S.byId.get(id);if(!r)return;const st=S.stuMap.get(
   m.querySelector('#edDel').onclick=async()=>{if(!confirm(`${r.n} ${r.d?md(r.d):''} 결석 기록을 지울까요?\n노션에서도 휴지통으로 옮겨져요. (설정 > 지운 기록에서 되살릴 수 있어요)`))return;
     try{await delRow(r.id);closeModal();toast('지웠어요.')}catch(e){toast(errText(e),true)}};
   const save=async(force)=>{const b=m.querySelector('#edO');b.disabled=true;b.textContent='저장하는 중...';
-    try{await saveRow({id:r.id,n:v.n,d:v.d,m:v.m,s:v.s,k:v.k,memo:v.memo,pm:(v.k&&v.s!=='완료'&&v.s!=='종료'&&v.pm)?v.pm:'',force:!!force});closeModal();toast('저장했어요. 노션에도 반영했어요.')}
+    try{await saveRow({id:r.id,n:v.n,d:v.d,m:v.m,s:v.s,k:v.k,memo:v.memo,pm:(v.k&&v.s!=='완료'&&v.s!=='종료'&&v.pm)?v.pm:'',sub:v.sub,force:!!force});closeModal();toast('저장했어요. 노션에도 반영했어요.')}
     catch(e){if(String(e.message)==='DUP'&&confirm('같은 날 같은 학생의 기록이 이미 있어요. 그래도 저장할까요?'))return save(true);toast(errText(e),true);b.disabled=false;b.textContent='저장'}};
   m.querySelector('#edO').onclick=()=>save(false);
   m.addEventListener('keyup',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.id!=='edN')save(false)});
@@ -748,7 +756,7 @@ function checkOnhi(){const h=location.hash;if(!h.startsWith('#onhi='))return;let
   history.replaceState(null,'',location.pathname+location.search);if(!p||!p.d){toast('온하이 데이터를 읽지 못했어요.',true);return}
   if(!S.token){S.onhiWait=p;toast('먼저 로그인해 주세요. 로그인하면 온하이 결석을 보여 드릴게요.');return}openOnhi(p)}
 function openOnhi(p){const d=p.d;
-  const ab=(p.ab||[]).map(([n,m,tm])=>{const ex=S.rows.find(r=>r.n===n&&r.d===d);return {n,m,tm,ex,on:!ex,known:S.stuMap.has(n)||S.rows.some(r=>r.n===n)}});
+  const ab=(p.ab||[]).map(([n,m,tm,lec])=>{const sub='리드인';const ex=S.rows.find(r=>r.n===n&&r.d===d&&subOf(r)===sub);return {n,m,tm,lec:lec||'',sub,ex,on:!ex,known:S.stuMap.has(n)||S.rows.some(r=>r.n===n)}});
   const mk=(p.mk||[]).map(([n,m,tm])=>{const done=S.allocs.some(x=>x.n===n&&x.d===d)||S.rows.some(r=>r.n===n&&r.s==='완료'&&r.k===d);
     const open=S.rows.filter(r=>r.n===n&&OPEN.has(info(r).key)&&rem(r)>0&&r.d!==d).sort((a,b)=>((a.k===d?0:1)-(b.k===d?0:1))||(a.d||'').localeCompare(b.d||''));
     return {n,m,tm,done,open,on:!done&&open.length>0}});
@@ -771,20 +779,20 @@ function openOnhi(p){const d=p.d;
     ${appOnly.length?`<div class="banner" style="margin-top:12px">앱에는 이날 결석인데 온하이에서는 결석이 아닌 학생: ${appOnly.map(r=>`<a href="#" data-oe="${r.id}">${esc(r.n)}</a>`).join(', ')} (온하이에서 출석으로 바꿨다면 앱 기록을 지워 주세요)</div>`:''}
     <div class="mfoot"><span class="sum" id="ohSum"></span><span class="sp"></span><button class="ghost" id="ohC">닫기</button><button class="primary" id="ohO">기록하기</button></div>`,'wide');
   function draw(){
-    m.querySelector('#ohAb').innerHTML=ab.map((x,i)=>`<div class="row"><input type="checkbox" class="cbx" data-ab="${i}" ${x.on?'checked':''} ${x.ex?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" step="5" data-abm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.ex?'disabled':''}>분<span class="sum">${esc(x.tm)}</span>
-      ${x.ex?`<span class="pill st-closed">이미 기록됨 (${x.ex.m}분)</span>`:'<span class="pill st-wait">새로 기록</span>'}${x.known?'':' <span class="dd soon">명단에 없는 이름</span>'}</div>`).join('')||'<div class="empty">이날 결석이 없어요.</div>';
+    m.querySelector('#ohAb').innerHTML=ab.map((x,i)=>`<div class="row"><input type="checkbox" class="cbx" data-ab="${i}" ${x.on?'checked':''} ${x.ex?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" step="5" data-abm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.ex?'disabled':''}>분<select class="inp" data-abs="${i}" ${x.ex?'disabled':''} style="width:auto">${SUBS.map(s=>`<option ${s===x.sub?'selected':''}>${s}</option>`).join('')}</select><span class="sum">${esc(x.tm)}${x.lec?' · '+esc(x.lec):''}</span>
+      ${x.ex?`<span class="pill st-closed">이미 기록됨 (${x.ex.m}분)</span>`:'<span class="pill st-wait">새로 기록</span>'}${x.known?'':' <span class="dd soon">학생일지에 없는 이름</span>'}</div>`).join('')||'<div class="empty">이날 결석이 없어요.</div>';
     m.querySelector('#ohMk').innerHTML=mk.map((x,i)=>{const owe=remSum(x.open);return `<div class="row"><input type="checkbox" class="cbx" data-mk="${i}" ${x.on?'checked':''} ${x.done||!x.open.length?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" step="5" data-mkm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.done||!x.open.length?'disabled':''}>분<span class="sum">${esc(x.tm)}${x.real!=null?` · 실제 ${x.real}분 함 (수업 ${x.slotM}분)`:''}</span>
       ${x.done?'<span class="pill st-done">이날 보강 이미 기록됨</span>':!x.open.length?'<span class="pill st-closed">채울 결석이 앱에 없어요</span>':`<span class="pill st-booked">보강 전 ${x.open.length}건 · ${owe}분</span>${x.m>owe?` <span class="dd soon">${x.m-owe}분은 남아요</span>`:''}`}</div>`}).join('')||'<div class="empty">이날 보강 출석이 없어요.</div>';
     m.querySelector('#ohS').innerHTML=shorts.map((x,i)=>`<div class="row"><input type="checkbox" class="cbx" data-ss="${i}" ${x.on?'checked':''} ${x.ex?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" data-ssm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.ex?'disabled':''}>분<span class="sum">${x.t.map(esc).join(' / ')}</span>${x.ex?'<span class="pill st-closed">이날 기록 이미 있음</span>':'<span class="pill st-wait">수업 덜 함</span>'}</div>`).join('')||'<div class="empty">없어요.</div>';
     m.querySelector('#ohV').innerHTML=overs.map((x,i)=>{const owe=remSum(x.open);return `<div class="row"><input type="checkbox" class="cbx" data-vv="${i}" ${x.on?'checked':''} ${x.done||!x.open.length?'disabled':''}><span class="nm">${esc(x.n)}</span><input class="inp" type="number" min="0" data-vvm="${i}" value="${x.m}" style="width:70px;text-align:right" ${x.done||!x.open.length?'disabled':''}>분<span class="sum">${x.t.map(esc).join(' / ')}</span>${x.done?'<span class="pill st-done">이날 이미 뺐음</span>':!x.open.length?'<span class="pill st-closed">뺄 못 한 시간 없음</span>':`<span class="pill st-booked">못 한 시간 ${owe}분에서 빼기</span>`}${x.sameDay&&!x.done?' <span class="dd soon" title="이날 이미 보강 기록이 있어요. 더 한 시간이 그 보강이면 체크하지 마세요">이날 보강 기록 있음</span>':''}</div>`}).join('')||'<div class="empty">없어요.</div>';
     const na=ab.filter(x=>x.on&&!x.ex).length,nm=mk.filter(x=>x.on&&!x.done&&x.open.length).length,ns=shorts.filter(x=>x.on&&!x.ex).length,nv=overs.filter(x=>x.on&&!x.done&&x.open.length).length;
     m.querySelector('#ohSum').textContent=`결석 ${na} · 덜 함 ${ns} · 더 함 ${nv} · 보강 ${nm}명 기록`;m.querySelector('#ohO').disabled=!(na+nm+ns+nv)}
-  m.addEventListener('change',e=>{const t=e.target;if(t.dataset.ss!=null)shorts[+t.dataset.ss].on=t.checked;if(t.dataset.vv!=null)overs[+t.dataset.vv].on=t.checked;if(t.dataset.ab!=null)ab[+t.dataset.ab].on=t.checked;if(t.dataset.mk!=null)mk[+t.dataset.mk].on=t.checked;draw()});
+  m.addEventListener('change',e=>{const t=e.target;if(t.dataset.abs!=null){ab[+t.dataset.abs].sub=t.value;return}if(t.dataset.ss!=null)shorts[+t.dataset.ss].on=t.checked;if(t.dataset.vv!=null)overs[+t.dataset.vv].on=t.checked;if(t.dataset.ab!=null)ab[+t.dataset.ab].on=t.checked;if(t.dataset.mk!=null)mk[+t.dataset.mk].on=t.checked;draw()});
   m.addEventListener('input',e=>{const t=e.target;if(t.dataset.ssm!=null)shorts[+t.dataset.ssm].m=+t.value||0;if(t.dataset.vvm!=null)overs[+t.dataset.vvm].m=+t.value||0;if(t.dataset.abm!=null)ab[+t.dataset.abm].m=+t.value||0;if(t.dataset.mkm!=null)mk[+t.dataset.mkm].m=+t.value||0});
   m.addEventListener('click',e=>{const a=e.target.closest('[data-oe]');if(a){e.preventDefault();openEdit(a.dataset.oe)}});
   m.querySelector('#ohC').onclick=closeModal;
   m.querySelector('#ohO').onclick=async()=>{const b=m.querySelector('#ohO');b.disabled=true;b.textContent='기록하는 중...';let na=0,nm=0,ns=0,nv=0,fail=0;
-    try{const items=ab.filter(x=>x.on&&!x.ex).map(x=>({n:x.n,m:x.m})).concat(shorts.filter(x=>x.on&&!x.ex&&x.m>0).map(x=>({n:x.n,m:x.m,memo:'수업 덜 함'})));
+    try{const items=ab.filter(x=>x.on&&!x.ex).map(x=>({n:x.n,m:x.m,sub:x.sub})).concat(shorts.filter(x=>x.on&&!x.ex&&x.m>0).map(x=>({n:x.n,m:x.m,memo:'수업 덜 함'})));
       if(items.length){const r=await api('ab_add_many',{p_token:S.token,p:{d,items}});(r.added||[]).forEach(upsertLocal);ns=(r.added||[]).filter(x=>x.memo==='수업 덜 함').length;na=(r.added||[]).length-ns;if(r.failed)S.pending+=r.failed}
       for(const x of overs.filter(x=>x.on&&!x.done&&x.open.length&&x.m>0)){try{const r=await api('ab_makeup',{p_token:S.token,p:{d,m:x.m,ids:x.open.map(o=>o.id),memo:'더 하고 감 (온하이)'}});(r.rows||[]).forEach(upsertLocal);S.allocs.push(...(r.allocs||[]));if(r.failed)S.pending+=r.failed;nv++}catch(er){fail++}}
       for(const x of mk.filter(x=>x.on&&!x.done&&x.open.length&&x.m>0)){try{const r=await api('ab_makeup',{p_token:S.token,p:{d,m:x.m,ids:x.open.map(o=>o.id),memo:'온하이 보강 출석'}});(r.rows||[]).forEach(upsertLocal);S.allocs.push(...(r.allocs||[]));if(r.failed)S.pending+=r.failed;nm++}catch(er){fail++}}
@@ -841,8 +849,8 @@ function openSettings(){const m=openModal(`<h2>설정</h2><div class="sub">앱 �
     el.innerHTML=t.map(r=>`<div class="row"><span class="nm">${esc(r.n||'(이름 없음)')}</span><span>${r.d?ymd(r.d):'날짜 없음'}</span><span class="mn">${r.m!=null?r.m+'분':''}</span><span class="acts"><button class="mini g" data-restore="${r.id}">되살리기</button></span></div>`).join('')||'<div class="empty">지운 기록이 없어요.</div>';
     el.querySelectorAll('[data-restore]').forEach(b=>b.onclick=async()=>{b.disabled=true;try{const x=await api('ab_restore',{p_token:S.token,p_id:b.dataset.restore});upsertLocal(x.row);afterSync(x.synced);render();b.textContent='되살림';toast('되살렸어요. 노션에도 다시 넣었어요.')}catch(er){toast(errText(er),true);b.disabled=false}})}catch(e){el.textContent=errText(e)}}}
 
-function csv(){const head=['이름','결석일','요일','빠진 시간(분)','보강한 시간(분)','남은 시간(분)','보강 여부','보강일','메모','소멸일','앱 분류'];
-  const rows=S.rows.slice().sort((a,b)=>(a.d||'').localeCompare(b.d||'')||a.n.localeCompare(b.n)).map(r=>{const i=info(r);return [r.n,r.d||'',r.d?dow(r.d):'',r.m??'',r.dm||'',rem(r),r.s,r.k||'',r.memo||'',i.exp||'',i.label]});
+function csv(){const head=['이름','수업','결석일','요일','빠진 시간(분)','보강한 시간(분)','남은 시간(분)','보강 여부','보강일','메모','소멸일','앱 분류'];
+  const rows=S.rows.slice().sort((a,b)=>(a.d||'').localeCompare(b.d||'')||a.n.localeCompare(b.n)).map(r=>{const i=info(r);return [r.n,subOf(r),r.d||'',r.d?dow(r.d):'',r.m??'',r.dm||'',rem(r),r.s,r.k||'',r.memo||'',i.exp||'',i.label]});
   const q=v=>{v=String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   const blob=new Blob(['\ufeff'+[head,...rows].map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`결석캘린더_${today()}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
