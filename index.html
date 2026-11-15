@@ -20,6 +20,12 @@ button,select,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 button:disabled{opacity:.55;cursor:default}
 .hidden{display:none!important}
+.pk h3{margin:2px 0 4px;font-size:17px;display:flex;align-items:center;gap:8px}.pk h3 .who{background:var(--mint);color:var(--green);border-radius:8px;padding:2px 10px;font-size:15px}
+.pk .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px}.pk .rbh{margin:0 0 8px;font-size:13px;color:var(--muted)}
+.rbl{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.rbi{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 14px;border:0;border-top:1px solid var(--line);background:#fff;cursor:pointer;font:inherit}.rbi:first-child{border-top:0}.rbi:hover{background:#f5faf7}
+.rbi .tt{flex:1;font-weight:700;font-size:14px}.rbi .d{color:var(--muted);font-size:12px;white-space:nowrap}
+.rbi .g{font-size:12px;white-space:nowrap}.rbi .g i{font-style:normal;font-weight:800}.rbi .g .ok{color:#1d7a4a}.rbi .g .pt{color:#b45d12}.rbi .g .re{color:#a33f3f}.rbi .go{font-size:18px;color:var(--green);font-weight:800;padding-left:4px}
 .drop{border:2px dashed #b9cbc3;border-radius:14px;padding:22px 16px;text-align:center;color:#536560;font-size:13px;line-height:1.7;cursor:pointer;background:#fafcfb}
 .drop.over{border-color:var(--green);background:var(--mint)}
 .drop b{color:var(--green)}
@@ -402,7 +408,7 @@ input[type=date].inp{width:150px}
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-12';
+const APP_VER='2026-11-16-1';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
@@ -514,6 +520,7 @@ $('slist').onclick=e=>{const it=e.target.closest('[data-id]');if(!it)return;if(S
 
 /* ---------- 학생 선택 ---------- */
 async function selectStudent(id){
+  if(S.sel!==id){S.bookId=null;S.cur=0;S.grade='';S.recEdit=null}
   S.sel=id;S.page=null;S.editing=null;try{history.replaceState(null,'','#'+encodeURIComponent(id))}catch(e){}
   renderSide();renderMain();if(S.tab==='report')loadReport();await loadPage();
 }
@@ -897,11 +904,22 @@ $('btnEditBook').onclick=()=>openEditor(S.bookId,false);
 
 function latestGrade(q,qn){if(!S.page)return '';let g='',t='';for(const r of S.page.records){if(r.bookId!==S.bookId)continue;const hit=r.qid?r.qid===q.id:(r.qn===qn&&r.question===q.q);if(hit&&r.ts>t){t=r.ts;g=r.grade}}return g}
 function suggestScore(rs){if(!rs.length)return null;let v=0;rs.forEach(r=>{v+=r.grade==='ok'?1:r.grade==='part'?.5:0});return Math.round(v/rs.length*10)*10}
+function renderPicker(){
+  const s=stu(S.sel);if(!s){$('bookArea').innerHTML='';return}
+  let h='<div class="pk"><h3><span class="who">'+esc(s.name)+'</span> 발문할 책을 골라 주세요</h3><div class="sub">위 칸에서 책 제목(초성 가능)을 찾거나, 아래 최근 책을 누르세요.</div>';
+  if(!S.page){h+='<div class="empty">'+(S.pageLoading?'최근 발문한 책을 불러오는 중이에요...':'책을 골라 주세요.')+'</div></div>';$('bookArea').innerHTML=h;return}
+  const by={};S.page.records.forEach(r=>{const x=by[r.bookId]||(by[r.bookId]={day:'',recs:[]});x.recs.push(r);if(r.day>x.day)x.day=r.day});
+  const list=Object.entries(by).filter(([id])=>bookById(id)).sort((a,b)=>a[1].day<b[1].day?1:a[1].day>b[1].day?-1:0).slice(0,8);
+  if(!list.length)h+='<div class="empty">아직 '+esc(s.name)+' 학생과 발문한 책이 없어요.<br>위 칸에 책 제목을 적어 골라 주세요.</div>';
+  else h+='<h4 class="rbh">'+esc(s.name)+'이(가) 최근 발문한 책</h4><div class="rbl">'+list.map(([id,x])=>{const b=bookById(id),last=x.recs.filter(r=>r.day===x.day),c=g=>last.filter(r=>r.grade===g).length;
+    return '<button class="rbi" data-pickbook="'+esc(id)+'">'+(b.level?'<span class="lv">'+esc(b.level)+'</span>':'<span class="lv nolv">레벨 미정</span>')+'<span class="tt">'+esc(b.title)+'</span><span class="d">'+dayLabel(x.day)+'</span><span class="g"><i class="ok">○'+c('ok')+'</i> <i class="pt">△'+c('part')+'</i> <i class="re">×'+c('re')+'</i></span><span class="go">›</span></button>'}).join('')+'</div>';
+  $('bookArea').innerHTML=h+'</div>';
+}
 function renderBalmun(){
   bookCombo.sync();
   if(S.tab!=='balmun')return;
   const b=bookById(S.bookId);
-  if(!b){$('bookArea').innerHTML='<div class="empty">책을 골라 주세요.</div>';return}
+  if(!b){renderPicker();return}
   const qs=b.questions||[];if(S.cur!=='free'&&!qs[S.cur])S.cur=qs.length?0:'free';
   const free=S.cur==='free',x=free?null:qs[S.cur];
   const PER=10,np=Math.max(1,Math.ceil(qs.length/PER));
@@ -952,6 +970,7 @@ function bookRecordsHtml(b){
       +dr.map(recHtml).join('')+'</div>'}).join('');
 }
 $('bookArea').addEventListener('click',async e=>{
+  const pk=e.target.closest('[data-pickbook]');if(pk){const b=bookById(pk.dataset.pickbook);if(!b)return;S.bookId=b.id;S.cur=b.questions.length?0:'free';S.grade='';savePref();renderBalmun();return}
   const er=e.target.closest('[data-editrec]'),rg=e.target.closest('[data-recgrade]'),rs=e.target.closest('[data-recsave]'),rc=e.target.closest('[data-reccancel]');
   if(er){const r=S.page.records.find(x=>x.id===er.dataset.editrec);if(!r)return;S.recEdit={id:r.id,grade:r.grade};renderBalmun();const t=$('recAns');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length);t.scrollIntoView({block:'center'})}return}
   if(rg){S.recEdit.grade=rg.dataset.recgrade;document.querySelectorAll('[data-recgrade]').forEach(x=>x.classList.toggle('on',x.dataset.recgrade===S.recEdit.grade));return}
