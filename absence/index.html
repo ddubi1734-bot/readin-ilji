@@ -237,7 +237,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-16-2';
+const APP_VER='2026-11-16-3';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -289,7 +289,7 @@ function info(r){
   const exp=addMonths(r.d,S.set.expireMonths||2), left=diff(t,exp);
   const base={exp,left};
   if(r.s==='완료')return {...base,key:'done',label:'완료'+(r.k?' '+md(r.k):'')};
-  if(r.s==='종료')return {...base,key:'closed',label:'종료'};
+  if(r.s==='종료')return {...base,key:'closed',label:left<=0?'소멸':'종료'};
   if(r.k){if(r.k<t)return {...base,key:'check',label:'보강일 지남 '+md(r.k)};const pl=plan(r);return {...base,key:'booked',label:(r.k===t?'오늘 보강':'예약 '+md(r.k))+(pl?' · '+pl+'분':'')}}
   if(r.s==='예약 중')return {...base,key:'booked',label:'예약 중'};
   if(left<=0)return {...base,key:'expired',label:'소멸'};
@@ -350,22 +350,22 @@ async function setStatus(id,st,k){const r=await api('ab_set_status',{p_token:S.t
 async function delRow(id){const r=await api('ab_delete',{p_token:S.token,p_id:id});S.rows=S.rows.filter(x=>x.id!==id);indexRows();afterSync(r.synced);render()}
 
 /* ---------- 화면 ---------- */
-const TABS=[['home','오늘'],['cal','캘린더'],['pend','보강 전'],['done','보강 완료'],['exp','소멸'],['stat','통계']];
+const TABS=[['home','오늘'],['cal','캘린더'],['pend','보강 전'],['done','보강 완료'],['stat','통계']];
 function counts(){const c={pend:0,done:0,exp:0,check:0};for(const r of S.rows){const k=info(r).key;if(OPEN.has(k))c.pend++;if(k==='check')c.check++;if(k==='done')c.done++;if(k==='expired')c.exp++}return c}
 function renderNav(c){$('nav').innerHTML=TABS.map(([k,l])=>{const n=k==='pend'?c.pend:k==='exp'?c.exp:null;return `<button data-tab="${k}" class="${S.tab===k?'on':''}">${l}${n!=null?`<span class="cnt">${n}</span>`:''}</button>`}).join('')+'<span class="sp"></span><button class="outline addbtn2" data-act="makeupStu" data-n="">+ 보강 기록</button><button class="primary addbtn" data-act="add">+ 결석 기록</button>'}
 function render(){
   const c=counts();renderNav(c);syncPill();
-  const f={home:vHome,cal:vCal,pend:vPend,done:vDone,exp:vExp,stu:vStu,stat:vStat}[S.tab]||vHome;
+  if(S.tab==='exp'||S.tab==='stu')S.tab='home';
+  const f={home:vHome,cal:vCal,pend:vPend,done:vDone,stat:vStat}[S.tab]||vHome;
   $('main').innerHTML=f(c);renderBulk();
 }
 function setTab(t){S.tab=t;S.picked.clear();savePref();render();window.scrollTo(0,0)}
 
 function rowLine(r,o={}){const i=info(r);const st=S.stuMap.get(r.n);
   const acts=[];
-  if(OPEN.has(i.key)||i.key==='expired')acts.push(`<button class="mini b" data-act="book" data-id="${r.id}">${r.k?'날짜 바꾸기':'예약'}</button>`);
+  if(OPEN.has(i.key)||i.key==='expired'||i.key==='closed')acts.push(`<button class="mini b" data-act="book" data-id="${r.id}">${r.k?'날짜 바꾸기':'예약'}</button>`);
   if(OPEN.has(i.key))acts.push(`<button class="mini g" data-act="makeup" data-id="${r.id}" title="보강한 시간 기록 (일부만 해도 돼요)">보강함</button>`);
-  if(i.key==='expired')acts.push(`<button class="mini" data-act="closeOne" data-id="${r.id}" title="확인하면 '종료'로 넘어가 이 목록에서 빠져요">확인</button>`);
-  if(i.key==='done'||i.key==='closed')acts.push(`<button class="mini" data-act="reopen" data-id="${r.id}">되돌리기</button>`);
+  if(i.key==='done')acts.push(`<button class="mini" data-act="reopen" data-id="${r.id}">되돌리기</button>`);
   return `<div class="row" data-id="${r.id}">
     ${o.check?`<input type="checkbox" class="cbx" data-act="pick" data-id="${r.id}" ${S.picked.has(r.id)?'checked':''}>`:''}
     ${o.noName?'':`<span class="nm" data-act="student" data-n="${esc(r.n)}">${esc(r.n||'(이름 없음)')}${st&&st.s!=='재원'?` <small style="color:var(--muted);font-weight:600">${esc(st.s)}</small>`:''}</span>`}
@@ -373,7 +373,7 @@ function rowLine(r,o={}){const i=info(r);const st=S.stuMap.get(r.n);
     <span class="mn">${r.m!=null?esc(r.m)+'분':'-'}</span>${subChip(r)}
     ${pill(i)} ${ddChip(i)}${(+r.dm||0)>0&&OPEN.has(i.key)?` <span class="dd part" title="보강한 시간 / 남은 시간">${r.dm}분 함 · ${rem(r)}분 남음</span>`:''}
     <span class="memo" data-act="edit" data-id="${r.id}" title="${esc(r.memo)}">${esc(r.memo)}${r.sync==='pending'?' <span class="dd soon" title="노션에 아직 못 보냈어요">노션 대기</span>':''}</span>
-    <span class="acts">${acts.join('')}${i.key==='expired'?'':`<button class="mini" data-act="edit" data-id="${r.id}">수정</button>`}</span></div>`}
+    <span class="acts">${acts.join('')}${i.key==='expired'||i.key==='closed'?'':`<button class="mini" data-act="edit" data-id="${r.id}">수정</button>`}</span></div>`}
 
 /* 오늘 */
 function vHome(c){const t=today();
@@ -877,7 +877,7 @@ function openNodate(){const rs=S.rows.filter(r=>info(r).key==='nodate');
 /* 설정 */
 function openSettings(){const m=openModal(`<h2>설정</h2><div class="sub">앱 버전 ${APP_VER}</div>
   <div class="field"><label>소멸 기준 (결석일로부터 몇 개월 안에 보강)</label><div class="hrow"><input class="inp" type="number" min="1" max="24" id="stE" value="${S.set.expireMonths||2}" style="max-width:90px">개월 <button class="outline" id="stES">저장</button></div>
-   <div class="sum" style="margin-top:4px">노션의 '소멸 시한' 수식은 2개월 기준이에요. 여기서 바꾸면 앱의 보강 전·소멸 분류만 바뀌어요.</div></div>
+   <div class="sum" style="margin-top:4px">노션의 '소멸 시한' 수식은 2개월 기준이에요. 여기서 바꾸면 앱의 보강 전·소멸 분류만 바뀌어요. 기한이 지난 기록은 앱을 열 때 자동으로 '종료'가 되고 노션에도 '종료'로 바뀌어요. 기준을 늘려도 이미 종료된 기록은 그대로라, 살릴 땐 학생 화면에서 <b>예약</b>을 눌러 주세요.</div></div>
   <div class="field"><label>덜 함·더 함 기준 (온하이 등·하원)</label><div class="hrow">수업 시간과 <input class="inp" type="number" min="1" max="60" id="stD" value="${S.set.diffMin||5}" style="max-width:70px">분 이상 차이 날 때만 <button class="outline" id="stDS">저장</button></div></div>
   <div class="field"><label>노션 백업</label><div class="hrow"><button class="outline" id="stPush">못 보낸 기록 다시 보내기</button><a class="ghost" target="_blank" rel="noopener" href="${esc(S.set.dbUrl||'https://www.notion.so')}">노션 결석 캘린더 열기</a></div>
    <div class="sum" style="margin-top:4px">앱이 원본이고, 앱에서 바꾼 것은 노션 결석 캘린더에 바로 백업돼요. 노션에서 고친 것은 앱에 들어오지 않아요.</div>
@@ -946,7 +946,7 @@ document.addEventListener('click',async e=>{
     else if(a==='bulkClear'){S.picked.clear();render()}
   }catch(er){toast(errText(er),true)}
 });
-function refreshBody(){const f={home:vHome,cal:vCal,pend:vPend,done:vDone,exp:vExp,stu:vStu,stat:vStat}[S.tab];const tpl=document.createElement('div');tpl.innerHTML=f(counts());
+function refreshBody(){const f={home:vHome,cal:vCal,pend:vPend,done:vDone,stat:vStat}[S.tab];const tpl=document.createElement('div');tpl.innerHTML=f(counts());
   const nb=tpl.querySelector('#vbody'),ob=$('vbody');if(nb&&ob)ob.innerHTML=nb.innerHTML;else render();renderBulk()}
 document.addEventListener('input',e=>{const id=e.target.id;const map={calQ:'calQ',pq:'pq',dq:'dq',eq:'eq',sq:'sq'};if(!map[id])return;S[map[id]]=e.target.value;refreshBody()});
 document.addEventListener('change',e=>{if(e.target.id==='showMk'){S.showMk=e.target.checked;savePref();render()}else if(e.target.id==='dm'){S.dm=e.target.value;render()}});
