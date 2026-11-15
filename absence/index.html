@@ -48,6 +48,9 @@ button{cursor:pointer}button:disabled{opacity:.55;cursor:default}
 .nav .addbtn{align-self:center;margin-bottom:6px;padding:8px 14px;font-size:13px;background:var(--green);color:#fff;border-radius:10px;border:0;font-weight:800}
 .main{padding:18px 22px 90px;max-width:1280px;margin:0 auto}
 /* sync pill */
+.hsearch{position:relative}.hsearch input{border:1px solid #dce5e0;border-radius:10px;padding:7px 11px;width:190px;outline:none;font-size:13px}.hsearch input:focus{border-color:var(--green);box-shadow:0 0 0 3px #176b5b1a}
+.hsug{position:absolute;top:38px;right:0;width:240px;max-height:320px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px #102a2426;z-index:60;padding:4px}
+.hsug button{display:flex;width:100%;justify-content:space-between;gap:8px;border:0;background:none;padding:8px 10px;border-radius:8px;font-size:13px;text-align:left}.hsug button:hover,.hsug button.on{background:#eef6f1}.hsug small{color:var(--muted)}
 .sync{font-size:11.5px;border-radius:99px;padding:4px 10px;background:#eef6f1;color:#3d6e5f;font-weight:700;border:0}
 .sync.warn{background:#fff1e0;color:#b45d12}
 /* status pills */
@@ -204,7 +207,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 .stu-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .kv{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-bottom:12px}.kv span{color:var(--muted)}.kv b{margin-left:3px}
 @media(max-width:900px){.stats{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.main{padding:14px 12px 90px}.top{padding:10px 12px}.nav{padding:8px 8px 0;top:59px}.brand p{display:none}.cell{min-height:84px;padding:3px}.ev{font-size:11px;padding:2px 4px}.ev .em{display:none}.toolbar .search{width:100%}}
-@media(max-width:560px){.topright .ghost.opt{display:none}.cal .wd{padding:6px 3px}}
+@media(max-width:560px){.hsearch input{width:120px}.topright .ghost.opt{display:none}.cal .wd{padding:6px 3px}}
 </style>
 </head>
 <body>
@@ -212,6 +215,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
   <div class="brand" id="brandHome" title="오늘 화면으로"><img class="logo" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23176b5b'/%3E%3Crect x='12' y='16' width='40' height='36' rx='6' fill='%23fff'/%3E%3Crect x='12' y='16' width='40' height='10' rx='5' fill='%23cfe8de'/%3E%3Crect x='20' y='10' width='5' height='11' rx='2.5' fill='%23fff'/%3E%3Crect x='39' y='10' width='5' height='11' rx='2.5' fill='%23fff'/%3E%3Cpath d='M23 39l6 6 12-13' stroke='%23176b5b' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <div><h1>결석·보강 캘린더</h1><p>리드인 황남1점 · 노션 결석 캘린더에 자동 백업</p></div></div>
   <div class="topright hidden" id="topright">
+    <div class="hsearch"><input id="hq" placeholder="학생 찾기 (초성 가능)" autocomplete="off" spellcheck="false"><div id="hqSug" class="hsug hidden"></div></div>
     <button class="sync" id="syncPill" title="앱 기록은 노션 결석 캘린더에 자동으로 백업돼요. 못 보낸 게 있으면 눌러서 다시 보내요">노션 백업</button>
     <a class="ghost opt" href="../" title="학생일지 앱으로">학생일지</a>
     <button class="ghost opt" id="btnSettings">설정</button>
@@ -233,7 +237,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-24';
+const APP_VER='2026-11-15-25';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -274,7 +278,7 @@ function shortGrade(g){if(!g)return '';return String(g).replace('초등학교 ',
 /* ---------- 상태 ---------- */
 const S={token:ls.get(TOKEN_KEY),rows:[],allocs:[],students:[],stuMap:new Map(),set:{expireMonths:2},pending:0,pulledAt:null,
   tab:'home',pt:'all',calY:0,calM:0,calQ:'',showMk:true,pq:'',pf:'all',pg:true,dq:'',dm:'',eq:'',sq:'',ssort:'owed',picked:new Set(),busy:false};
-try{const p=JSON.parse(ls.get(PREF_KEY)||'{}');if(p.tab)S.tab=p.tab;if(p.pg!=null)S.pg=p.pg;if(p.showMk!=null)S.showMk=p.showMk}catch(e){}
+try{const p=JSON.parse(ls.get(PREF_KEY)||'{}');if(p.tab&&p.tab!=='stu'&&p.tab!=='scrap')S.tab=p.tab;if(p.pg!=null)S.pg=p.pg;if(p.showMk!=null)S.showMk=p.showMk}catch(e){}
 function savePref(){ls.set(PREF_KEY,JSON.stringify({tab:S.tab,pg:S.pg,showMk:S.showMk}))}
 {const t=today();S.calY=+t.slice(0,4);S.calM=+t.slice(5,7)}
 
@@ -344,7 +348,7 @@ async function setStatus(id,st,k){const r=await api('ab_set_status',{p_token:S.t
 async function delRow(id){const r=await api('ab_delete',{p_token:S.token,p_id:id});S.rows=S.rows.filter(x=>x.id!==id);indexRows();afterSync(r.synced);render()}
 
 /* ---------- 화면 ---------- */
-const TABS=[['home','오늘'],['cal','캘린더'],['pend','보강 전'],['done','보강 완료'],['exp','소멸'],['stu','학생별'],['stat','통계']];
+const TABS=[['home','오늘'],['cal','캘린더'],['pend','보강 전'],['done','보강 완료'],['exp','소멸'],['stat','통계']];
 function counts(){const c={pend:0,done:0,exp:0,check:0};for(const r of S.rows){const k=info(r).key;if(OPEN.has(k))c.pend++;if(k==='check')c.check++;if(k==='done')c.done++;if(k==='expired')c.exp++}return c}
 function renderNav(c){$('nav').innerHTML=TABS.map(([k,l])=>{const n=k==='pend'?c.pend:k==='exp'?c.exp:null;return `<button data-tab="${k}" class="${S.tab===k?'on':''}">${l}${n!=null?`<span class="cnt">${n}</span>`:''}</button>`}).join('')+'<span class="sp"></span><button class="outline addbtn2" data-act="makeupStu" data-n="">+ 보강 기록</button><button class="primary addbtn" data-act="add">+ 결석 기록</button>'}
 function render(){
@@ -920,6 +924,16 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('modalRoot').firs
 $('btnLogin').onclick=login;$('pw').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
 $('btnLogout').onclick=()=>{if(confirm('로그아웃할까요? (학생일지 앱도 같이 로그아웃돼요)'))logout()};
 $('btnSettings').onclick=openSettings;
+function hqNames(v){const names=new Set(S.students.map(s=>s.n));S.rows.forEach(r=>r.n&&names.add(r.n));
+  const rank=n=>{const s=S.stuMap.get(n);return s?(s.s==='재원'?0:s.s==='휴원'?1:2):3};
+  return [...names].filter(n=>match(n,v)).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b)).slice(0,12)}
+function hqDraw(){const v=$('hq').value.trim(),el=$('hqSug');if(!v){el.classList.add('hidden');return}
+  const list=hqNames(v);el.innerHTML=list.map((n,i)=>{const s=S.stuMap.get(n);const open=S.rows.filter(r=>r.n===n&&OPEN.has(info(r).key));return `<button data-hn="${esc(n)}" class="${i===0?'on':''}"><span><b>${esc(n)}</b> <small>${s?esc(s.s):'온하이에 없음'}</small></span><small>${open.length?'보강 전 '+mins(remSum(open)):''}</small></button>`}).join('')||'<div class="empty" style="padding:8px 10px">찾는 학생이 없어요.</div>';
+  el.classList.remove('hidden')}
+$('hq').addEventListener('input',hqDraw);$('hq').addEventListener('focus',hqDraw);
+$('hq').addEventListener('keyup',e=>{if(e.key==='Enter'){hqDraw();const f=$('hqSug').querySelector('[data-hn]');if(f){$('hqSug').classList.add('hidden');$('hq').value='';$('hq').blur();openStudent(f.dataset.hn)}}else if(e.key==='Escape'){$('hqSug').classList.add('hidden');$('hq').blur()}});
+$('hqSug').addEventListener('mousedown',e=>{const b=e.target.closest('[data-hn]');if(!b)return;e.preventDefault();$('hqSug').classList.add('hidden');$('hq').value='';$('hq').blur();openStudent(b.dataset.hn)});
+$('hq').addEventListener('blur',()=>setTimeout(()=>$('hqSug').classList.add('hidden'),150));
 $('brandHome').onclick=()=>setTab('home');
 $('syncPill').onclick=()=>pushPending(false);
 setInterval(()=>{if(S.token)syncPill()},30*1000);
