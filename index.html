@@ -572,7 +572,7 @@ const byLast=(a,b)=>(b.last||'')>(a.last||'')?1:(b.last||'')<(a.last||'')?-1:0;
 const bookCombo=makeCombo({input:$('bookInput'),menu:$('bookMenu'),
   items(){return S.books.map((b,i)=>Object.assign({i},b)).sort((x,y)=>byLast(x,y)||y.i-x.i)},
   text:b=>b.title,isSel:b=>b.id===S.bookId,current:()=>(bookById(S.bookId)||{}).title||'',
-  render(b){return (b.level?'<span class="lv">'+esc(b.level)+'</span>':'<span class="lv nolv">레벨 미정</span>')+'<span class="t">'+esc(b.title)+'</span>'+(b.questions&&b.questions.length?'<span class="sub">발문지 '+b.questions.length+'문항</span>':'')+(b.last?'<span class="hint">최근 발문 '+dayLabel(kstDay(b.last))+'</span>':'')},
+  render(b){return (b.level?'<span class="lv">'+esc(b.level)+'</span>':'<span class="lv nolv">레벨 미정</span>')+'<span class="t">'+esc(b.title)+'</span>'+(b.questions&&b.questions.length?'<span class="sub">'+(b.source==='책 소개'?'책 소개로 만든 ':'발문지 ')+b.questions.length+'문항</span>':'')+(b.last?'<span class="hint">최근 발문 '+dayLabel(kstDay(b.last))+'</span>':'')},
   onPick:b=>{S.bookId=b.id;S.cur=b.questions.length?0:'free';S.grade='';savePref();renderBalmun()},onAdd:q=>openBookModal(q)});
 function openBookModal(title){$('newTitle').value=title;$('newLevel').value='';drawLvChips();$('bookModal').classList.add('open');setTimeout(()=>$('newLevel').focus(),160)}
 function drawLvChips(){$('lvchips').innerHTML=LEVELS.map(l=>'<button type="button" class="chip'+($('newLevel').value.trim()===l?' on':'')+'" data-lv="'+l+'">'+l+'</button>').join('')}
@@ -628,6 +628,7 @@ function renderBalmun(){
   const qs=b.questions||[];if(S.cur!=='free'&&!qs[S.cur])S.cur=qs.length?0:'free';
   const free=S.cur==='free',x=free?null:qs[S.cur];
   let h='<div class="qnav">'+qs.map((q,i)=>{const g=latestGrade(q,i+1);return '<button class="qbtn'+(i===S.cur?' active':'')+'" data-q="'+i+'">질문 '+(i+1)+(g?'<i>'+MARK[g]+'</i>':'')+'</button>'}).join('')+'<button class="qbtn free'+(free?' active':'')+'" data-q="free">+ 직접 질문</button></div>';
+  if(b.source==='책 소개')h+='<div class="banner" style="margin:0 0 12px">리드인 책 소개를 바탕으로 자동으로 만든 질문이에요. 수업 전에 한 번 훑어보고, 고칠 곳은 \'발문지 편집\'에서 고쳐 주세요. 한 번 저장하면 이 안내는 사라져요.</div>';
   if(free)h+='<div class="qtype">직접 질문</div><input class="tin" id="freeQ" placeholder="발문지에 없는 질문을 적어 주세요"><textarea class="ta small" id="freeA" placeholder="모범 답안 (없으면 비워 두세요)" style="margin-bottom:10px"></textarea>';
   else h+='<div class="qtype">'+esc(x.kind||'')+'</div><p class="question">'+esc(x.q)+'</p><div class="answerbox"><div class="cap">모범 답안</div><p>'+esc(x.a||'(모범 답안 없음)')+'</p></div>';
   h+='<textarea class="ta c" id="childAnswer" placeholder="아이의 답을 적어 주세요."></textarea><div class="grade" id="grades">'+['ok','part','re'].map(g=>'<button data-grade="'+g+'" class="'+(S.grade===g?'on':'')+'">'+GRADE[g]+'</button>').join('')+'</div>';
