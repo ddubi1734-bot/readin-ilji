@@ -198,7 +198,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-11';
+const APP_VER='2026-11-15-13';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -238,7 +238,7 @@ function shortGrade(g){if(!g)return '';return String(g).replace('초등학교 ',
 
 /* ---------- 상태 ---------- */
 const S={token:ls.get(TOKEN_KEY),rows:[],allocs:[],students:[],stuMap:new Map(),set:{expireMonths:2},pending:0,pulledAt:null,
-  tab:'home',calY:0,calM:0,calQ:'',showMk:true,pq:'',pf:'all',pg:true,dq:'',dm:'',eq:'',sq:'',ssort:'owed',picked:new Set(),busy:false};
+  tab:'home',pt:'all',calY:0,calM:0,calQ:'',showMk:true,pq:'',pf:'all',pg:true,dq:'',dm:'',eq:'',sq:'',ssort:'owed',picked:new Set(),busy:false};
 try{const p=JSON.parse(ls.get(PREF_KEY)||'{}');if(p.tab)S.tab=p.tab;if(p.pg!=null)S.pg=p.pg;if(p.showMk!=null)S.showMk=p.showMk}catch(e){}
 function savePref(){ls.set(PREF_KEY,JSON.stringify({tab:S.tab,pg:S.pg,showMk:S.showMk}))}
 {const t=today();S.calY=+t.slice(0,4);S.calM=+t.slice(5,7)}
@@ -261,6 +261,10 @@ function pill(i){return `<span class="pill st-${i.key}">${esc(i.label)}</span>`}
 const OPEN=new Set(['wait','booked','check']);
 function rem(r){if(r.s==='완료'||r.s==='종료')return 0;return Math.max((+r.m||0)-(+r.dm||0),0)}
 function remSum(list){return list.reduce((a,r)=>a+rem(r),0)}
+function isGone(r){const k=info(r).key;return k==='expired'||k==='closed'}
+function isShort(r){return r.memo==='수업 덜 함'}
+function splitSum(list){let a=0,s=0;for(const r of list){if(isShort(r))s+=rem(r);else a+=rem(r)}return {a,s}}
+function splitTxt(list){const x=splitSum(list);return x.s?`결석 ${mins(x.a)} · 덜 함 ${mins(x.s)}`:mins(x.a)}
 function plan(r){const x=rem(r);return r.pm&&r.pm<x?+r.pm:x}
 function rowsBy(fn){return S.rows.filter(fn)}
 function indexRows(){S.byId=new Map(S.rows.map(r=>[r.id,r]))}
@@ -303,7 +307,7 @@ async function delRow(id){const r=await api('ab_delete',{p_token:S.token,p_id:id
 
 /* ---------- 화면 ---------- */
 const TABS=[['home','오늘'],['cal','캘린더'],['pend','보강 전'],['done','보강 완료'],['exp','소멸'],['stu','학생별'],['stat','통계']];
-function counts(){const c={pend:0,done:0,exp:0,check:0};for(const r of S.rows){const k=info(r).key;if(OPEN.has(k))c.pend++;if(k==='check')c.check++;if(k==='done'||k==='closed')c.done++;if(k==='expired')c.exp++}return c}
+function counts(){const c={pend:0,done:0,exp:0,check:0};for(const r of S.rows){const k=info(r).key;if(OPEN.has(k))c.pend++;if(k==='check')c.check++;if(k==='done')c.done++;if(k==='expired')c.exp++}return c}
 function renderNav(c){$('nav').innerHTML=TABS.map(([k,l])=>{const n=k==='pend'?c.pend:k==='exp'?c.exp:null;return `<button data-tab="${k}" class="${S.tab===k?'on':''}">${l}${n!=null?`<span class="cnt">${n}</span>`:''}</button>`}).join('')+'<span class="sp"></span><button class="outline addbtn2" data-act="makeupStu" data-n="">+ 보강 기록</button><button class="primary addbtn" data-act="add">+ 결석 기록</button>'}
 function render(){
   const c=counts();renderNav(c);syncPill();
@@ -315,6 +319,7 @@ function setTab(t){S.tab=t;S.picked.clear();savePref();render();window.scrollTo(
 function rowLine(r,o={}){const i=info(r);const st=S.stuMap.get(r.n);
   const acts=[];
   if(OPEN.has(i.key)||i.key==='expired'){acts.push(`<button class="mini b" data-act="book" data-id="${r.id}">${r.k?'날짜 바꾸기':'예약'}</button>`);acts.push(`<button class="mini g" data-act="makeup" data-id="${r.id}" title="보강한 시간 기록 (일부만 해도 돼요)">보강함</button>`)}
+  if(i.key==='expired')acts.push(`<button class="mini" data-act="closeOne" data-id="${r.id}" title="소멸 확인 (종료로 바꿔요)">확인</button>`);
   if(i.key==='done'||i.key==='closed')acts.push(`<button class="mini" data-act="reopen" data-id="${r.id}">되돌리기</button>`);
   return `<div class="row" data-id="${r.id}">
     ${o.check?`<input type="checkbox" class="cbx" data-act="pick" data-id="${r.id}" ${S.picked.has(r.id)?'checked':''}>`:''}
@@ -338,7 +343,7 @@ function vHome(c){const t=today();
   const sec=(title,hint,list,o={})=>`<section class="card sec"><h3>${title} <span class="n">${list.length}건</span>${o.btn||''}</h3>${hint?`<p class="hint">${hint}</p>`:''}<div class="rows">${list.length?list.map(r=>rowLine(r)).join(''):`<div class="empty">${o.empty||'없어요.'}</div>`}</div></section>`;
   return `
   <div class="stats">
-    <div class="card stat" data-tab="pend"><div class="l">보강 기다리는 결석</div><div class="v">${open.length}건</div><div class="s">합계 ${mins(owed)} · 학생 ${new Set(open.map(r=>r.n)).size}명</div></div>
+    <div class="card stat" data-tab="pend"><div class="l">보강 기다리는 결석</div><div class="v">${open.length}건</div><div class="s">${splitTxt(open)} · 학생 ${new Set(open.map(r=>r.n)).size}명</div></div>
     <div class="card stat red" data-act="goSoon"><div class="l">2주 안에 소멸</div><div class="v">${soon.length}건</div><div class="s">${soon[0]?'가장 빠른 것 '+md(info(soon[0]).exp):'여유 있어요'}</div></div>
     <div class="card stat purple" data-act="goCheck"><div class="l">보강일 지남 · 완료 확인</div><div class="v">${check.length}건</div><div class="s">보강했으면 완료로 바꿔 주세요</div></div>
     <div class="card stat blue" data-tab="cal"><div class="l">${+ym.slice(5)}월 결석</div><div class="v">${monthRows.length}건</div><div class="s">${mins(monthRows.reduce((a,r)=>a+(+r.m||0),0))} · 보강 완료 ${monthRows.filter(r=>r.s==='완료').length}건</div></div>
@@ -381,12 +386,14 @@ function vCal(){const y=S.calY,m=S.calM,t=today();
     <div class="legend">${['wait','booked','check','done','expired','closed'].map(k=>pill({key:k,label:{wait:'보강 전',booked:'예약',check:'보강일 지남',done:'완료',expired:'소멸',closed:'종료'}[k]})).join('')}<span class="pill" style="border:1.5px dashed #9fb7e3;color:var(--blue);background:#fff"><span class="tg">보강</span>예약 (할 시간)</span><span class="pill" style="border:1.5px dashed #a8d5ba;color:#1d7a4a;background:#fff"><span class="tg">보강</span>한 날 (한 시간)</span></div></div>`}
 
 /* 보강 전 */
-function pendRows(){const q=S.pq.trim();return rowsBy(r=>{const i=info(r);if(!OPEN.has(i.key))return false;if(!match(r.n,q))return false;
+function pendRows(){const q=S.pq.trim();return rowsBy(r=>{const i=info(r);if(!OPEN.has(i.key))return false;if(!match(r.n,q))return false;if(S.pt==='ab'&&isShort(r))return false;if(S.pt==='short'&&!isShort(r))return false;
   if(S.pf==='wait')return i.key==='wait';if(S.pf==='booked')return i.key==='booked';if(S.pf==='check')return i.key==='check';if(S.pf==='soon')return i.left<=14&&i.key!=='booked';return true})}
 function vPend(){const list=pendRows();const nod=rowsBy(r=>info(r).key==='nodate');
   const total=remSum(list);
   const cnt=k=>rowsBy(r=>{const i=info(r);return k==='all'?OPEN.has(i.key):k==='soon'?(OPEN.has(i.key)&&i.left<=14&&i.key!=='booked'):i.key===k}).length;
   const chips=[['all','전체'],['wait','보강 전'],['booked','예약됨'],['check','보강일 지남'],['soon','2주 안 소멸']].map(([k,l])=>`<button class="chip ${S.pf===k?'on':''}" data-act="pf" data-v="${k}">${l} <b>${cnt(k)}</b></button>`).join('');
+  const openAll=rowsBy(r=>OPEN.has(info(r).key)),ss=splitSum(openAll);
+  const tchips=[['all','결석+덜 함',ss.a+ss.s],['ab','결석만',ss.a],['short','덜 함만',ss.s]].map(([k,l,v])=>`<button class="chip ${S.pt===k?'on':''}" data-act="pt" data-v="${k}">${l} <b>${mins(v)}</b></button>`).join('');
   let body='';
   if(S.pg){const g=new Map();for(const r of list){if(!g.has(r.n))g.set(r.n,[]);g.get(r.n).push(r)}
     const names=[...g.keys()].sort((a,b)=>a.localeCompare(b));
@@ -397,18 +404,18 @@ function vPend(){const list=pendRows();const nod=rowsBy(r=>info(r).key==='nodate
         <span class="gn" data-act="student" data-n="${esc(n)}">${esc(n)}</span><span class="gs">${st?esc([shortGrade(st.g),st.s!=='재원'?st.s:''].filter(Boolean).join(' · ')):''}</span>
         ${isFinite(minLeft)?ddChip({key:'wait',left:minLeft,exp:addDays(today(),minLeft)}):''}
         <button class="mini g" data-act="makeupStu" data-n="${esc(n)}" title="이 학생 보강한 시간 기록">보강 기록</button><button class="mini" data-act="msg" data-n="${esc(n)}" title="학부모 안내 문구 만들기">안내 문구</button>
-        <span class="tot">${rs.length}건 · ${mins(tot)}</span></div>
+        <span class="tot">${rs.length}건 · ${splitTxt(rs)}</span></div>
         <div class="rows">${rs.map(r=>rowLine(r,{check:true,noName:true})).join('')}</div></div>`}).join('');
   }else{body=`<div class="card sec"><div class="rows">${list.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.n.localeCompare(b.n)).map(r=>rowLine(r,{check:true})).join('')}</div></div>`}
   return `<div class="toolbar"><input class="search" id="pq" placeholder="이름 검색 (초성 가능)" value="${esc(S.pq)}" autocomplete="off">${chips}<span class="sp"></span>
-    <button class="chip ${S.pg?'on':''}" data-act="pg">학생별로 묶기</button></div><div id="vbody">
+    <button class="chip ${S.pg?'on':''}" data-act="pg">학생별로 묶기</button></div><div class="toolbar" style="margin-top:-4px"><span class="sum">종류</span>${tchips}</div><div id="vbody">
     ${nod.length?`<div class="banner">이름이나 날짜가 비어 있는 기록이 ${nod.length}건 있어요 (노션의 '날짜 없음'). <button class="mini" data-act="showNodate">보기·정리</button></div>`:''}
-    <div class="sum" style="margin-bottom:10px">${list.length}건 · 합계 <b>${mins(total)}</b> · 학생 ${new Set(list.map(r=>r.n)).size}명 &nbsp;|&nbsp; 여러 건을 체크하면 한 번에 예약·완료할 수 있어요.</div>
+    <div class="sum" style="margin-bottom:10px">${list.length}건 · 합계 <b>${mins(total)}</b>${splitSum(list).s&&splitSum(list).a?` (결석 ${mins(splitSum(list).a)} · 덜 함 ${mins(splitSum(list).s)})`:''} · 학생 ${new Set(list.map(r=>r.n)).size}명 &nbsp;|&nbsp; 여러 건을 체크하면 한 번에 예약·완료할 수 있어요.</div>
     ${body||'<div class="card sec"><div class="empty">해당하는 기록이 없어요.</div></div>'}</div>`}
 
 /* 보강 완료 */
-function vDone(){const q=S.dq.trim();let list=rowsBy(r=>{const k=info(r).key;return (k==='done'||k==='closed')&&match(r.n,q)});
-  const months=[...new Set(rowsBy(r=>r.s==='완료'||r.s==='종료').map(r=>(r.k||r.d||'').slice(0,7)).filter(Boolean))].sort().reverse();
+function vDone(){const q=S.dq.trim();let list=rowsBy(r=>{const k=info(r).key;return k==='done'&&match(r.n,q)});
+  const months=[...new Set(rowsBy(r=>r.s==='완료').map(r=>(r.k||r.d||'').slice(0,7)).filter(Boolean))].sort().reverse();
   if(S.dm)list=list.filter(r=>(r.k||r.d||'').startsWith(S.dm));
   list.sort((a,b)=>{const x=a.k||a.d||'',y=b.k||b.d||'';return x<y?1:x>y?-1:a.n.localeCompare(b.n)});
   const tot=list.reduce((a,r)=>a+(r.s==='완료'?(+r.m||0):0),0);
@@ -421,36 +428,42 @@ function vDone(){const q=S.dq.trim();let list=rowsBy(r=>{const k=info(r).key;ret
 
 /* 소멸 */
 function vExp(){const q=S.eq.trim();const list=rowsBy(r=>info(r).key==='expired'&&match(r.n,q)).sort((a,b)=>a.n.localeCompare(b.n)||(a.d<b.d?-1:1));
-  return `<div class="toolbar"><input class="search" id="eq" placeholder="이름 검색 (초성 가능)" value="${esc(S.eq)}" autocomplete="off"></div><div id="vbody">
-    <div class="sum" style="margin:-4px 0 6px">${list.length}건 · ${mins(remSum(list))}</div>
-    <p class="sum" style="margin:-4px 0 12px">결석일로부터 ${S.set.expireMonths||2}개월이 지나 보강 기한이 끝난 기록이에요 (노션의 '소멸' 보기와 같은 기준). 예외로 보강해 줄 때는 <b>예약</b>을 누르면 다시 '보강 전'으로 올라가요.</p>
-    <div class="card sec"><div class="rows">${list.map(r=>rowLine(r)).join('')||'<div class="empty">소멸된 기록이 없어요.</div>'}</div></div></div>`}
+  const closedN=rowsBy(r=>info(r).key==='closed').length;
+  return `<div class="toolbar"><input class="search" id="eq" placeholder="이름 검색 (초성 가능)" value="${esc(S.eq)}" autocomplete="off"><span class="sp"></span>${list.length?`<button class="danger" data-act="closeAll">${q?'검색된 ':'' }${list.length}건 모두 확인</button>`:''}</div><div id="vbody">
+    <div class="sum" style="margin:-4px 0 6px">새로 소멸된 ${list.length}건 · ${splitTxt(list)}</div>
+    <p class="sum" style="margin:-4px 0 12px">결석일로부터 ${S.set.expireMonths||2}개월이 지나 보강 기한이 끝난 기록이에요. 확인하면 '종료'로 바뀌어 여기서 사라져요(학생 화면·통계·노션 백업에는 남아요). 예외로 보강해 줄 때는 <b>예약</b>을 누르면 다시 '보강 전'으로 올라가요. 지금까지 확인한 소멸 ${closedN}건.</p>
+    <div class="card sec"><div class="rows">${list.map(r=>rowLine(r,{check:true})).join('')||'<div class="empty">새로 소멸된 기록이 없어요.</div>'}</div></div></div>`}
+async function closeGone(ids){if(!ids.length)return;
+  const r=await api('ab_close_expired',{p_token:S.token,p_ids:ids});ids.forEach(id=>{const x=S.byId.get(id);if(x){x.s='종료';x.sync='pending'}});S.picked.clear();S.pending=r.pending;render();
+  toast(`${r.closed}건을 확인(종료)했어요. 노션 백업을 보내는 중이에요...`);
+  for(let i=0;i<40&&S.pending>0;i++){try{const p=await api('ab_push_pending',{p_token:S.token});S.pending=p.pending;syncPill(`노션 백업 중... 남은 ${p.pending}건`);if(!p.sent&&p.pending)break}catch(e){break}}
+  await load();toast(S.pending?`확인은 끝났어요. 노션에 못 보낸 ${S.pending}건은 위쪽 버튼으로 다시 보내 주세요.`:'확인을 마쳤고 노션 백업도 끝났어요.',!!S.pending)}
 
 /* 학생별 */
 function stuStats(){const m=new Map();
-  const get=n=>{if(!m.has(n))m.set(n,{n,total:0,owed:0,owedN:0,done:0,exp:0,last:'',expSoon:null});return m.get(n)};
+  const get=n=>{if(!m.has(n))m.set(n,{n,total:0,owed:0,owedN:0,owedS:0,owedSN:0,done:0,exp:0,last:'',expSoon:null});return m.get(n)};
   for(const s of S.students)if(s.s==='재원')get(s.n);
   for(const r of S.rows){if(!r.n)continue;const x=get(r.n),i=info(r);x.total++;if(r.d&&r.d>x.last)x.last=r.d;
-    if(OPEN.has(i.key)){x.owed+=rem(r);x.owedN++;if(i.key==='wait'&&(x.expSoon==null||i.left<x.expSoon))x.expSoon=i.left}
-    if(i.key==='done')x.done++;if(i.key==='expired')x.exp++}
+    if(OPEN.has(i.key)){if(isShort(r)){x.owedS+=rem(r);x.owedSN++}else{x.owed+=rem(r);x.owedN++}if(i.key==='wait'&&(x.expSoon==null||i.left<x.expSoon))x.expSoon=i.left}
+    if(i.key==='done')x.done++;if(i.key==='expired'||i.key==='closed')x.exp++}
   return [...m.values()]}
 function vStu(){const q=S.sq.trim();let list=stuStats().filter(x=>match(x.n,q));
   const ac=r=>{const s=S.stuMap.get(r.n);return s?s.s:'기록만'};
   if(S.sfilter&&S.sfilter!=='all')list=list.filter(x=>ac(x)===S.sfilter);
-  const srt={owed:(a,b)=>b.owed-a.owed||a.n.localeCompare(b.n),name:(a,b)=>a.n.localeCompare(b.n),total:(a,b)=>b.total-a.total,last:(a,b)=>(b.last||'').localeCompare(a.last||''),exp:(a,b)=>b.exp-a.exp}[S.ssort]||((a,b)=>0);
+  const srt={owed:(a,b)=>(b.owed+b.owedS)-(a.owed+a.owedS)||a.n.localeCompare(b.n),owedS:(a,b)=>b.owedS-a.owedS||a.n.localeCompare(b.n),name:(a,b)=>a.n.localeCompare(b.n),total:(a,b)=>b.total-a.total,last:(a,b)=>(b.last||'').localeCompare(a.last||''),exp:(a,b)=>b.exp-a.exp}[S.ssort]||((a,b)=>0);
   list.sort(srt);
   const th=(k,l,c='')=>`<th class="${c}" data-act="ssort" data-v="${k}">${l}${S.ssort===k?' ▾':''}</th>`;
   return `<div class="toolbar"><input class="search" id="sq" placeholder="이름 검색 (초성 가능)" value="${esc(S.sq)}" autocomplete="off">
     ${['all','재원','휴원','퇴원','기록만'].map(k=>`<button class="chip ${(S.sfilter||'all')===k?'on':''}" data-act="sfilter" data-v="${k}">${k==='all'?'전체':k==='기록만'?'명단에 없음':k}</button>`).join('')}
     </div><div id="vbody"><div class="sum" style="margin:-4px 0 8px">${list.length}명</div>
-    <div class="tw"><table class="t"><thead><tr>${th('name','이름')}<th>상태</th>${th('owed','보강 전','num')}${th('total','전체 결석','num')}<th class="num">완료</th>${th('exp','소멸','num')}${th('last','최근 결석')}<th>소멸 임박</th></tr></thead><tbody>
+    <div class="tw"><table class="t"><thead><tr>${th('name','이름')}<th>상태</th>${th('owed','보강 전 (결석)','num')}${th('owedS','덜 함','num')}${th('total','전체 결석','num')}<th class="num">완료</th>${th('exp','소멸','num')}${th('last','최근 결석')}<th>소멸 임박</th></tr></thead><tbody>
     ${list.map(x=>{const s=S.stuMap.get(x.n);return `<tr style="cursor:pointer" data-act="student" data-n="${esc(x.n)}"><td style="font-weight:800">${esc(x.n)}</td><td style="color:var(--muted)">${s?esc([s.s,shortGrade(s.g)].filter(Boolean).join(' · ')):'명단에 없음'}</td>
-      <td class="num" style="font-weight:800;color:${x.owed?'var(--amber)':'#b0bbb7'}">${x.owedN?x.owedN+'건 · '+mins(x.owed):'-'}</td><td class="num">${x.total||'-'}</td><td class="num">${x.done||'-'}</td><td class="num" style="color:${x.exp?'var(--red)':'#b0bbb7'}">${x.exp||'-'}</td><td>${x.last?ymd(x.last):'-'}</td><td>${x.expSoon!=null?ddChip({key:'wait',left:x.expSoon,exp:addDays(today(),x.expSoon)}):''}</td></tr>`}).join('')}
+      <td class="num" style="font-weight:800;color:${x.owed?'var(--amber)':'#b0bbb7'}">${x.owedN?x.owedN+'건 · '+mins(x.owed):'-'}</td><td class="num" style="font-weight:800;color:${x.owedS?'var(--amber)':'#b0bbb7'}">${x.owedSN?x.owedSN+'건 · '+mins(x.owedS):'-'}</td><td class="num">${x.total||'-'}</td><td class="num">${x.done||'-'}</td><td class="num" style="color:${x.exp?'var(--red)':'#b0bbb7'}">${x.exp||'-'}</td><td>${x.last?ymd(x.last):'-'}</td><td>${x.expSoon!=null?ddChip({key:'wait',left:x.expSoon,exp:addDays(today(),x.expSoon)}):''}</td></tr>`}).join('')}
     </tbody></table></div></div>`}
 
 /* 통계 */
 function vStat(){const t=today();const months=[];for(let i=11;i>=0;i--)months.push(addMonths(t.slice(0,7)+'-01',-i).slice(0,7));
-  const data=months.map(m=>{const rs=S.rows.filter(r=>r.d&&r.d.startsWith(m));return {m,n:rs.length,min:rs.reduce((a,r)=>a+(+r.m||0),0),done:rs.filter(r=>r.s==='완료').length,exp:rs.filter(r=>info(r).key==='expired').length}});
+  const data=months.map(m=>{const rs=S.rows.filter(r=>r.d&&r.d.startsWith(m));return {m,n:rs.length,min:rs.reduce((a,r)=>a+(+r.m||0),0),done:rs.filter(r=>r.s==='완료').length,exp:rs.filter(isGone).length}});
   const mx=Math.max(1,...data.map(d=>d.n));
   const wd=[0,0,0,0,0,0,0];const since=addMonths(t,-3);const recent=S.rows.filter(r=>r.d&&r.d>=since);recent.forEach(r=>wd[pd(r.d).getUTCDay()]++);const wmx=Math.max(1,...wd);
   const top=new Map();recent.forEach(r=>{if(!r.n)return;const x=top.get(r.n)||{n:0,m:0};x.n++;x.m+=(+r.m||0);top.set(r.n,x)});
@@ -462,7 +475,7 @@ function vStat(){const t=today();const months=[];for(let i=11;i>=0;i--)months.pu
     <div class="card stat"><div class="l">전체 결석 기록</div><div class="v">${S.rows.filter(r=>r.d).length}건</div><div class="s">${S.rows.length?'첫 기록 '+ymd(S.rows.filter(r=>r.d).map(r=>r.d).sort()[0]):''}</div></div>
     <div class="card stat"><div class="l">보강 완료율</div><div class="v">${rate}%</div><div class="s">마감된 기록 중 보강까지 한 비율</div></div>
     <div class="card stat"><div class="l">결석 → 보강까지</div><div class="v">평균 ${lag}일</div><div class="s">보강일이 적힌 완료 기록 ${done.length}건 기준</div></div>
-    <div class="card stat red"><div class="l">소멸된 시간 (최근 12개월)</div><div class="v">${mins(data.reduce((a,d)=>a+S.rows.filter(r=>r.d&&r.d.startsWith(d.m)&&info(r).key==='expired').reduce((x,r)=>x+(+r.m||0),0),0))}</div><div class="s">${data.reduce((a,d)=>a+d.exp,0)}건</div></div></div>
+    <div class="card stat red"><div class="l">소멸된 시간 (최근 12개월)</div><div class="v">${mins(data.reduce((a,d)=>a+S.rows.filter(r=>r.d&&r.d.startsWith(d.m)&&isGone(r)).reduce((x,r)=>x+rem(r)+(r.s==='종료'?Math.max((+r.m||0)-(+r.dm||0),0):0),0),0))}</div><div class="s">${data.reduce((a,d)=>a+d.exp,0)}건</div></div></div>
   <section class="card sec"><h3>달별 결석 <span class="n">최근 12개월 · 진한 막대 = 결석, 연한 부분 = 그중 보강 완료</span></h3>
     <div class="bars">${data.map(d=>`<div class="bar" title="${d.m}: 결석 ${d.n}건 · ${mins(d.min)} · 보강 완료 ${d.done}건 · 소멸 ${d.exp}건"><span class="v">${d.n}</span><div class="b" style="height:${d.n/mx*100}%"><div class="dn" style="height:${d.n?d.done/d.n*100:0}%"></div></div><span class="l">${+d.m.slice(5)}월</span></div>`).join('')}</div>
     <div class="tw" style="margin-top:12px;max-height:none"><table class="t"><thead><tr><th>달</th><th class="num">결석</th><th class="num">빠진 시간</th><th class="num">보강 완료</th><th class="num">소멸</th><th class="num">아직 보강 전</th></tr></thead><tbody>
@@ -474,9 +487,10 @@ function vStat(){const t=today();const months=[];for(let i=11;i>=0;i--)months.pu
   <div style="margin-top:6px"><button class="outline" data-act="csv">전체 기록 엑셀(CSV)로 받기</button></div>`}
 
 /* ---------- 선택 일괄 처리 ---------- */
-function renderBulk(){const el=$('bulk');if(!S.picked.size||S.tab!=='pend'){el.classList.add('hidden');return}
+function renderBulk(){const el=$('bulk');if(!S.picked.size||(S.tab!=='pend'&&S.tab!=='exp')){el.classList.add('hidden');return}
+  if(S.tab==='exp'){const rs0=[...S.picked].map(id=>S.byId.get(id)).filter(Boolean);el.innerHTML=`<span><b>${rs0.length}건</b> 선택 · ${splitTxt(rs0)}</span><button class="w" data-act="closePicked">선택한 것 확인(종료)</button><button class="x" data-act="bulkClear">선택 해제</button>`;el.classList.remove('hidden');return}
   const rs=[...S.picked].map(id=>S.byId.get(id)).filter(Boolean);const tot=remSum(rs);
-  el.innerHTML=`<span><b>${rs.length}건</b> 선택 · ${mins(tot)}</span><button class="w" data-act="bulkBook">한 번에 예약</button><button class="w" data-act="bulkDone">한 번에 완료</button><button class="w" data-act="bulkMsg">안내 문구</button><button class="x" data-act="bulkClear">선택 해제</button>`;
+  el.innerHTML=`<span><b>${rs.length}건</b> 선택 · ${splitTxt(rs)}</span><button class="w" data-act="bulkBook">한 번에 예약</button><button class="w" data-act="bulkDone">한 번에 완료</button><button class="w" data-act="bulkMsg">안내 문구</button><button class="x" data-act="bulkClear">선택 해제</button>`;
   el.classList.remove('hidden')}
 async function bulkMakeup(rs){const k=await askDate('보강한 날짜',`선택한 ${rs.length}건(${ns2(rs)}명)의 남은 시간을 모두 보강한 것으로 기록해요. 일부만 했으면 학생별 '보강 기록'을 써 주세요.`,today(),'완료 처리');if(!k)return;
   let ok=0,fail=0;for(const r of rs){toast(`처리하는 중... ${ok+fail+1}/${rs.length}`);try{const x=await api('ab_makeup',{p_token:S.token,p:{d:k,m:Math.max(rem(r),1),ids:[r.id]}});(x.rows||[]).forEach(upsertLocal);S.allocs.push(...(x.allocs||[]));if(x.failed)S.pending+=x.failed;ok++}catch(e){fail++}}
@@ -617,7 +631,7 @@ function openStudent(n){S.curStu=n;const st=S.stuMap.get(n);const rs=S.rows.filt
   const open=rs.filter(r=>OPEN.has(info(r).key));
   const m=openModal(`<div class="stu-head"><h2 style="margin:0">${esc(n)}</h2>${st?`<span class="pill st-closed">${esc(st.s)}</span><span class="sum">${esc(st.g||'')}</span>`:'<span class="sum">학생일지 명단에 없는 이름</span>'}<span class="sp" style="flex:1"></span>
     <button class="primary" style="padding:8px 12px;font-size:13px" data-act="makeupStu" data-n="${esc(n)}">+ 보강 기록</button><button class="outline" id="sAdd">+ 결석 기록</button>${open.length?'<button class="ghost" id="sMsg">안내 문구</button>':''}${st&&st.p?`<a class="ghost" href="../#${esc(st.p)}" target="_blank" rel="noopener">학생일지에서 보기</a>`:''}</div>
-    <div class="kv"><div><span>보강 전</span><b style="color:var(--amber)">${open.length}건 · ${mins(remSum(open))}</b></div><div><span>전체 결석</span><b>${rs.length}건</b></div><div><span>보강 완료</span><b>${rs.filter(r=>r.s==='완료').length}건</b></div><div><span>소멸</span><b style="color:var(--red)">${rs.filter(r=>info(r).key==='expired').length}건</b></div></div>
+    <div class="kv"><div><span>보강 전</span><b style="color:var(--amber)">${open.length}건 · ${splitTxt(open)}</b></div><div><span>전체 결석</span><b>${rs.length}건</b></div><div><span>보강 완료</span><b>${rs.filter(r=>r.s==='완료').length}건</b></div><div><span>소멸</span><b style="color:var(--red)">${rs.filter(isGone).length}건</b></div></div>
     <div class="rows" style="max-height:48vh;overflow:auto">${rs.map(r=>rowLine(r,{noName:true})).join('')||'<div class="empty">결석 기록이 없어요.</div>'}</div>
     ${stuSessions(n)}
     <div class="mfoot"><span class="sp"></span><button class="ghost" id="sC">닫기</button></div>`,'wide');
@@ -810,6 +824,10 @@ document.addEventListener('click',async e=>{
       const x=await api('ab_reopen',{p_token:S.token,p_id:id});upsertLocal(x.row);S.allocs=x.allocs||S.allocs;afterSync(x.synced);render();if(stuCtx)openStudent(stuCtx);toast('보강 전으로 돌렸어요.')}
     else if(a==='calMove'){const v=+el.dataset.v;if(v===0){const t=today();S.calY=+t.slice(0,4);S.calM=+t.slice(5,7)}else{let m=S.calM+v,y=S.calY;if(m<1){m=12;y--}if(m>12){m=1;y++}S.calY=y;S.calM=m}render()}
     else if(a==='pf'){S.pf=el.dataset.v;S.picked.clear();render()}
+    else if(a==='pt'){S.pt=el.dataset.v;S.picked.clear();render()}
+    else if(a==='closeOne'){await closeGone([id])}
+    else if(a==='closePicked'){const ids=[...S.picked];if(!confirm(`선택한 ${ids.length}건을 소멸 확인(종료)할까요?`))return;await closeGone(ids)}
+    else if(a==='closeAll'){const q=S.eq.trim();const ids=rowsBy(r=>info(r).key==='expired'&&match(r.n,q)).map(r=>r.id);if(!confirm(`소멸된 ${ids.length}건을 모두 확인(종료)할까요? 소멸 탭에서 사라지고, 학생 화면·통계·노션 백업에는 남아요.`))return;await closeGone(ids)}
     else if(a==='pg'){S.pg=!S.pg;savePref();render()}
     else if(a==='sfilter'){S.sfilter=el.dataset.v;render()}
     else if(a==='ssort'){S.ssort=el.dataset.v;render()}
