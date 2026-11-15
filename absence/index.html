@@ -237,7 +237,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-16-6';
+const APP_VER='2026-11-16-7';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -821,7 +821,7 @@ function openOnhi(p){const d=p.d;
     ab.filter(x=>x.ex).forEach(x=>skipped.push(li(x.n,null,'결석',skip('이미 기록됨 ('+x.ex.m+'분)'))));
     shorts.filter(x=>x.ex).forEach(x=>skipped.push(li(x.n,x.m,'덜 함',skip('이날 기록 이미 있음'))));
     overs.filter(x=>!pick.vv.includes(x)).forEach(x=>skipped.push(li(x.n,x.m,'더 함',skip(x.done?'이날 이미 뺐음':!x.open.length?'뺄 못 한 시간 없음':x.sameDay?'이날 보강 기록 있어 중복 방지로 건너뜀':'0분'))));
-    mk.filter(x=>!pick.mk.includes(x)).forEach(x=>skipped.push(li(x.n,x.m,'보강 출석',skip(x.done?'이날 보강 이미 기록됨':x.wait?x.wait+' · 끝나고 다시 보내면 기록돼요':!x.open.length?'채울 결석이 앱에 없어요':'0분'))));
+    mk.filter(x=>!pick.mk.includes(x)&&!(x.wait&&!x.done)).forEach(x=>skipped.push(li(x.n,x.m,'보강 출석',skip(x.done?'이날 보강 이미 기록됨':x.wait?x.wait+' · 끝나고 다시 보내면 기록돼요':!x.open.length?'채울 결석이 앱에 없어요':'0분'))));
     bks.filter(x=>!x.r).forEach(x=>skipped.push(li(x.n,null,'보강 예약 '+mdw(x.ad)+' 결석 → '+mdw(x.kd),skip('앱에 그 결석이 없어요'))));
     const st=x=>x.err?bad:ok;
     const total=got.ab.length+got.ss.length+got.vv.length+got.mk.length+got.bk.length;
@@ -831,7 +831,8 @@ function openOnhi(p){const d=p.d;
       +sec('덜 하고 간 학생 '+pick.ss.length+'명',pick.ss.map(x=>li(x.n,x.m,x.t.map(esc).join(' / '),st(x))))
       +sec('더 하고 간 학생 '+pick.vv.length+'명',pick.vv.map(x=>li(x.n,x.m,'못 한 시간에서 뺌 · '+x.t.map(esc).join(' / '),st(x))))
       +sec('보강 출석 '+pick.mk.length+'명',pick.mk.map(x=>li(x.n,x.m,esc(x.tm)+(x.real!=null?' · 실제 '+x.real+'분 함 (수업 '+x.slotM+'분)':x.realNear!=null?' · 실제 '+x.realNear+'분이지만 '+dMin+'분 미만 차이라 수업 시간대로':''),st(x))))
-      +(total||fail?'':'<div class="empty">새로 기록할 게 없어서 이날은 가져온 날로만 표시했어요.</div>')
+      +sec('오늘 보강 예정 (아직 안 옴) '+mk.filter(x=>x.wait&&!x.done).length+'명',mk.filter(x=>x.wait&&!x.done).map(x=>{const bk=x.open.filter(r=>r.k===d);return li(x.n,x.m,esc(x.tm)+' · '+x.wait+' · 수업 끝나고 다시 보내면 보강함으로 기록돼요',bk.length?'<span class="pill st-booked">앱 예약 있음 · '+remSum(bk)+'분</span>':'<span class="pill st-closed">앱 예약 없음</span>')}))
+      +(total||fail||mk.some(x=>x.wait&&!x.done)?'':'<div class="empty">새로 기록할 게 없어서 이날은 가져온 날로만 표시했어요.</div>')
       +sec('건너뛴 것 '+skipped.length+'건',skipped)
       +(noTime.length?'<div class="sum" style="margin-top:8px">등원·하원 기록이 없어 덜 함·더 함을 계산 못 한 학생: '+noTime.map(esc).join(', ')+'</div>':'')
       +(appOnly.length?'<div class="banner" style="margin-top:12px">앱에는 이날 결석인데 온하이에서는 결석이 아닌 학생: '+appOnly.map(r=>'<a href="#" data-oe="'+r.id+'">'+esc(r.n)+'</a>').join(', ')+' (온하이에서 출석으로 바꿨다면 앱 기록을 지워 주세요)</div>':'')
