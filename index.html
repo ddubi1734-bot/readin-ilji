@@ -224,7 +224,7 @@ input[type=date].inp{width:150px}
 </style>
 </head>
 <body>
-<header class="top"><div class="brand"><img class="logo" src="icon-192.png" alt="학생일지"><div><h1>학생일지</h1><p>리드인 황남1점 · 노션 학생 일지와 바로 연결</p></div></div>
+<header class="top"><div class="brand" id="brandHome" role="button" tabindex="0" title="홈 화면(오늘 챙길 학생)으로" style="cursor:pointer"><img class="logo" src="icon-192.png" alt="학생일지"><div><h1>학생일지</h1><p>리드인 황남1점 · 노션 학생 일지와 바로 연결</p></div></div>
   <div class="topright hidden" id="topright"><button class="ghost" id="btnRefresh" title="노션에서 학생 목록과 정보를 다시 불러와요">노션에서 새로고침</button><button class="ghost" id="btnLogout">로그아웃</button></div></header>
 
 <div id="loginView" class="loginwrap hidden"><section class="card login">
@@ -310,7 +310,7 @@ input[type=date].inp{width:150px}
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-4';
+const APP_VER='2026-11-15-5';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
@@ -419,7 +419,7 @@ $('slist').onclick=e=>{const it=e.target.closest('[data-id]');if(it)selectStuden
 
 /* ---------- 학생 선택 ---------- */
 async function selectStudent(id){
-  S.sel=id;S.page=null;S.editing=null;history.replaceState(null,'','#'+encodeURIComponent(id));
+  S.sel=id;S.page=null;S.editing=null;try{history.replaceState(null,'','#'+encodeURIComponent(id))}catch(e){}
   renderSide();renderMain();await loadPage();
 }
 async function loadPage(){
@@ -450,6 +450,9 @@ function renderDash(){
     +'<section class="card pad dcard"><h3>레포트 보낸 지 오래된 학생</h3><p class="desc">마지막 발송일이 오래된 순</p>'+top(act,'lastReport',[60,120],'레포트')+'</section>'
     +'</div></div>';
 }
+function goHome(){S.sel=null;S.page=null;S.editing=null;S.recEdit=null;try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}renderSide();renderMain();window.scrollTo({top:0,behavior:'smooth'});const sl=document.getElementById('slist');if(sl)sl.scrollTop=0}
+$('brandHome').onclick=()=>{if(!$('appView').classList.contains('hidden'))goHome()};
+$('brandHome').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('brandHome').click()}});
 $('dash').onclick=e=>{const r=e.target.closest('[data-id]');if(r)selectStudent(r.dataset.id)};
 
 /* ---------- 학생 정보 고치기 ---------- */
