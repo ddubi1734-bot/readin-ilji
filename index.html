@@ -627,8 +627,8 @@ function renderBalmun(){
   if(b.source==='책 소개')h+='<div class="banner" style="margin:0 0 12px">리드인 책 소개를 바탕으로 자동으로 만든 질문이에요. 수업 전에 한 번 훑어보고, 고칠 곳은 \'발문지 편집\'에서 고쳐 주세요. 한 번 저장하면 이 안내는 사라져요.</div>';
   if(free)h+='<div class="qtype">직접 질문</div><input class="tin" id="freeQ" placeholder="발문지에 없는 질문을 적어 주세요"><textarea class="ta small" id="freeA" placeholder="모범 답안 (없으면 비워 두세요)" style="margin-bottom:10px"></textarea>';
   else h+='<div class="qtype">'+esc(x.kind||'')+'</div><p class="question">'+esc(x.q)+'</p><div class="answerbox"><div class="cap">모범 답안</div><p>'+esc(x.a||'(모범 답안 없음)')+'</p></div>';
-  h+='<textarea class="ta c" id="childAnswer" placeholder="아이의 답을 적어 주세요."></textarea><div class="grade" id="grades">'+['ok','part','re'].map(g=>'<button data-grade="'+g+'" class="'+(S.grade===g?'on':'')+'">'+GRADE[g]+'</button>').join('')+'</div>';
-  h+='<div class="crow"><span class="hint">같은 날 같은 책 답은 노션에 한 덩어리로 모여요</span><button class="primary" id="aSave">답변 기록 저장</button></div>';
+  h+='<textarea class="ta c" id="childAnswer" placeholder="아이의 답을 적어 주세요."></textarea><div class="grade" id="grades">'+['ok','part','re'].map(g=>'<button data-grade="'+g+'" class="'+(S.grade===g?'on':'')+'">'+GRADE[g]+' <small style="opacity:.55;font-weight:600">Alt+'+({ok:1,part:2,re:3}[g])+'</small></button>').join('')+'</div>';
+  h+='<div class="crow"><span class="hint">아이 답을 적고 ○△×를 누르면 바로 저장되고 다음 질문으로 넘어가요. 키보드는 Alt+1(○) Alt+2(△) Alt+3(×). 잘못 누른 건 아래 기록에서 지우면 돼요.</span></div>';
   h+=bookRecordsHtml(b);
   const keep={a:($('childAnswer')||{}).value||'',fq:($('freeQ')||{}).value||'',fa:($('freeA')||{}).value||''};
   $('bookArea').innerHTML=h;
@@ -648,8 +648,7 @@ function bookRecordsHtml(b){
 $('bookArea').addEventListener('click',async e=>{
   const qb=e.target.closest('[data-q]'),gb=e.target.closest('[data-grade]'),sv=e.target.closest('#aSave'),dr=e.target.closest('[data-delrec]');
   if(qb){S.cur=qb.dataset.q==='free'?'free':+qb.dataset.q;S.grade='';renderBalmun();const f=S.cur==='free'?$('freeQ'):$('childAnswer');if(f)f.focus();return}
-  if(gb){S.grade=gb.dataset.grade;document.querySelectorAll('#grades button').forEach(x=>x.classList.toggle('on',x.dataset.grade===S.grade));return}
-  if(sv){await saveAnswer(sv);return}
+  if(gb){await gradeAndSave(gb.dataset.grade);return}
   if(dr){if(!confirm('이 답변 기록을 지울까요? 노션 학생 일지에서도 빠져요.'))return;
     try{const r=await api('bm_delete_record',{p_token:S.token,p_id:dr.dataset.delrec});S.unsynced=r.unsynced;await loadPage();toast('기록을 지웠어요')}catch(err){if(!onAuthFail(err))toast(errText(err),true)}}
 });
@@ -659,7 +658,15 @@ $('bookArea').addEventListener('change',async e=>{
     try{const r=await api('bm_set_score',{p_token:S.token,p_page:S.sel,p_book:S.bookId,p_day:ts.day,p_score:n});S.unsynced=r.unsynced;await loadPage();toast(n==null?'진단 점수를 지웠어요':'진단 점수 '+n+'점을 노션에도 반영했어요')}catch(err){if(!onAuthFail(err))toast(errText(err),true)}return}
   const el=e.target.closest('[data-score]');if(!el)return;const v=el.value.trim(),n=v===''?null:Math.max(0,Math.min(100,Math.round(+v)));
   try{const r=await api('bm_set_score',{p_token:S.token,p_page:S.sel,p_book:S.bookId,p_day:el.dataset.score,p_score:n});S.unsynced=r.unsynced;await loadPage();toast(n==null?'점수를 지웠어요':'점수 '+n+'점을 노션에도 반영했어요')}catch(err){if(!onAuthFail(err))toast(errText(err),true)}});
-$('bookArea').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.closest('[data-score]')||e.target.id==='todayScore'))e.target.blur();if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&e.target.id==='childAnswer'){e.preventDefault();$('aSave').click()}});
+$('bookArea').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.closest('[data-score]')||e.target.id==='todayScore'))e.target.blur();if(e.altKey&&['1','2','3'].includes(e.key)&&(e.target.id==='childAnswer'||e.target.id==='freeQ'||e.target.id==='freeA')){e.preventDefault();gradeAndSave({'1':'ok','2':'part','3':'re'}[e.key])}});
+let gradeBusy=false;
+async function gradeAndSave(g){
+  if(gradeBusy)return;
+  const ca=$('childAnswer');if(!ca||!ca.value.trim()){if(ca)ca.focus();toast('아이의 답을 먼저 적어 주세요');return}
+  S.grade=g;document.querySelectorAll('#grades button').forEach(x=>x.classList.toggle('on',x.dataset.grade===g));
+  gradeBusy=true;const btns=[...document.querySelectorAll('#grades button')];btns.forEach(b=>b.disabled=true);
+  try{await saveAnswer({set disabled(v){}})}finally{gradeBusy=false;document.querySelectorAll('#grades button').forEach(b=>b.disabled=false)}
+}
 async function saveAnswer(btn){
   const s=stu(S.sel),b=bookById(S.bookId);let q;
   if(!b){toast('책을 먼저 골라 주세요');$('bookInput').focus();return}
