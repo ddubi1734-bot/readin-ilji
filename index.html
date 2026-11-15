@@ -307,6 +307,7 @@ input[type=date].inp{width:150px}
 
 <script>
 'use strict';
+const APP_VER='2026-11-15-2';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
@@ -496,6 +497,9 @@ async function flushQueue(){
   if(sent){renderBanners();if(S.sel)await loadPage();toast('보관해 둔 기록 '+sent+'건을 보냈어요')}
 }
 window.addEventListener('online',flushQueue);setInterval(flushQueue,20000);
+/* 새 버전 확인 (3분마다, 창으로 돌아올 때) */
+async function checkVersion(){if(S.newVer||!/^https?:/.test(location.protocol))return;try{const t=await (await fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'})).text();const m=t.match(/const APP_VER='([^']+)'/);if(m&&m[1]!==APP_VER){S.newVer=true;renderBanners()}}catch(e){}}
+setInterval(checkVersion,180000);window.addEventListener('focus',checkVersion);
 
 /* ---------- 코멘트 / 렙코 ---------- */
 function touchLocal(id){const s=stu(id);if(s){s.journalAt=kstDay();renderSide()}}
@@ -708,6 +712,7 @@ function renderBanners(){
   if(S.queue.length)h+='<div class="banner">인터넷이 끊겨 이 컴퓨터에 보관 중인 기록이 '+S.queue.length+'건 있어요. 연결되면 자동으로 보내요.<button id="bnFlush">지금 보내기</button></div>';
   if(S.unsynced)h+='<div class="banner err">서버에는 저장됐지만 노션 학생 일지에 못 들어간 발문 기록이 '+S.unsynced+'건 있어요.<button id="bnRetry">노션에 다시 보내기</button></div>';
   if(S.warn)h+='<div class="banner">'+esc(S.warn)+'</div>';
+  if(S.newVer)h+='<div class="banner">학생일지가 새 버전으로 바뀌었어요. 새로고침하면 새 기능을 쓸 수 있어요.<button onclick="location.reload()">새로고침</button></div>';
   $('banners').innerHTML=h;
   const f=$('bnFlush');if(f)f.onclick=flushQueue;
   const r=$('bnRetry');if(r)r.onclick=async()=>{r.disabled=true;try{const x=await api('bm_retry',{p_token:S.token});S.unsynced=x.unsynced;renderBanners();if(S.sel)await loadPage();toast(x.failed?'아직 '+x.failed+'건은 못 보냈어요. 잠시 뒤 다시 눌러 주세요':'노션에 '+x.ok+'건을 다시 보냈어요',!!x.failed)}catch(e){if(!onAuthFail(e))toast(errText(e),true)}finally{r.disabled=false}};
