@@ -20,6 +20,40 @@ button,select,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 button:disabled{opacity:.55;cursor:default}
 .hidden{display:none!important}
+.rp{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.rp{grid-template-columns:1fr}}
+.rpc{border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;background:#fff}
+.rpc h4{margin:0;font-size:15.5px;display:flex;align-items:center;gap:8px}
+.rpc .src{font-size:11.5px;color:var(--muted);margin:3px 0 10px;line-height:1.5}
+.rpc dl{display:grid;grid-template-columns:86px 1fr;gap:5px 10px;margin:0 0 12px;font-size:13px}
+.rpc dt{color:var(--muted)}.rpc dd{margin:0;font-weight:650}
+.rpc .opts{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.rpc .opts .inp{flex:1;min-width:120px;font-size:12.5px}
+.rpc .go{margin-top:auto;width:100%;padding:10px;border-radius:10px;border:0;background:var(--green);color:#fff;font-weight:800;font-size:13.5px;cursor:pointer}
+.rpc .go:disabled{background:#c9d4cf;cursor:default}
+.rpc .lastreq{font-size:11.5px;color:var(--muted);margin-top:7px;text-align:center}
+.due{font-size:11px;font-weight:800;background:#fff1e0;color:#b45d12;border-radius:6px;padding:2px 7px}
+.rpmemo{display:flex;margin-bottom:14px}.rpmemo .inp{flex:1;padding:9px 11px}
+.ready{margin-top:14px;border:2px solid var(--green);background:#f1f8f4;border-radius:14px;padding:14px 16px}
+.ready .t{font-weight:800;font-size:14.5px;color:var(--green);margin-bottom:4px}
+.ready .d{font-size:12.5px;color:#33433f;line-height:1.6}
+.ready textarea{width:100%;margin-top:10px;min-height:130px;border:1px dashed #a9c4b8;border-radius:10px;padding:10px 12px;font:inherit;font-size:12.5px;line-height:1.6;background:#fff;resize:vertical;box-sizing:border-box}
+.ready .row{display:flex;gap:8px;margin-top:8px}
+.rhist{margin-top:16px}.rhist h5{margin:0 0 6px;font-size:12.5px;color:var(--muted)}
+.rh{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--line);font-size:13px;flex-wrap:wrap}
+.rh small{color:var(--muted)}.rh .lnk{margin-left:auto}
+.pill{font-size:11px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.p-ok{background:#e3f4ea;color:#1d7a4a}.p-wait{background:#eef1ef;color:#6b7c79}.p-run{background:#e7effc;color:#2f5fb3}
+.outline.on{background:var(--green);color:#fff}
+.msel{display:flex;align-items:center;gap:8px;margin:8px 14px 2px;padding:7px 10px;border-radius:10px;background:#f1f8f4;border:1px solid #cfe3d8;font-size:12.5px}
+.msel b{color:var(--green)}.msel .sp{flex:1}.msel button{border:0;background:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0}
+.cb{width:18px;height:18px;border:2px solid #b9cbc3;border-radius:5px;flex:none;display:inline-flex;align-items:center;justify-content:center;background:#fff;font-size:12px;font-weight:900;color:#fff}
+.sitem.chk{background:#eef7f2}.sitem.chk .cb{background:var(--green);border-color:var(--green)}
+.mbar .n{font-size:12px;font-weight:700;margin-bottom:7px;color:var(--ink)}
+.mbar .g{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mbar .g button{padding:8px 4px;border-radius:8px;border:1px solid var(--green);background:#fff;color:var(--green);font-weight:800;font-size:12px;white-space:nowrap;cursor:pointer}
+.mbar .g button:disabled{opacity:.45;cursor:default}
+.sortrow{white-space:nowrap}#btnMulti{white-space:nowrap;padding:6px 9px;flex:none}
+#reqModal .ready{margin-top:0}
 .top{background:#fff;border-bottom:1px solid var(--line);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:30}
 .brand{display:flex;gap:11px;align-items:center}
 .logo{width:40px;height:40px;border-radius:11px;display:block;box-shadow:0 3px 10px #0f544633}
@@ -275,8 +309,9 @@ input[type=date].inp{width:150px}
         <option value="consult">상담한 지 오래된 순</option>
         <option value="report">레포트 보낸 지 오래된 순</option>
         <option value="joined">최근 입회순</option>
-      </select></div>
+      </select><button class="outline" id="btnMulti" title="여러 학생을 골라 레포트를 한꺼번에 요청해요">여러 명</button></div>
     </div>
+    <div class="msel hidden" id="msel"><b>여러 명 선택 중</b><span class="sp"></span><button id="mselAll">보이는 학생 모두</button><button id="mselOff">끝내기</button></div>
     <div class="slist" id="slist"></div>
     <div class="sidefoot" id="sidefoot"></div>
   </aside>
@@ -298,7 +333,7 @@ input[type=date].inp{width:150px}
         </div>
       </section>
 
-      <div class="tabs" id="tabs"><button class="tab on" data-tab="balmun">발문</button><button class="tab" data-tab="comment">코멘트</button><button class="tab" data-tab="history">내역 <span id="hCount" style="font-weight:600;color:var(--muted)"></span></button></div>
+      <div class="tabs" id="tabs"><button class="tab on" data-tab="balmun">발문</button><button class="tab" data-tab="comment">코멘트</button><button class="tab" data-tab="history">내역 <span id="hCount" style="font-weight:600;color:var(--muted)"></span></button><button class="tab" data-tab="report">레포트</button></div>
       <section class="card pad composer">
         <div id="tab-comment">
           <textarea class="ta c" id="cText" placeholder="오늘 수업 모습, 컨디션, 성격, 주의할 점 등 무엇이든 적어 주세요. (Ctrl+Enter로 저장)"></textarea>
@@ -309,6 +344,7 @@ input[type=date].inp{width:150px}
           <div id="bookArea"></div>
         </div>
         <div id="tab-history" class="hidden"><div class="colhead"><h3>일지 · 코멘트와 발문</h3><span id="lCount"></span></div><p class="hint" style="font-size:12px;color:var(--muted);margin:-4px 0 10px">노션 학생 일지에 있는 기록이 최신순으로 보여요. 발문 기록은 '발문 탭에서 보기'를 눌러 고치고, 코멘트는 여기서 바로 수정·삭제할 수 있어요.</p><div id="leftList"></div></div>
+        <div id="tab-report" class="hidden"></div>
       </section>
     </div>
   </main>
@@ -330,6 +366,7 @@ input[type=date].inp{width:150px}
 </div></div>
 <datalist id="lvlist"><option>기초</option><option>1레벨</option><option>2레벨</option><option>3레벨</option><option>4레벨</option><option>5레벨</option><option>6레벨</option><option>7레벨</option></datalist>
 <datalist id="kindlist"><option>사실 질문</option><option>추론 질문</option><option>적용 질문</option><option>어휘</option><option>비판 질문</option><option>생각 나누기</option></datalist>
+<div class="modalback" id="reqModal"><div class="modal" style="width:min(580px,100%)"><div id="reqModalBody"></div></div></div>
 <div class="modalback" id="stuModal"><div class="modal"><h3>새 학생 추가</h3>
   <p class="desc">노션 학생 일지에 새 페이지가 만들어져요. 노션 템플릿(코멘트 추가, 렙코 기록 버튼)이 그대로 들어가요.</p>
   <label for="nsName">이름</label><input class="inp" id="nsName" autocomplete="off">
@@ -339,7 +376,7 @@ input[type=date].inp{width:150px}
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-10';
+const APP_VER='2026-11-15-11';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
@@ -371,6 +408,7 @@ function errText(e){const m=String(e&&e.message||e);if(/^NOTION/.test(m))return 
 const S={token:ls.get(TOKEN_KEY),students:[],books:[],unsynced:0,warn:null,filter:'재원',sort:'name',q:'',
   sel:null,page:null,pageLoading:false,pendingScore:{},recEdit:null,tab:'balmun',bookId:null,cur:0,grade:'',queue:[],editing:null};
 try{S.queue=JSON.parse(ls.get(QUEUE_KEY)||'[]')}catch(e){S.queue=[]}
+S.multi=false;S.picked=new Set();S.rep=null;S.repReady=null;S.multiText='';
 try{const p=JSON.parse(ls.get(PREF_KEY)||'{}');S.filter=p.filter||'재원';S.sort=p.sort||'name';S.bookId=p.bookId||null;S.tab=p.tab||'balmun'}catch(e){}
 function savePref(){ls.set(PREF_KEY,JSON.stringify({filter:S.filter,sort:S.sort,bookId:S.bookId,tab:S.tab}))}
 function saveQueue(){ls.set(QUEUE_KEY,JSON.stringify(S.queue))}
@@ -440,17 +478,18 @@ function renderSide(){
   const list=visibleStudents();
   $('slist').innerHTML=list.map(s=>{const m=SORTS[S.sort].meta(s);return '<div class="sitem'+(s.id===S.sel?' on':'')+'" data-id="'+s.id+'"><div><div class="nm">'+esc(s.name)+(s.status!=='재원'?' <span class="st'+(s.status==='퇴원'?' out':'')+'">'+esc(s.status||'')+'</span>':'')+'</div><div class="gr">'+esc(shortGrade(s.grade))+'</div></div><span class="meta '+m.c+'">'+esc(m.t)+'</span></div>'}).join('')||'<div class="none">찾는 학생이 없어요.</div>';
   $('sidefoot').textContent=list.length+'명 · 노션 학생 일지와 같은 명단이에요';
+  decorateMulti();
 }
 $('chips').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;S.filter=b.dataset.f;savePref();renderSide()};
 $('sort').onchange=()=>{S.sort=$('sort').value;savePref();renderSide()};
 $('q').addEventListener('input',()=>{S.q=$('q').value.trim();renderSide()});
 $('q').addEventListener('keydown',e=>{if(e.isComposing||e.keyCode===229)return;if(e.key==='Enter'){const f=visibleStudents()[0];if(f)selectStudent(f.id)}if(e.key==='Escape'){$('q').value='';S.q='';renderSide()}});
-$('slist').onclick=e=>{const it=e.target.closest('[data-id]');if(it)selectStudent(it.dataset.id)};
+$('slist').onclick=e=>{const it=e.target.closest('[data-id]');if(!it)return;if(S.multi){const id=it.dataset.id;if(S.picked.has(id))S.picked.delete(id);else S.picked.add(id);renderSide();return}selectStudent(it.dataset.id)};
 
 /* ---------- 학생 선택 ---------- */
 async function selectStudent(id){
   S.sel=id;S.page=null;S.editing=null;try{history.replaceState(null,'','#'+encodeURIComponent(id))}catch(e){}
-  renderSide();renderMain();await loadPage();
+  renderSide();renderMain();if(S.tab==='report')loadReport();await loadPage();
 }
 async function loadPage(){
   const id=S.sel;if(!id)return;S.pageLoading=true;renderTimeline();
@@ -521,9 +560,98 @@ $('nsSave').onclick=async()=>{
 };
 $('nsName').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('nsSave').click()});
 
+/* ---------- 레포트 요청 ---------- */
+const RK={vocab:{n:'어휘 레포트',src:'문해력마당 어휘마당 기록을 바로 불러와요',out:'레포트 PDF'},
+  training:{n:'트레이닝 레포트',src:'읽쓰 학습 결과는 요청하면 Aside가 모아요',out:'Word 초안 → 검토 → PDF'},
+  course3:{n:'3코스 레포트',src:'리드인 관리자 기록을 Aside가 모아요',out:'Word 초안 → 검토 → PDF'},
+  levelup:{n:'레벨업 레포트',src:'리드인 레벨·코스 기록을 Aside가 확인해요',out:'학부모 문자 초안'}};
+const RST={waiting:['요청함','p-wait'],working:['만드는 중','p-run'],done:['완료','p-ok']};
+const shortStage=s=>String(s||'').replace(' 어휘','');
+function md(d){return d?String(d).slice(5,10).replace('-','/'):''}
+function optText(kind,o){o=o||{};const p=[];if(o.stage)p.push(shortStage(o.stage)+' 단계');if(o.course)p.push(o.course);if(o.range)p.push(o.range);return p.join(' · ')}
+async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}ta.remove();return ok}}
+function reqText(res,kind,opts){const k=RK[kind],ss=res.students||[];
+  let t='[학생일지 레포트 요청 '+res.id+']\n종류: '+k.n+' ('+k.out+')\n';
+  if(ss.length===1){const x=ss[0];t+='학생: '+x.name+' ('+(shortGrade(x.grade)||'학년 미상')+(x.status?' · '+x.status:'')+')'+(x.lastReport?' · 노션 마지막 레포트 발송 '+x.lastReport:'')+'\n'}
+  else t+='학생 '+ss.length+'명: '+ss.map(x=>x.name+(x.grade?'('+shortGrade(x.grade)+')':'')).join(', ')+'\n';
+  const o=optText(kind,opts);if(o)t+='옵션: '+o+'\n';
+  if(kind==='vocab')ss.forEach(x=>{const v=x.vocab,pre=ss.length>1?'- '+x.name+': ':'어휘 기록: ';if(!v||!v.found){t+=pre+'문해력마당 계정 없음\n';return}
+    t+=pre+'지금 '+shortStage(v.current)+' · 테스트 '+v.tests+'회 평균 '+(v.avg==null?'-':v.avg+'점')+' · 복습 단어 '+v.review+'개'+(v.lastReport?' · 마지막 발송 '+v.lastReport.sentOn:'')+'\n'});
+  if(opts&&opts.memo)t+='부탁: '+opts.memo+'\n';
+  return t+'(처리 방법: leadin-report-request 스킬)'}
+function readyHTML(r){return '<div class="ready"><div class="t">✓ '+esc(r.title)+' 요청을 '+(r.copied===false?'만들었어요':'복사했어요')+'</div><div class="d">Aside 채팅창에 <b>붙여넣기(Ctrl+V)</b>하고 보내 주세요. 바로 만들기 시작할게요. · 요청 번호 '+esc(r.id)+'</div><textarea readonly>'+esc(r.text)+'</textarea><div class="row"><button class="primary" data-copy>다시 복사</button><button class="outline" data-rclose>닫기</button></div></div>'}
+async function loadReport(){const id=S.sel;if(!id)return;if(!S.rep||S.rep.id!==id){S.rep={id,loading:true};}renderReport();
+  try{const r=await api('bm_report_tab',{p_token:S.token,p_page:id});if(S.sel!==id)return;S.rep={id,vocab:r.vocab,requests:r.requests}}
+  catch(e){if(!onAuthFail(e))toast(errText(e),true);if(S.rep&&S.rep.id===id)S.rep.loading=false}
+  renderReport()}
+function lastReq(kind){const r=(S.rep&&S.rep.requests||[]).find(x=>x.kind===kind);return r?'마지막 요청 '+md(kstDay(r.createdAt))+' · '+(RST[r.status]||[r.status])[0]:'아직 요청한 적 없어요'}
+function renderReport(){
+  const el=$('tab-report');if(!el||S.tab!=='report')return;
+  const s=stu(S.sel);if(!s)return;const R=S.rep&&S.rep.id===S.sel?S.rep:null;
+  if(!R||!R.requests){el.innerHTML='<p class="hint" style="color:var(--muted);font-size:13px">'+(R&&R.loading?'레포트 정보를 불러오는 중…':'레포트 정보를 못 불러왔어요. 탭을 다시 눌러 주세요.')+'</p>';return}
+  const keep={};['rpMemo','rpCourse','rpRange','rpStage'].forEach(k=>{const x=$(k);if(x)keep[k]=x.value});
+  const v=R.vocab||{found:false};let vb;
+  if(!v.found)vb='<dl><dt>문해력마당</dt><dd style="color:var(--muted);font-weight:500">같은 이름의 학생 계정이 없어요</dd></dl>';
+  else{const st=v.stages||[];const pick=(v.due||[]).slice(-1)[0]||v.current;
+    vb='<dl><dt>지금 단계</dt><dd>'+esc(shortStage(v.current))+'</dd><dt>단계 진행</dt><dd>'+(st.length?st.map(x=>esc(shortStage(x.stage))+' '+x.tested+'/'+x.sets).join(' · '):'아직 테스트 없음')+'</dd>'
+      +'<dt>테스트 평균</dt><dd>'+(v.tests?v.avg+'점 ('+v.tests+'회)':'-')+'</dd><dt>복습 단어</dt><dd>'+(v.review||0)+'개</dd>'
+      +'<dt>마지막 발송</dt><dd>'+(v.lastReport?esc(md(v.lastReport.sentOn)+(v.lastReport.memo?' · '+v.lastReport.memo:'')):'아직 안 보냄')+'</dd></dl>';
+    if(st.length)vb+='<div class="opts"><select class="inp" id="rpStage">'+st.map(x=>'<option value="'+esc(x.stage)+'"'+(pick===x.stage?' selected':'')+'>'+esc(shortStage(x.stage))+(x.doneAt?' 단계 (완료)':' 단계 ('+x.tested+'/'+x.sets+')')+'</option>').join('')+'</select></div>'}
+  const card=(k,body,extra)=>'<div class="rpc"><h4>'+RK[k].n+(extra||'')+'</h4><div class="src">'+RK[k].src+' · '+RK[k].out+'</div>'+body+'<button class="go" data-req="'+k+'"'+(k==='vocab'&&!v.found?' disabled':'')+'>'+RK[k].n+' 요청</button><div class="lastreq">'+esc(lastReq(k))+'</div></div>';
+  const tb='<dl><dt>노션 발송일</dt><dd>'+(s.lastReport?esc(s.lastReport):'기록 없음')+'</dd></dl><div class="opts"><select class="inp" id="rpCourse"><option value="">과정: 읽쓰에서 확인</option><option>읽기트레이닝</option><option>독해트레이닝</option></select><input class="inp" id="rpRange" placeholder="범위 (예: 5권, 5-6권)"></div>';
+  const cb='<dl><dt>담는 내용</dt><dd>레벨·코스, 영역별 이해도, 독서 기록, 추천 도서</dd></dl>';
+  const lb='<dl><dt>담는 내용</dt><dd>올라간 레벨 축하와 칭찬, 다음 레벨 안내</dd></dl>';
+  let h='<div class="rpmemo"><input class="inp" id="rpMemo" placeholder="추가로 부탁할 말 (선택) · 예: 요즘 발표가 늘었다는 얘기도 넣어 줘"></div>';
+  h+='<div class="rp">'+card('vocab',vb,v.found&&(v.due||[]).length?'<span class="due">보낼 차례</span>':'')+card('training',tb)+card('course3',cb)+card('levelup',lb)+'</div>';
+  if(S.repReady&&S.repReady.page===S.sel)h+=readyHTML(S.repReady);
+  const rq=R.requests||[];
+  h+='<div class="rhist"><h5>요청 기록</h5>'+(rq.length?rq.map(r=>{const st=RST[r.status]||[r.status,'p-wait'],o=optText(r.kind,r.opts);return '<div class="rh"><small>'+md(kstDay(r.createdAt))+'</small><b>'+esc((RK[r.kind]||{n:r.kind}).n)+'</b>'+(o?'<small>'+esc(o)+'</small>':'')+'<span class="pill '+st[1]+'">'+st[0]+'</span>'+(r.note?'<small>'+esc(r.note)+'</small>':'')+(r.status==='waiting'?'<button class="lnk del" data-rcancel="'+esc(r.id)+'">취소</button>':'')+'</div>'}).join(''):'<p style="color:var(--muted);font-size:12px;margin:4px 0">아직 요청한 레포트가 없어요.</p>')+'</div>';
+  el.innerHTML=h;Object.entries(keep).forEach(([k,val])=>{const x=$(k);if(x&&val)x.value=val});
+}
+function collectOpts(kind){const o={};if(kind==='vocab'&&$('rpStage'))o.stage=$('rpStage').value;
+  if(kind==='training'){const c=$('rpCourse')&&$('rpCourse').value,r=$('rpRange')&&$('rpRange').value.trim();if(c)o.course=c;if(r)o.range=r}
+  const m=$('rpMemo')&&$('rpMemo').value.trim();if(m)o.memo=m;return o}
+$('tab-report').onclick=async e=>{
+  const go=e.target.closest('[data-req]');
+  if(go){const kind=go.dataset.req,opts=collectOpts(kind);go.disabled=true;
+    try{const res=await api('bm_report_request',{p_token:S.token,p:{kind,pages:[S.sel],opts}});
+      const text=reqText(res,kind,opts),ok=await copyText(text);
+      S.repReady={page:S.sel,id:res.id,title:RK[kind].n,text,copied:ok};
+      if(S.rep&&S.rep.id===S.sel)S.rep.requests=[{id:res.id,kind,opts,status:'waiting',createdAt:new Date().toISOString()}].concat(S.rep.requests||[]);
+      if($('rpMemo'))$('rpMemo').value='';
+      renderReport();toast(ok?'요청을 복사했어요. Aside 채팅에 붙여넣어 주세요':'복사가 안 됐어요. 상자 안 글을 직접 복사해 주세요',!ok)}
+    catch(err){if(!onAuthFail(err))toast(errText(err),true)}finally{go.disabled=false}return}
+  if(e.target.closest('[data-copy]')){const r=S.repReady;if(r){const ok=await copyText(r.text);toast(ok?'다시 복사했어요':'복사가 안 됐어요',!ok)}return}
+  if(e.target.closest('[data-rclose]')){S.repReady=null;renderReport();return}
+  const c=e.target.closest('[data-rcancel]');
+  if(c){if(!confirm('이 요청을 취소할까요?'))return;
+    try{const rq=await api('bm_report_cancel',{p_token:S.token,p_id:c.dataset.rcancel,p_page:S.sel});if(S.rep&&S.rep.id===S.sel)S.rep.requests=rq;if(S.repReady&&S.repReady.id===c.dataset.rcancel)S.repReady=null;renderReport();toast('요청을 취소했어요')}
+    catch(err){if(!onAuthFail(err))toast(errText(err),true)}}
+};
+/* 여러 명 선택 */
+function decorateMulti(){
+  $('msel').classList.toggle('hidden',!S.multi);$('btnMulti').classList.toggle('on',S.multi);
+  if(!S.multi)return;
+  document.querySelectorAll('#slist .sitem').forEach(it=>{const on=S.picked.has(it.dataset.id);it.classList.toggle('chk',on);it.classList.remove('on');it.insertAdjacentHTML('afterbegin','<span class="cb">'+(on?'✓':'')+'</span>')});
+  const n=S.picked.size,names=[...S.picked].map(id=>(stu(id)||{}).name).filter(Boolean);
+  $('sidefoot').innerHTML='<div class="mbar"><div class="n">'+(n?'<span style="color:var(--green)">'+n+'명</span> 선택 · '+esc(names.slice(0,4).join(', '))+(n>4?' 외 '+(n-4)+'명':''):'레포트를 요청할 학생을 골라 주세요')+'</div><div class="g">'+Object.keys(RK).map(k=>'<button data-mreq="'+k+'"'+(n?'':' disabled')+'>'+RK[k].n+'</button>').join('')+'</div></div>';
+}
+$('btnMulti').onclick=()=>{S.multi=!S.multi;if(!S.multi)S.picked.clear();renderSide()};
+$('mselOff').onclick=()=>{S.multi=false;S.picked.clear();renderSide()};
+$('mselAll').onclick=()=>{visibleStudents().forEach(s=>S.picked.add(s.id));renderSide()};
+$('sidefoot').onclick=async e=>{const b=e.target.closest('[data-mreq]');if(!b||!S.picked.size)return;const kind=b.dataset.mreq;b.disabled=true;
+  try{const res=await api('bm_report_request',{p_token:S.token,p:{kind,pages:[...S.picked],opts:{}}});
+    const text=reqText(res,kind,{}),ok=await copyText(text);S.multiText=text;
+    $('reqModalBody').innerHTML=readyHTML({id:res.id,title:RK[kind].n+' '+(res.students||[]).length+'명',text,copied:ok});$('reqModal').classList.add('open');
+    if(S.rep&&S.picked.has(S.rep.id)){S.rep=null;if(S.tab==='report'&&S.sel)loadReport()}
+    toast(ok?'요청을 복사했어요. Aside 채팅에 붙여넣어 주세요':'복사가 안 됐어요. 상자 안 글을 직접 복사해 주세요',!ok)}
+  catch(err){if(!onAuthFail(err))toast(errText(err),true)}finally{b.disabled=false}};
+$('reqModal').onclick=async e=>{if(e.target.closest('[data-copy]')){const ok=await copyText(S.multiText||'');toast(ok?'다시 복사했어요':'복사가 안 됐어요',!ok);return}
+  if(e.target.closest('[data-rclose]')||e.target===$('reqModal'))$('reqModal').classList.remove('open')};
+
 /* ---------- 탭 ---------- */
-function renderTabs(){if(!['comment','balmun','history'].includes(S.tab))S.tab='balmun';document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===S.tab));['comment','balmun','history'].forEach(k=>$('tab-'+k).classList.toggle('hidden',S.tab!==k))}
-$('tabs').onclick=e=>{const t=e.target.closest('[data-tab]');if(!t)return;S.tab=t.dataset.tab;savePref();renderTabs();renderBalmun()};
+function renderTabs(){if(!['comment','balmun','history','report'].includes(S.tab))S.tab='balmun';document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===S.tab));['comment','balmun','history','report'].forEach(k=>$('tab-'+k).classList.toggle('hidden',S.tab!==k))}
+$('tabs').onclick=e=>{const t=e.target.closest('[data-tab]');if(!t)return;S.tab=t.dataset.tab;savePref();renderTabs();renderBalmun();if(S.tab==='report')loadReport()};
 
 /* ---------- 오프라인 보관 ---------- */
 async function send(fn,args){
