@@ -208,7 +208,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-15';
+const APP_VER='2026-11-15-16';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -407,7 +407,7 @@ function vCal(){const y=S.calY,m=S.calM,t=today(),cv=cvGet();
     <button class="ghost" data-act="calMove" data-v="-1">◀ 지난 달</button><button class="ghost" data-act="calMove" data-v="0">오늘</button><button class="ghost" data-act="calMove" data-v="1">다음 달 ▶</button>
     <span style="flex:1"></span>
     <input class="search" id="calQ" placeholder="학생 찾기 (초성 가능)" value="${esc(S.calQ)}" autocomplete="off"></div>
-    <div class="toolbar" style="margin:-2px 0 8px"><span class="sum">보기</span>${tg('ab','결석')}${tg('sh','덜 함')}${tg('bk','보강 예약')}${tg('mk','보강함')}<span style="width:8px"></span>${tg('done','끝난 것도 보기')}</div>
+    <div class="toolbar" style="margin:-2px 0 8px"><span class="sum">보기</span>${tg('ab','결석')}${tg('sh','덜 함')}${tg('bk','보강 예약')}${tg('mk','보강함')}<span style="width:8px"></span>${tg('done','보강 끝난 결석·덜 함도 보기')}</div>
     <div id="vbody"><div class="sum" style="margin-bottom:8px">${m}월 결석 <b>${mRows.filter(r=>!isShort(r)).length}건</b> · 덜 함 <b>${mRows.filter(isShort).length}건</b> · 보강 완료 <b>${mRows.filter(r=>r.s==='완료').length}</b> · 보강 전 <b>${mRows.filter(r=>OPEN.has(info(r).key)).length}</b> &nbsp;|&nbsp; 빈 칸을 누르면 그날 결석을 기록해요.</div>
     <div class="cal">${[...DOW].map((w,i)=>`<div class="wd ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('')}${cells}</div>
     <div class="legend"><span class="ln st-wait lg"><span class="tg">결석</span>보강 전</span><span class="ln st-booked lg"><span class="tg">결석</span>예약됨</span><span class="ln st-done lg"><span class="tg">결석</span>완료</span><span class="ln sh st-wait lg"><span class="tg">덜</span>수업 덜 함</span><span class="ln bk lg"><span class="tg">보강</span>예약 (할 분)</span><span class="ln bk late lg"><span class="tg">확인</span>보강일 지남</span><span class="ln mk lg"><span class="tg">보강함</span>한 날 (+는 더 하고 감)</span></div></div>`}
