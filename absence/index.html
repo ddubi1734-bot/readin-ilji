@@ -113,7 +113,9 @@ button{cursor:pointer}button:disabled{opacity:.55;cursor:default}
 .ev .em{font-size:11px;opacity:.85;margin-left:auto;white-space:nowrap}
 .ev.st-wait{background:#fff4e0}.ev.st-booked{background:#e7effc}.ev.st-check{background:#f3e8fb}.ev.st-done{background:#e3f4ea}.ev.st-closed{background:#eef1ef}.ev.st-expired{background:#fbeaea}
 .ev.mk{background:#fff;border:1.5px dashed #9fb7e3;color:var(--blue)}
-.ev.mk.done{border-color:#a8d5ba;color:#1d7a4a}.ev.mk.late{border-color:#c9a6e0;color:#7a3fa3}
+.ev.mk.done{border-color:#a8d5ba;color:#1d7a4a}.ev .tg,.legend .tg{flex:none;font-size:10.5px;font-weight:800;border-radius:5px;padding:1px 5px;background:#2f5fb3;color:#fff;margin-right:2px;line-height:1.4}
+.ev.mk.done .tg,.legend .pill[style*='a8d5ba'] .tg{background:#1d7a4a}.ev.mk.late .tg{background:#7a3fa3}
+.ev.mk.late{border-color:#c9a6e0;color:#7a3fa3}
 .ev.dim{opacity:.18}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px;align-items:center}
 .legend .pill{font-size:11px}
@@ -196,7 +198,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-15-3';
+const APP_VER='2026-11-15-4';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -365,17 +367,17 @@ function vCal(){const y=S.calY,m=S.calM,t=today();
     cells+=`<div class="cell ${d.slice(0,7)!==ym?'out':''} ${d===t?'today':''} ${wd===0?'sun':''}" data-act="dayAdd" data-d="${d}">
       <div class="dn"><span>${+d.slice(8)===1||d===start?(+d.slice(5,7))+'월 '+(+d.slice(8))+'일':+d.slice(8)}</span>${list.length?`<span class="ds">${list.length}명</span>`:''}</div>
       ${list.map(r=>{const i=info(r);return `<div class="ev st-${i.key} ${q&&!match(r.n,q)?'dim':''}" data-act="edit" data-id="${r.id}" title="${esc(r.n)} · ${r.m!=null?r.m+'분':''} · ${esc(i.label)}${r.memo?' · '+esc(r.memo):''}"><span class="en">${esc(r.n||'(이름 없음)')}</span><span class="em">${r.memo==='수업 덜 함'?'덜 ':''}${r.m!=null?r.m:''}</span></div>`}).join('')}
-      ${mk.map(r=>`<div class="ev mk ${r.s==='완료'?'done':r.k<t?'late':''} ${q&&!match(r.n,q)?'dim':''}" data-act="edit" data-id="${r.id}" title="보강 예약: ${esc(r.n)} ${plan(r)?plan(r)+'분':''} (${mdw(r.d)} 결석분${r.pm&&r.pm<rem(r)?', 남은 '+rem(r)+'분 중':''})"><span class="en">↺ ${esc(r.n)}</span><span class="em">${r.s==='완료'?'완료':(r.k<t?'확인 ':'')+(plan(r)?plan(r)+'분':'보강')}</span></div>`).join('')}
-      ${(agDay.get(d)||[]).map(o=>`<div class="ev mk done ${q&&!match(o.n,q)?'dim':''}" data-act="student" data-n="${esc(o.n)}" title="보강함: ${esc(o.n)} ${o.m}분 (결석 ${o.c}건에 나눠 채움)"><span class="en">↺ ${esc(o.n)}</span><span class="em">${o.m}분</span></div>`).join('')}
+      ${mk.map(r=>`<div class="ev mk ${r.s==='완료'?'done':r.k<t?'late':''} ${q&&!match(r.n,q)?'dim':''}" data-act="edit" data-id="${r.id}" title="보강 예약: ${esc(r.n)} ${plan(r)?plan(r)+'분':''} (${mdw(r.d)} 결석분${r.pm&&r.pm<rem(r)?', 남은 '+rem(r)+'분 중':''})"><span class="tg">보강</span><span class="en">${esc(r.n)}</span><span class="em">${r.s==='완료'?'완료':(r.k<t?'확인 ':'')+(plan(r)?plan(r)+'분':'보강')}</span></div>`).join('')}
+      ${(agDay.get(d)||[]).map(o=>`<div class="ev mk done ${q&&!match(o.n,q)?'dim':''}" data-act="student" data-n="${esc(o.n)}" title="보강함: ${esc(o.n)} ${o.m}분 (결석 ${o.c}건에 나눠 채움)"><span class="tg">보강</span><span class="en">${esc(o.n)}</span><span class="em">${o.m}분</span></div>`).join('')}
     </div>`}
   return `<div class="calhead"><h2>${y}년 ${m}월</h2>
     <button class="ghost" data-act="calMove" data-v="-1">◀ 지난 달</button><button class="ghost" data-act="calMove" data-v="0">오늘</button><button class="ghost" data-act="calMove" data-v="1">다음 달 ▶</button>
     <span style="flex:1"></span>
     <input class="search" id="calQ" placeholder="학생 찾기 (초성 가능)" value="${esc(S.calQ)}" autocomplete="off">
-    <label class="chip ${S.showMk?'on':''}" style="cursor:pointer"><input type="checkbox" id="showMk" ${S.showMk?'checked':''} style="display:none">↺ 보강 일정 보기</label></div>
+    <label class="chip ${S.showMk?'on':''}" style="cursor:pointer"><input type="checkbox" id="showMk" ${S.showMk?'checked':''} style="display:none">보강 일정 보기</label></div>
     <div id="vbody"><div class="sum" style="margin-bottom:8px">${m}월 결석 <b>${mRows.length}건</b> · <b>${mins(mRows.reduce((a,r)=>a+(+r.m||0),0))}</b> · 보강 완료 <b>${mRows.filter(r=>r.s==='완료').length}</b> · 보강 전 <b>${mRows.filter(r=>OPEN.has(info(r).key)).length}</b> · 소멸 <b>${mRows.filter(r=>info(r).key==='expired').length}</b> &nbsp;|&nbsp; 빈 칸을 누르면 그날 결석을 기록해요.</div>
     <div class="cal">${[...DOW].map((w,i)=>`<div class="wd ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('')}${cells}</div>
-    <div class="legend">${['wait','booked','check','done','expired','closed'].map(k=>pill({key:k,label:{wait:'보강 전',booked:'예약',check:'보강일 지남',done:'완료',expired:'소멸',closed:'종료'}[k]})).join('')}<span class="pill" style="border:1.5px dashed #9fb7e3;color:var(--blue);background:#fff">↺ 보강 예약</span><span class="pill" style="border:1.5px dashed #a8d5ba;color:#1d7a4a;background:#fff">↺ 보강함 (분)</span></div></div>`}
+    <div class="legend">${['wait','booked','check','done','expired','closed'].map(k=>pill({key:k,label:{wait:'보강 전',booked:'예약',check:'보강일 지남',done:'완료',expired:'소멸',closed:'종료'}[k]})).join('')}<span class="pill" style="border:1.5px dashed #9fb7e3;color:var(--blue);background:#fff"><span class="tg">보강</span>예약 (할 시간)</span><span class="pill" style="border:1.5px dashed #a8d5ba;color:#1d7a4a;background:#fff"><span class="tg">보강</span>한 날 (한 시간)</span></div></div>`}
 
 /* 보강 전 */
 function pendRows(){const q=S.pq.trim();return rowsBy(r=>{const i=info(r);if(!OPEN.has(i.key))return false;if(!match(r.n,q))return false;
