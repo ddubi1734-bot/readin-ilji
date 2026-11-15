@@ -237,7 +237,7 @@ textarea.inp{width:100%;min-height:150px;line-height:1.6;padding:10px 12px;resiz
 
 <script>
 'use strict';
-const APP_VER='2026-11-16-4';
+const APP_VER='2026-11-16-5';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', PREF_KEY='absence.pref.v1';
@@ -786,7 +786,7 @@ function openOnhi(p){const d=p.d;
     const sub='리드인',open=openFor(n,sub);
     return {n,m,tm,sub,done,open,on:!done&&open.length>0}});
   const at=p.at||[],dMin=S.set.diffMin||5;
-  mk.forEach(x=>{const rs=at.filter(a=>a[0]===x.n&&a[6]==='3');if(rs.length&&rs.every(a=>a[5]!=null)){const real=rs.reduce((s,a)=>s+a[5],0);if(real!==x.m){x.slotM=x.m;x.real=real;x.m=real}}});
+  mk.forEach(x=>{const rs=at.filter(a=>a[0]===x.n&&a[6]==='3');if(rs.length&&rs.every(a=>a[5]!=null)){const real=rs.reduce((s,a)=>s+a[5],0);if(Math.abs(real-x.m)>=dMin){x.slotM=x.m;x.real=real;x.m=real}else if(real!==x.m){x.realNear=real}}});
   const per=new Map();at.filter(a=>a[6]==='1'&&a[5]!=null).forEach(a=>{const o=per.get(a[0])||{n:a[0],sm:0,dur:0,t:[]};o.sm+=a[2];o.dur+=a[5];o.t.push(`${a[1]} 수업 · 등원 ${a[3]} 하원 ${a[4]} (${a[5]}분)`);per.set(a[0],o)});
   const shorts=[],overs=[];
   for(const o of per.values()){const df=o.dur-o.sm;
@@ -829,7 +829,7 @@ function openOnhi(p){const d=p.d;
       +sec('보강 예약 '+pick.bk.length+'건',pick.bk.map(x=>li(x.n,x.slot,mdw(x.ad)+' 결석 → <b>'+mdw(x.kd)+' '+esc(x.st)+'~'+esc(x.et)+'</b>'+(x.r.k?' (앱 예약 '+md(x.r.k)+'에서 바꿈)':''),st(x))))
       +sec('덜 하고 간 학생 '+pick.ss.length+'명',pick.ss.map(x=>li(x.n,x.m,x.t.map(esc).join(' / '),st(x))))
       +sec('더 하고 간 학생 '+pick.vv.length+'명',pick.vv.map(x=>li(x.n,x.m,'못 한 시간에서 뺌 · '+x.t.map(esc).join(' / '),st(x))))
-      +sec('보강 출석 '+pick.mk.length+'명',pick.mk.map(x=>li(x.n,x.m,esc(x.tm)+(x.real!=null?' · 실제 '+x.real+'분 함 (수업 '+x.slotM+'분)':''),st(x))))
+      +sec('보강 출석 '+pick.mk.length+'명',pick.mk.map(x=>li(x.n,x.m,esc(x.tm)+(x.real!=null?' · 실제 '+x.real+'분 함 (수업 '+x.slotM+'분)':x.realNear!=null?' · 실제 '+x.realNear+'분이지만 '+dMin+'분 미만 차이라 수업 시간대로':''),st(x))))
       +(total||fail?'':'<div class="empty">새로 기록할 게 없어서 이날은 가져온 날로만 표시했어요.</div>')
       +sec('건너뛴 것 '+skipped.length+'건',skipped)
       +(noTime.length?'<div class="sum" style="margin-top:8px">등원·하원 기록이 없어 덜 함·더 함을 계산 못 한 학생: '+noTime.map(esc).join(', ')+'</div>':'')
