@@ -35,6 +35,9 @@ button:disabled{opacity:.55;cursor:default}
 .rtab td{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}.rtab tr.cl{cursor:pointer}.rtab tr.cl:hover td{background:#f5faf7}
 .rtab td .n{color:var(--muted);font-size:11px;margin-left:3px}.rtab td.none{color:#c3ccc8}
 #raSort{width:auto!important;min-width:170px}
+.lgf{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 8px}.lgf .chip{cursor:pointer}
+.lgmore{border:1px solid var(--line);background:#f7faf8;color:var(--green);font-weight:800;border-radius:9px;padding:7px 12px;font-size:12.5px;margin-top:8px;cursor:pointer;width:100%}
+.rtab tr.op td{background:var(--mint)}.rtab tr.rexp td{background:#fafcfb;white-space:normal;padding:6px 14px 12px}.rtab tr.rexp .lgmore{width:auto}
 .rctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.rctl .chip{cursor:pointer}
 .pk h3{margin:2px 0 4px;font-size:17px;display:flex;align-items:center;gap:8px}.pk h3 .who{background:var(--mint);color:var(--green);border-radius:8px;padding:2px 10px;font-size:15px}
 .pk .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px}.pk .rbh{margin:0 0 8px;font-size:13px;color:var(--muted)}
@@ -425,7 +428,7 @@ input[type=date].inp{width:150px}
 
 <script>
 'use strict';
-const APP_VER='2026-11-16-3';
+const APP_VER='2026-11-16-4';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
@@ -537,7 +540,7 @@ $('slist').onclick=e=>{const it=e.target.closest('[data-id]');if(!it)return;if(S
 
 /* ---------- 학생 선택 ---------- */
 async function selectStudent(id){
-  if(S.sel!==id){S.bookId=null;S.cur=0;S.grade='';S.recEdit=null}
+  if(S.sel!==id){S.bookId=null;S.cur=0;S.grade='';S.recEdit=null;S.lgKindF='all';S.lgAll=false}
   S.sel=id;S.page=null;S.editing=null;try{history.replaceState(null,'','#'+encodeURIComponent(id))}catch(e){}
   renderSide();renderMain();if(S.tab==='report')loadReport();await loadPage();
 }
@@ -723,7 +726,10 @@ function kp(k){return '<span class="kp kp-'+esc(k)+'">'+esc(LK[k]||k)+'</span>'}
 function logsHTML(LG){
   let h='<div class="lgw"><h5>보낸 기록 <small>학부모님께 보낸 레포트를 모두 모아 봐요</small></h5>';
   h+='<div class="lgadd"><select class="inp" id="lgKind">'+['vocab','training','course3','levelup','etc'].map(k=>'<option value="'+k+'">'+LK[k]+' 레포트</option>').join('')+'</select><input type="date" class="inp" id="lgDate" value="'+kstDay()+'"><input class="inp" id="lgMemo" placeholder="메모 (예: 5-6권, 초급 완료, 1→2레벨)"><button data-lgadd>보냄 기록</button></div>';
-  h+=LG.length?LG.map(l=>'<div class="lgr"><span class="dt">'+dayLabel(l.sentOn)+'</span>'+kp(l.kind)+'<span class="mm">'+esc(l.memo||'')+'</span>'+(LSRC[l.source]?'<span class="srcs">'+esc(LSRC[l.source])+'</span>':'')+'<button class="lnk del" data-lgdel="'+esc(l.id)+'">삭제</button></div>').join(''):'<p style="color:var(--muted);font-size:12px;margin:4px 0">아직 보낸 기록이 없어요.</p>';
+  const fk=S.lgKindF||'all',FL=fk==='all'?LG:LG.filter(l=>l.kind===fk),lim=S.lgAll?FL.length:8;
+  const kinds=[...new Set(LG.map(l=>l.kind))];
+  if(LG.length)h+='<div class="lgf">'+['all'].concat(kinds).map(k=>'<button class="chip'+(fk===k?' on':'')+'" data-lgf="'+k+'">'+(k==='all'?'전체 '+LG.length:LK[k]+' '+LG.filter(l=>l.kind===k).length)+'</button>').join('')+'</div>';
+  h+=FL.length?FL.slice(0,lim).map(l=>'<div class="lgr"><span class="dt">'+dayLabel(l.sentOn)+'</span>'+kp(l.kind)+'<span class="mm">'+esc(l.memo||'')+'</span>'+(LSRC[l.source]?'<span class="srcs">'+esc(LSRC[l.source])+'</span>':'')+'<button class="lnk del" data-lgdel="'+esc(l.id)+'">삭제</button></div>').join('')+(FL.length>lim?'<button class="lgmore" data-lgall>전체 보기 ('+FL.length+'건)</button>':(S.lgAll&&FL.length>8?'<button class="lgmore" data-lgall>접기</button>':'')):'<p style="color:var(--muted);font-size:12px;margin:4px 0">'+(LG.length?'이 종류로 보낸 기록이 없어요.':'아직 보낸 기록이 없어요.')+'</p>';
   return h+'</div>'}
 function renderReport(){
   const el=$('tab-report');if(!el||S.tab!=='report')return;
@@ -758,6 +764,8 @@ $('tab-report').onclick=async e=>{
   if(la){const p={pageId:S.sel,kind:$('lgKind').value,sentOn:$('lgDate').value,memo:$('lgMemo').value.trim()};la.disabled=true;
     try{const r=await api('bm_report_log_add',{p_token:S.token,p});if(S.rep&&S.rep.id===S.sel)S.rep.logs=r.logs;if(r.student)putStudent(r.student);$('lgMemo').value='';renderReport();renderSide();renderMain();toast(r.warn||LK[p.kind]+' 레포트 보낸 기록을 남겼어요',!!r.warn)}
     catch(err){if(!onAuthFail(err))toast(errText(err),true)}finally{la.disabled=false}return}
+  const lf=e.target.closest('[data-lgf]');if(lf){S.lgKindF=lf.dataset.lgf;S.lgAll=false;renderReport();return}
+  if(e.target.closest('[data-lgall]')){S.lgAll=!S.lgAll;renderReport();return}
   const ld=e.target.closest('[data-lgdel]');
   if(ld){if(!confirm('이 보낸 기록을 지울까요?'))return;
     try{const r=await api('bm_report_log_delete',{p_token:S.token,p_page:S.sel,p_id:ld.dataset.lgdel});if(S.rep&&S.rep.id===S.sel)S.rep.logs=r.logs;renderReport();toast('지웠어요')}
@@ -790,7 +798,7 @@ function renderRepAll(){const D=S.ra.data;if(!D){$('raBody').innerHTML='불러�
   if(S.ra.sort==='old')list.sort((a,b)=>(lastAny(a)||'0')<(lastAny(b)||'0')?-1:1);else if(S.ra.sort==='recent')list.sort((a,b)=>(lastAny(a)||'0')>(lastAny(b)||'0')?-1:1);
   const cell=(s,k)=>{const x=s.last[k];return x?'<td>'+ymd(x.on)+(x.n>1?'<span class="n">총 '+x.n+'회</span>':'')+'</td>':'<td class="none">-</td>'};
   let h='<table class="rtab"><thead><tr><th>이름</th><th>학년</th><th>마지막 발송</th>'+ks.map(k=>'<th>'+LK[k]+'</th>').join('')+'</tr></thead><tbody>'
-    +list.map(s=>{const la=lastAny(s);return '<tr class="cl" data-rastu="'+esc(s.id)+'"><td><b>'+esc(s.name)+'</b>'+(s.status!=='재원'?' <small style="color:var(--muted)">'+esc(s.status||'')+'</small>':'')+'</td><td>'+esc(shortGrade(s.grade))+'</td><td>'+(la?'<b>'+ymd(la)+'</b> <span class="n">'+agoText(la)+'</span>':'<span style="color:var(--red)">없음</span>')+'</td>'+ks.map(k=>cell(s,k)).join('')+'</tr>'}).join('')+'</tbody></table>';
+    +list.map(s=>{const la=lastAny(s),op=S.ra.open===s.id,mine=op?D.recent.filter(l=>l.pageId===s.id):[];return '<tr class="cl'+(op?' op':'')+'" data-raopen="'+esc(s.id)+'"><td><b>'+esc(s.name)+'</b>'+(s.status!=='재원'?' <small style="color:var(--muted)">'+esc(s.status||'')+'</small>':'')+'</td><td>'+esc(shortGrade(s.grade))+'</td><td>'+(la?'<b>'+ymd(la)+'</b> <span class="n">'+agoText(la)+'</span>':'<span style="color:var(--red)">없음</span>')+'</td>'+ks.map(k=>cell(s,k)).join('')+'</tr>'+(op?'<tr class="rexp"><td colspan="'+(3+ks.length)+'">'+(mine.length?mine.map(l=>'<div class="lgr"><span class="dt">'+dayLabel(l.sentOn)+'</span>'+kp(l.kind)+'<span class="mm">'+esc(l.memo||'')+'</span>'+(LSRC[l.source]?'<span class="srcs">'+esc(LSRC[l.source])+'</span>':'')+'</div>').join(''):'<p style="color:var(--muted);margin:6px 0">아직 보낸 기록이 없어요.</p>')+'<button class="lgmore" data-rastu="'+esc(s.id)+'">이 학생 화면으로 가기 ›</button></td></tr>':'')}).join('')+'</tbody></table>';
   h+='<h4 style="margin:18px 0 6px;font-size:13px">최근 보낸 레포트</h4>'+(D.recent.length?D.recent.slice(0,40).map(l=>'<div class="lgr cl" data-rastu="'+esc(l.pageId)+'" style="cursor:pointer"><span class="dt">'+dayLabel(l.sentOn)+'</span><b style="width:70px">'+esc(l.name)+'</b>'+kp(l.kind)+'<span class="mm">'+esc(l.memo||'')+'</span></div>').join(''):'<p style="color:var(--muted)">아직 기록이 없어요.</p>');
   $('raBody').innerHTML=h}
 $('btnRepAll').onclick=async()=>{$('repAll').classList.add('open');S.ra.data=null;renderRepAll();
@@ -798,6 +806,7 @@ $('btnRepAll').onclick=async()=>{$('repAll').classList.add('open');S.ra.data=nul
 $('raClose').onclick=()=>$('repAll').classList.remove('open');
 $('repAll').onclick=e=>{if(e.target===$('repAll')){$('repAll').classList.remove('open');return}
   const f=e.target.closest('[data-raf]');if(f){S.ra.filter=f.dataset.raf;renderRepAll();return}
+  const ro=e.target.closest('[data-raopen]');if(ro){S.ra.open=S.ra.open===ro.dataset.raopen?null:ro.dataset.raopen;renderRepAll();return}
   const r=e.target.closest('[data-rastu]');if(r&&stu(r.dataset.rastu)){$('repAll').classList.remove('open');S.tab='report';savePref();selectStudent(r.dataset.rastu);renderTabs();loadReport()}};
 $('repAll').addEventListener('change',e=>{if(e.target.id==='raSort'){S.ra.sort=e.target.value;renderRepAll()}});
 /* 여러 명 선택 */
