@@ -20,6 +20,21 @@ button,select,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 button:disabled{opacity:.55;cursor:default}
 .hidden{display:none!important}
+.lgw{margin-top:18px;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:#fff}
+.lgw h5{margin:0 0 10px;font-size:14px;display:flex;align-items:center;gap:8px}.lgw h5 small{font-weight:500;color:var(--muted);font-size:12px}
+.lgadd{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.lgadd select,.lgadd input{font-size:12.5px}.lgadd #lgMemo{flex:1;min-width:160px}
+.lgadd button{border:0;background:var(--green);color:#fff;font-weight:800;border-radius:9px;padding:7px 12px;font-size:12.5px;cursor:pointer}
+.lgr{display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid var(--line);font-size:13px}
+.lgr .dt{width:84px;flex:none;color:#33433f;font-weight:700}.lgr .mm{flex:1;color:#536560}.lgr .srcs{font-size:11px;color:var(--muted)}
+.kp{font-size:11px;font-weight:800;border-radius:6px;padding:2px 8px;white-space:nowrap}
+.kp-vocab{background:#e7effc;color:#2f5fb3}.kp-reading{background:#e6f3ee;color:#176b5b}.kp-training{background:#fdeedd;color:#b45d12}.kp-course3{background:#f2eafb;color:#7a3fb8}.kp-levelup{background:#fff3c4;color:#8a6a00}.kp-etc{background:#eef1ef;color:#6b7c79}
+#repAll .modal{width:min(1080px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;padding:0}
+#repAll .rhd{padding:18px 22px 10px;border-bottom:1px solid var(--line)}#repAll .rhd h3{margin:0 0 8px}
+#repAll .rbd{padding:10px 22px 18px;overflow:auto}
+.rtab{width:100%;border-collapse:collapse;font-size:12.5px}.rtab th{position:sticky;top:0;background:#f5f8f6;text-align:left;padding:7px 8px;color:#536560;font-size:12px;border-bottom:1px solid var(--line)}
+.rtab td{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}.rtab tr.cl{cursor:pointer}.rtab tr.cl:hover td{background:#f5faf7}
+.rtab td .n{color:var(--muted);font-size:11px;margin-left:3px}.rtab td.none{color:#c3ccc8}
+.rctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.rctl .chip{cursor:pointer}
 .pk h3{margin:2px 0 4px;font-size:17px;display:flex;align-items:center;gap:8px}.pk h3 .who{background:var(--mint);color:var(--green);border-radius:8px;padding:2px 10px;font-size:15px}
 .pk .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px}.pk .rbh{margin:0 0 8px;font-size:13px;color:var(--muted)}
 .rbl{border:1px solid var(--line);border-radius:12px;overflow:hidden}
@@ -308,7 +323,7 @@ input[type=date].inp{width:150px}
 </head>
 <body>
 <header class="top"><div class="brand" id="brandHome" role="button" tabindex="0" title="홈 화면(오늘 챙길 학생)으로" style="cursor:pointer"><img class="logo" src="icon2-192.png" alt="학생일지"><div><h1>학생일지</h1><p>리드인 황남1점 · 노션 학생 일지와 바로 연결</p></div></div>
-  <div class="topright hidden" id="topright"><button class="ghost" id="btnRefresh" title="노션에서 학생 목록과 정보를 다시 불러와요">노션에서 새로고침</button><button class="ghost" id="btnLogout">로그아웃</button></div></header>
+  <div class="topright hidden" id="topright"><button class="ghost" id="btnRefresh" title="노션에서 학생 목록과 정보를 다시 불러와요">노션에서 새로고침</button><button class="ghost" id="btnRepAll" title="모든 학생의 레포트 보낸 기록">레포트 기록</button><button class="ghost" id="btnLogout">로그아웃</button></div></header>
 
 <div id="loginView" class="loginwrap hidden"><section class="card login">
   <h2>로그인</h2><p>원장님 비밀번호(문해력마당과 같은 비밀번호)를 입력해 주세요.</p>
@@ -398,6 +413,7 @@ input[type=date].inp{width:150px}
   </div>
   <div class="edfoot"><label style="font-size:12.5px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="upReplace"> 같은 제목의 책이 있으면 새 발문지로 바꾸기</label><span class="grow"></span><button id="upCancel">닫기</button><button class="primary" id="upSave" disabled>올리기</button></div>
 </div></div>
+<div class="modalback" id="repAll"><div class="modal"><div class="rhd"><h3>레포트 보낸 기록</h3><div class="rctl" id="raCtl"></div></div><div class="rbd" id="raBody">불러오는 중이에요...</div><div class="modalfoot" style="padding:0 22px 16px;margin:0"><button id="raClose">닫기</button></div></div></div>
 <div class="modalback" id="reqModal"><div class="modal" style="width:min(580px,100%)"><div id="reqModalBody"></div></div></div>
 <div class="modalback" id="stuModal"><div class="modal"><h3>새 학생 추가</h3>
   <p class="desc">노션 학생 일지에 새 페이지가 만들어져요. 노션 템플릿(코멘트 추가, 렙코 기록 버튼)이 그대로 들어가요.</p>
@@ -408,7 +424,7 @@ input[type=date].inp{width:150px}
 
 <script>
 'use strict';
-const APP_VER='2026-11-16-1';
+const APP_VER='2026-11-16-2';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
@@ -695,15 +711,24 @@ function reqText(res,kind,opts){const k=RK[kind],ss=res.students||[];
   return t+'(처리 방법: leadin-report-request 스킬)'}
 function readyHTML(r){return '<div class="ready"><div class="t">✓ '+esc(r.title)+' 요청을 '+(r.copied===false?'만들었어요':'복사했어요')+'</div><div class="d">Aside 채팅창에 <b>붙여넣기(Ctrl+V)</b>하고 보내 주세요. 바로 만들기 시작할게요. · 요청 번호 '+esc(r.id)+'</div><textarea readonly>'+esc(r.text)+'</textarea><div class="row"><button class="primary" data-copy>다시 복사</button><button class="outline" data-rclose>닫기</button></div></div>'}
 async function loadReport(){const id=S.sel;if(!id)return;if(!S.rep||S.rep.id!==id){S.rep={id,loading:true};}renderReport();
-  try{const r=await api('bm_report_tab',{p_token:S.token,p_page:id});if(S.sel!==id)return;S.rep={id,vocab:r.vocab,requests:r.requests}}
+  try{const r=await api('bm_report_tab',{p_token:S.token,p_page:id});if(S.sel!==id)return;S.rep={id,vocab:r.vocab,requests:r.requests,logs:r.logs||[]}}
   catch(e){if(!onAuthFail(e))toast(errText(e),true);if(S.rep&&S.rep.id===id)S.rep.loading=false}
   renderReport()}
 function lastReq(kind){const r=(S.rep&&S.rep.requests||[]).find(x=>x.kind===kind);return r?'마지막 요청 '+md(kstDay(r.createdAt))+' · '+(RST[r.status]||[r.status])[0]:'아직 요청한 적 없어요'}
+const LK={vocab:'어휘',reading:'독해',training:'트레이닝',course3:'3코스',levelup:'레벨업',etc:'기타'};
+const LSRC={leadin:'리드인 활동 레포트 문자',notion:'노션 마지막 발송일에서 가져옴 · 종류 모름','문해력마당':'문해력마당 기록'};
+function ymd(d){if(!d)return '';const s=String(d).slice(0,10),y=s.slice(0,4)!==kstDay().slice(0,4)?s.slice(2,4)+'.':'';return y+s.slice(5,7)+'/'+s.slice(8,10)}
+function kp(k){return '<span class="kp kp-'+esc(k)+'">'+esc(LK[k]||k)+'</span>'}
+function logsHTML(LG){
+  let h='<div class="lgw"><h5>보낸 기록 <small>학부모님께 보낸 레포트를 모두 모아 봐요</small></h5>';
+  h+='<div class="lgadd"><select class="inp" id="lgKind">'+['vocab','training','course3','levelup','etc'].map(k=>'<option value="'+k+'">'+LK[k]+' 레포트</option>').join('')+'</select><input type="date" class="inp" id="lgDate" value="'+kstDay()+'"><input class="inp" id="lgMemo" placeholder="메모 (예: 5-6권, 초급 완료, 1→2레벨)"><button data-lgadd>보냄 기록</button></div>';
+  h+=LG.length?LG.map(l=>'<div class="lgr"><span class="dt">'+dayLabel(l.sentOn)+'</span>'+kp(l.kind)+'<span class="mm">'+esc(l.memo||'')+'</span>'+(LSRC[l.source]?'<span class="srcs">'+esc(LSRC[l.source])+'</span>':'')+'<button class="lnk del" data-lgdel="'+esc(l.id)+'">삭제</button></div>').join(''):'<p style="color:var(--muted);font-size:12px;margin:4px 0">아직 보낸 기록이 없어요.</p>';
+  return h+'</div>'}
 function renderReport(){
   const el=$('tab-report');if(!el||S.tab!=='report')return;
   const s=stu(S.sel);if(!s)return;const R=S.rep&&S.rep.id===S.sel?S.rep:null;
   if(!R||!R.requests){el.innerHTML='<p class="hint" style="color:var(--muted);font-size:13px">'+(R&&R.loading?'레포트 정보를 불러오는 중…':'레포트 정보를 못 불러왔어요. 탭을 다시 눌러 주세요.')+'</p>';return}
-  const keep={};['rpMemo','rpCourse','rpRange','rpStage'].forEach(k=>{const x=$(k);if(x)keep[k]=x.value});
+  const keep={};['rpMemo','rpCourse','rpRange','rpStage','lgKind','lgDate','lgMemo'].forEach(k=>{const x=$(k);if(x)keep[k]=x.value});
   const v=R.vocab||{found:false};let vb;
   if(!v.found)vb='<dl><dt>문해력마당</dt><dd style="color:var(--muted);font-weight:500">같은 이름의 학생 계정이 없어요</dd></dl>';
   else{const st=v.stages||[];const pick=(v.due||[]).slice(-1)[0]||v.current;
@@ -712,12 +737,14 @@ function renderReport(){
       +'<dt>마지막 발송</dt><dd>'+(v.lastReport?esc(md(v.lastReport.sentOn)+(v.lastReport.memo?' · '+v.lastReport.memo:'')):'아직 안 보냄')+'</dd></dl>';
     if(st.length)vb+='<div class="opts"><select class="inp" id="rpStage">'+st.map(x=>'<option value="'+esc(x.stage)+'"'+(pick===x.stage?' selected':'')+'>'+esc(shortStage(x.stage))+(x.doneAt?' 단계 (완료)':' 단계 ('+x.tested+'/'+x.sets+')')+'</option>').join('')+'</select></div>'}
   const card=(k,body,extra)=>'<div class="rpc"><h4>'+RK[k].n+(extra||'')+'</h4><div class="src">'+RK[k].src+' · '+RK[k].out+'</div>'+body+'<button class="go" data-req="'+k+'"'+(k==='vocab'&&!v.found?' disabled':'')+'>'+RK[k].n+' 요청</button><div class="lastreq">'+esc(lastReq(k))+'</div></div>';
-  const tb='<dl><dt>노션 발송일</dt><dd>'+(s.lastReport?esc(s.lastReport):'기록 없음')+'</dd></dl><div class="opts"><select class="inp" id="rpCourse"><option value="">과정: 읽쓰에서 확인</option><option>읽기트레이닝</option><option>독해트레이닝</option></select><input class="inp" id="rpRange" placeholder="범위 (예: 5권, 5-6권)"></div>';
-  const cb='<dl><dt>담는 내용</dt><dd>레벨·코스, 영역별 이해도, 독서 기록, 추천 도서</dd></dl>';
-  const lb='<dl><dt>담는 내용</dt><dd>올라간 레벨 축하와 칭찬, 다음 레벨 안내</dd></dl>';
+  const LG=R.logs||[],lastL=k=>{const x=LG.find(l=>l.kind===k);return x?ymd(x.sentOn)+(x.memo&&x.source!=='leadin'&&x.source!=='notion'?' · '+x.memo:''):'아직 안 보냄'};
+  const tb='<dl><dt>마지막 발송</dt><dd>'+esc(lastL('training'))+'</dd></dl><div class="opts"><select class="inp" id="rpCourse"><option value="">과정: 읽쓰에서 확인</option><option>읽기트레이닝</option><option>독해트레이닝</option></select><input class="inp" id="rpRange" placeholder="범위 (예: 5권, 5-6권)"></div>';
+  const cb='<dl><dt>담는 내용</dt><dd>레벨·코스, 영역별 이해도, 독서 기록, 추천 도서</dd><dt>마지막 발송</dt><dd>'+esc(lastL('course3'))+'</dd></dl>';
+  const lb='<dl><dt>담는 내용</dt><dd>올라간 레벨 축하와 칭찬, 다음 레벨 안내</dd><dt>마지막 발송</dt><dd>'+esc(lastL('levelup'))+'</dd></dl>';
   let h='<div class="rpmemo"><input class="inp" id="rpMemo" placeholder="추가로 부탁할 말 (선택) · 예: 요즘 발표가 늘었다는 얘기도 넣어 줘"></div>';
   h+='<div class="rp">'+card('vocab',vb,v.found&&(v.due||[]).length?'<span class="due">보낼 차례</span>':'')+card('training',tb)+card('course3',cb)+card('levelup',lb)+'</div>';
   if(S.repReady&&S.repReady.page===S.sel)h+=readyHTML(S.repReady);
+  h+=logsHTML(LG);
   const rq=R.requests||[];
   h+='<div class="rhist"><h5>요청 기록</h5>'+(rq.length?rq.map(r=>{const st=RST[r.status]||[r.status,'p-wait'],o=optText(r.kind,r.opts);return '<div class="rh"><small>'+md(kstDay(r.createdAt))+'</small><b>'+esc((RK[r.kind]||{n:r.kind}).n)+'</b>'+(o?'<small>'+esc(o)+'</small>':'')+'<span class="pill '+st[1]+'">'+st[0]+'</span>'+(r.note?'<small>'+esc(r.note)+'</small>':'')+(r.status==='waiting'?'<button class="lnk del" data-rcancel="'+esc(r.id)+'">취소</button>':'')+'</div>'}).join(''):'<p style="color:var(--muted);font-size:12px;margin:4px 0">아직 요청한 레포트가 없어요.</p>')+'</div>';
   el.innerHTML=h;Object.entries(keep).forEach(([k,val])=>{const x=$(k);if(x&&val)x.value=val});
@@ -726,6 +753,14 @@ function collectOpts(kind){const o={};if(kind==='vocab'&&$('rpStage'))o.stage=$(
   if(kind==='training'){const c=$('rpCourse')&&$('rpCourse').value,r=$('rpRange')&&$('rpRange').value.trim();if(c)o.course=c;if(r)o.range=r}
   const m=$('rpMemo')&&$('rpMemo').value.trim();if(m)o.memo=m;return o}
 $('tab-report').onclick=async e=>{
+  const la=e.target.closest('[data-lgadd]');
+  if(la){const p={pageId:S.sel,kind:$('lgKind').value,sentOn:$('lgDate').value,memo:$('lgMemo').value.trim()};la.disabled=true;
+    try{const r=await api('bm_report_log_add',{p_token:S.token,p});if(S.rep&&S.rep.id===S.sel)S.rep.logs=r.logs;if(r.student)putStudent(r.student);$('lgMemo').value='';renderReport();renderSide();renderMain();toast(r.warn||LK[p.kind]+' 레포트 보낸 기록을 남겼어요',!!r.warn)}
+    catch(err){if(!onAuthFail(err))toast(errText(err),true)}finally{la.disabled=false}return}
+  const ld=e.target.closest('[data-lgdel]');
+  if(ld){if(!confirm('이 보낸 기록을 지울까요?'))return;
+    try{const r=await api('bm_report_log_delete',{p_token:S.token,p_page:S.sel,p_id:ld.dataset.lgdel});if(S.rep&&S.rep.id===S.sel)S.rep.logs=r.logs;renderReport();toast('지웠어요')}
+    catch(err){if(!onAuthFail(err))toast(errText(err),true)}return}
   const go=e.target.closest('[data-req]');
   if(go){const kind=go.dataset.req,opts=collectOpts(kind);go.disabled=true;
     try{const res=await api('bm_report_request',{p_token:S.token,p:{kind,pages:[S.sel],opts}});
@@ -742,6 +777,28 @@ $('tab-report').onclick=async e=>{
     try{const rq=await api('bm_report_cancel',{p_token:S.token,p_id:c.dataset.rcancel,p_page:S.sel});if(S.rep&&S.rep.id===S.sel)S.rep.requests=rq;if(S.repReady&&S.repReady.id===c.dataset.rcancel)S.repReady=null;renderReport();toast('요청을 취소했어요')}
     catch(err){if(!onAuthFail(err))toast(errText(err),true)}}
 };
+/* 레포트 보낸 기록 한눈에 */
+S.ra={data:null,filter:'재원',sort:'name'};
+function renderRepAll(){const D=S.ra.data;if(!D){$('raBody').innerHTML='불러오는 중이에요...';return}
+  const ks=['vocab','training','course3','levelup','etc'];
+  $('raCtl').innerHTML=['재원','휴원','퇴원','전체'].map(f=>'<button class="chip'+(S.ra.filter===f?' on':'')+'" data-raf="'+f+'">'+f+'</button>').join('')
+    +'<select class="inp" id="raSort" style="margin-left:auto;font-size:12.5px"><option value="name">이름순</option><option value="old">보낸 지 오래된 순</option><option value="recent">최근 보낸 순</option></select>';
+  $('raSort').value=S.ra.sort;
+  const lastAny=s=>{let m='';ks.concat(['reading']).forEach(k=>{const x=s.last[k];if(x&&x.on>m)m=x.on});if(s.lastReport&&s.lastReport>m)m=s.lastReport;return m};
+  let list=D.students.filter(s=>S.ra.filter==='전체'||s.status===S.ra.filter);
+  if(S.ra.sort==='old')list.sort((a,b)=>(lastAny(a)||'0')<(lastAny(b)||'0')?-1:1);else if(S.ra.sort==='recent')list.sort((a,b)=>(lastAny(a)||'0')>(lastAny(b)||'0')?-1:1);
+  const cell=(s,k)=>{const x=s.last[k];return x?'<td>'+ymd(x.on)+(x.n>1?'<span class="n">총 '+x.n+'회</span>':'')+'</td>':'<td class="none">-</td>'};
+  let h='<table class="rtab"><thead><tr><th>이름</th><th>학년</th><th>마지막 발송</th>'+ks.map(k=>'<th>'+LK[k]+'</th>').join('')+'</tr></thead><tbody>'
+    +list.map(s=>{const la=lastAny(s);return '<tr class="cl" data-rastu="'+esc(s.id)+'"><td><b>'+esc(s.name)+'</b>'+(s.status!=='재원'?' <small style="color:var(--muted)">'+esc(s.status||'')+'</small>':'')+'</td><td>'+esc(shortGrade(s.grade))+'</td><td>'+(la?'<b>'+ymd(la)+'</b> <span class="n">'+agoText(la)+'</span>':'<span style="color:var(--red)">없음</span>')+'</td>'+ks.map(k=>cell(s,k)).join('')+'</tr>'}).join('')+'</tbody></table>';
+  h+='<h4 style="margin:18px 0 6px;font-size:13px">최근 보낸 레포트</h4>'+(D.recent.length?D.recent.slice(0,40).map(l=>'<div class="lgr cl" data-rastu="'+esc(l.pageId)+'" style="cursor:pointer"><span class="dt">'+dayLabel(l.sentOn)+'</span><b style="width:70px">'+esc(l.name)+'</b>'+kp(l.kind)+'<span class="mm">'+esc(l.memo||'')+'</span></div>').join(''):'<p style="color:var(--muted)">아직 기록이 없어요.</p>');
+  $('raBody').innerHTML=h}
+$('btnRepAll').onclick=async()=>{$('repAll').classList.add('open');S.ra.data=null;renderRepAll();
+  try{S.ra.data=await api('bm_report_overview',{p_token:S.token});renderRepAll()}catch(e){if(!onAuthFail(e))$('raBody').textContent=errText(e)}};
+$('raClose').onclick=()=>$('repAll').classList.remove('open');
+$('repAll').onclick=e=>{if(e.target===$('repAll')){$('repAll').classList.remove('open');return}
+  const f=e.target.closest('[data-raf]');if(f){S.ra.filter=f.dataset.raf;renderRepAll();return}
+  const r=e.target.closest('[data-rastu]');if(r&&stu(r.dataset.rastu)){$('repAll').classList.remove('open');S.tab='report';savePref();selectStudent(r.dataset.rastu);renderTabs();loadReport()}};
+$('repAll').addEventListener('change',e=>{if(e.target.id==='raSort'){S.ra.sort=e.target.value;renderRepAll()}});
 /* 여러 명 선택 */
 function decorateMulti(){
   $('msel').classList.toggle('hidden',!S.multi);$('btnMulti').classList.toggle('on',S.multi);
