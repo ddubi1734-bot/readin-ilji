@@ -293,6 +293,7 @@ input[type=date].inp{width:150px}
 .wsbtn{background:#1f6f5c;color:#fff;border:1px solid #1f6f5c;font-weight:700;white-space:nowrap}.wsbtn:disabled{background:#c9d3cf;border-color:#c9d3cf;color:#fff;cursor:default}
 .modal.wsmodal{width:min(880px,100%);max-height:calc(100vh - 40px);overflow:auto;display:flex;gap:24px;padding:24px 26px}
 .wsprev{width:300px;flex:none}.wsside{min-width:300px}.wsprev canvas{width:300px;border:1px solid #dfe5e2;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.08);background:#fff;display:block;min-height:120px}
+.wspgs{display:flex;gap:6px;justify-content:center;margin-top:8px}.wspgs:empty{display:none}.wspgs button{padding:5px 16px;border:1px solid #cfd8d4;border-radius:8px;background:#fff;color:#36524a;font-size:13px;font-weight:600}.wspgs button.on{background:#1f6f5c;color:#fff;border-color:#1f6f5c}
 .wsnote{font-size:12px;color:#6b7c76;text-align:center;margin-top:6px}
 .wsside{flex:1;display:flex;flex-direction:column;min-width:0}.wsside h3{margin:0;font-size:20px}
 .wsmode{display:flex;gap:8px;margin:6px 0 14px}.wsmode button{flex:1;text-align:left;border:1px solid #d5ddda;border-radius:10px;padding:10px 12px;background:#fff;color:#5f6f6a;font-weight:600}.wsmode button.on{border:2px solid #1f6f5c;background:#e8f5f0;color:#1f6f5c;font-weight:800}
@@ -413,7 +414,7 @@ body.noselect{user-select:none}
 
 <div class="toast" id="toast"></div>
 <div class="modalback" id="wsModal"><div class="modal wsmodal">
-  <div class="wsprev"><canvas id="wsCanvas" width="600" height="848"></canvas><div class="wsnote" id="wsPgInfo">불러오는 중이에요...</div></div>
+  <div class="wsprev"><canvas id="wsCanvas" width="600" height="848"></canvas><div class="wspgs" id="wsPgs"></div><div class="wsnote" id="wsPgInfo">불러오는 중이에요...</div></div>
   <div class="wsside"><h3>🖨 활동지 인쇄</h3><p class="desc" id="wsTitle" style="margin:4px 0 0"></p>
     <div class="wslbl">맨 위 칸</div>
     <div class="wsmode"><button data-wsmode="fill" class="on">● 이름·날짜 넣기</button><button data-wsmode="blank">○ 빈 칸으로</button></div>
@@ -459,7 +460,7 @@ body.noselect{user-select:none}
 
 <script>
 'use strict';
-const APP_VER='2026-11-17-3';
+const APP_VER='2026-11-17-4';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
@@ -1003,16 +1004,17 @@ function wsStamp(pg,vals){const c=document.createElement('canvas');c.width=pg.c.
   return c}
 const WS={path:null,mode:'fill'};
 function wsVals(){if(WS.mode!=='fill')return null;return {grade:$('wsGrade').value.trim(),name:$('wsName').value.trim(),date:wsDateText($('wsDate').value)}}
-function wsPreview(){const d=WSC[WS.path];const cv=$('wsCanvas');if(!d){return}const pg=d.pages[0];const st=wsStamp(pg,wsVals());
+function wsPgButtons(){const d=WSC[WS.path],el=$('wsPgs');if(!d||d.pages.length<2){el.innerHTML='';return}el.innerHTML=d.pages.map((_,i)=>'<button data-wspg="'+i+'" class="'+(i===WS.pg?'on':'')+'">'+(i+1)+'쪽</button>').join('');el.querySelectorAll('[data-wspg]').forEach(b=>b.onclick=()=>{WS.pg=+b.dataset.wspg;wsPgButtons();wsPreview()})}
+function wsPreview(){const d=WSC[WS.path];const cv=$('wsCanvas');if(!d){return}if(!(WS.pg<d.pages.length))WS.pg=0;const pg=d.pages[WS.pg];
+  $('wsPgInfo').textContent='미리보기 · '+(WS.pg+1)+'쪽 (전체 '+d.pages.length+'쪽)'+(d.pages[0].fields?'':' · 이 활동지는 이름 칸을 못 찾아서 빈 칸으로 뽑혀요');const st=wsStamp(pg,wsVals());
   cv.width=600;cv.height=Math.round(600*st.height/st.width);const ctx=cv.getContext('2d');ctx.imageSmoothingQuality='high';ctx.drawImage(st,0,0,cv.width,cv.height)}
 async function openWs(){const b=bookById(S.bookId),s=stu(S.sel);const w=b&&S.ws[b.id];if(!w)return;
-  WS.path=w[0];WS.mode='fill';document.querySelectorAll('[data-wsmode]').forEach(x=>{const on=x.dataset.wsmode==='fill';x.classList.toggle('on',on);x.textContent=(on?'● ':'○ ')+(x.dataset.wsmode==='fill'?'이름·날짜 넣기':'빈 칸으로')});
+  WS.path=w[0];WS.mode='fill';WS.pg=0;$('wsPgs').innerHTML='';document.querySelectorAll('[data-wsmode]').forEach(x=>{const on=x.dataset.wsmode==='fill';x.classList.toggle('on',on);x.textContent=(on?'● ':'○ ')+(x.dataset.wsmode==='fill'?'이름·날짜 넣기':'빈 칸으로')});
   $('wsTitle').textContent='「'+b.title+'」 · '+(b.level?b.level+' ':'')+'글쓰기 활동지'+(w[1]?' · '+w[1]+'쪽':'');
   $('wsGrade').value=wsGradeText(s&&s.grade);$('wsName').value=s?s.name:'';$('wsDate').value=kstDay();$('wsCopies').value=1;wsInputs(true);
   $('wsGo').disabled=true;$('wsPgInfo').textContent='활동지를 불러오는 중이에요...';const cv=$('wsCanvas');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
   $('wsModal').classList.add('open');
-  try{const d=await wsLoad(WS.path);if(WS.path!==w[0])return;wsPreview();$('wsGo').disabled=false;
-    $('wsPgInfo').textContent='미리보기 · 1쪽 (전체 '+d.pages.length+'쪽)'+(d.pages[0].fields?'':' · 이 활동지는 이름 칸을 못 찾아서 빈 칸으로 뽑혀요')}
+  try{const d=await wsLoad(WS.path);if(WS.path!==w[0])return;wsPgButtons();wsPreview();$('wsGo').disabled=false}
   catch(e){$('wsPgInfo').textContent='활동지를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'}}
 function wsInputs(on){['wsGrade','wsName','wsDate'].forEach(id=>$(id).disabled=!on)}
 document.querySelectorAll('[data-wsmode]').forEach(x=>x.onclick=()=>{WS.mode=x.dataset.wsmode;document.querySelectorAll('[data-wsmode]').forEach(y=>{const on=y===x;y.classList.toggle('on',on);y.textContent=(on?'● ':'○ ')+(y.dataset.wsmode==='fill'?'이름·날짜 넣기':'빈 칸으로')});wsInputs(WS.mode==='fill');wsPreview()});
