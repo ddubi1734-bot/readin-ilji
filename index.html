@@ -291,14 +291,14 @@ input[type=date].inp{width:150px}
 .toast.bad{background:#8a2f2f}
 .wstag{align-self:center;font-size:12px;color:#1f6f5c;background:#e3f4ee;border-radius:10px;padding:3px 9px;white-space:nowrap}.wstag.none{color:#8a948f;background:#eef1f0}
 .wsbtn{background:#1f6f5c;color:#fff;border:1px solid #1f6f5c;font-weight:700;white-space:nowrap}.wsbtn:disabled{background:#c9d3cf;border-color:#c9d3cf;color:#fff;cursor:default}
-.wsmodal{width:min(880px,100%);display:flex;gap:24px;padding:24px 26px}
-.wsprev{width:300px;flex:none}.wsprev canvas{width:300px;border:1px solid #dfe5e2;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.08);background:#fff;display:block;min-height:120px}
+.modal.wsmodal{width:min(880px,100%);max-height:calc(100vh - 40px);overflow:auto;display:flex;gap:24px;padding:24px 26px}
+.wsprev{width:300px;flex:none}.wsside{min-width:300px}.wsprev canvas{width:300px;border:1px solid #dfe5e2;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.08);background:#fff;display:block;min-height:120px}
 .wsnote{font-size:12px;color:#6b7c76;text-align:center;margin-top:6px}
 .wsside{flex:1;display:flex;flex-direction:column;min-width:0}.wsside h3{margin:0;font-size:20px}
 .wsmode{display:flex;gap:8px;margin:6px 0 14px}.wsmode button{flex:1;text-align:left;border:1px solid #d5ddda;border-radius:10px;padding:10px 12px;background:#fff;color:#5f6f6a;font-weight:600}.wsmode button.on{border:2px solid #1f6f5c;background:#e8f5f0;color:#1f6f5c;font-weight:800}
 .wsgrid{display:grid;grid-template-columns:56px 1fr;gap:9px 12px;align-items:center}.wsgrid label{color:#5f6f6a;font-size:14px;margin:0}.wsgrid .inp:disabled{background:#f3f5f4;color:#9aa5a1}
 .wslbl{font-size:13px;font-weight:700;color:#36524a;margin-top:14px}
-@media(max-width:760px){.wsmodal{flex-direction:column}.wsprev{width:100%}.wsprev canvas{width:100%}}
+@media(max-width:760px){.modal.wsmodal{flex-direction:column}.wsprev{width:100%}.wsprev canvas{width:100%}}
 .modalback{position:fixed;inset:0;background:#14252266;display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
 .modalback.open{display:flex}
 .modal{background:#fff;width:min(420px,100%);padding:22px;border-radius:16px}
@@ -459,7 +459,7 @@ body.noselect{user-select:none}
 
 <script>
 'use strict';
-const APP_VER='2026-11-17-2';
+const APP_VER='2026-11-17-3';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
