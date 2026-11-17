@@ -289,6 +289,16 @@ input[type=date].inp{width:150px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#183c34;color:#fff;padding:11px 17px;border-radius:10px;box-shadow:0 6px 22px #102a241f;opacity:0;pointer-events:none;transition:.2s;font-size:13px;z-index:60;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
 .toast.bad{background:#8a2f2f}
+.wstag{align-self:center;font-size:12px;color:#1f6f5c;background:#e3f4ee;border-radius:10px;padding:3px 9px;white-space:nowrap}.wstag.none{color:#8a948f;background:#eef1f0}
+.wsbtn{background:#1f6f5c;color:#fff;border:1px solid #1f6f5c;font-weight:700;white-space:nowrap}.wsbtn:disabled{background:#c9d3cf;border-color:#c9d3cf;color:#fff;cursor:default}
+.wsmodal{width:min(880px,100%);display:flex;gap:24px;padding:24px 26px}
+.wsprev{width:300px;flex:none}.wsprev canvas{width:300px;border:1px solid #dfe5e2;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.08);background:#fff;display:block;min-height:120px}
+.wsnote{font-size:12px;color:#6b7c76;text-align:center;margin-top:6px}
+.wsside{flex:1;display:flex;flex-direction:column;min-width:0}.wsside h3{margin:0;font-size:20px}
+.wsmode{display:flex;gap:8px;margin:6px 0 14px}.wsmode button{flex:1;text-align:left;border:1px solid #d5ddda;border-radius:10px;padding:10px 12px;background:#fff;color:#5f6f6a;font-weight:600}.wsmode button.on{border:2px solid #1f6f5c;background:#e8f5f0;color:#1f6f5c;font-weight:800}
+.wsgrid{display:grid;grid-template-columns:56px 1fr;gap:9px 12px;align-items:center}.wsgrid label{color:#5f6f6a;font-size:14px;margin:0}.wsgrid .inp:disabled{background:#f3f5f4;color:#9aa5a1}
+.wslbl{font-size:13px;font-weight:700;color:#36524a;margin-top:14px}
+@media(max-width:760px){.wsmodal{flex-direction:column}.wsprev{width:100%}.wsprev canvas{width:100%}}
 .modalback{position:fixed;inset:0;background:#14252266;display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
 .modalback.open{display:flex}
 .modal{background:#fff;width:min(420px,100%);padding:22px;border-radius:16px}
@@ -391,7 +401,7 @@ body.noselect{user-select:none}
           <div class="crow"><input type="date" class="inp" id="cDate"><span class="hint">노션 학생 일지 왼쪽 칸 맨 위에 날짜와 함께 들어가요</span><button class="primary" id="cSave">코멘트 저장</button></div>
         </div>
         <div id="tab-balmun" class="hidden">
-          <div class="pickrow"><div class="bookbar"><div class="combo"><input id="bookInput" autocomplete="off" spellcheck="false" placeholder="책 제목 (초성 가능, 최근 발문한 책이 위에)"><div class="menu" id="bookMenu"></div></div><button class="outline" id="btnEditBook">발문지 편집</button><button class="outline" id="btnUpload">발문지 올리기</button></div></div>
+          <div class="pickrow"><div class="bookbar"><div class="combo"><input id="bookInput" autocomplete="off" spellcheck="false" placeholder="책 제목 (초성 가능, 최근 발문한 책이 위에)"><div class="menu" id="bookMenu"></div></div><span class="wstag" id="wsTag" style="display:none"></span><button class="wsbtn" id="btnPrintWs" style="display:none">🖨 활동지 인쇄</button><button class="outline" id="btnEditBook">발문지 편집</button><button class="outline" id="btnUpload">발문지 올리기</button></div></div>
           <div id="bookArea"></div>
         </div>
         <div id="tab-history" class="hidden"><div class="colhead"><h3>일지 · 코멘트와 발문</h3><span id="lCount"></span></div><p class="hint" style="font-size:12px;color:var(--muted);margin:-4px 0 10px">노션 학생 일지에 있는 기록이 최신순으로 보여요. 발문 기록은 '발문 탭에서 보기'를 눌러 고치고, 코멘트는 여기서 바로 수정·삭제할 수 있어요.</p><div id="leftList"></div></div>
@@ -402,6 +412,15 @@ body.noselect{user-select:none}
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="modalback" id="wsModal"><div class="modal wsmodal">
+  <div class="wsprev"><canvas id="wsCanvas" width="600" height="848"></canvas><div class="wsnote" id="wsPgInfo">불러오는 중이에요...</div></div>
+  <div class="wsside"><h3>🖨 활동지 인쇄</h3><p class="desc" id="wsTitle" style="margin:4px 0 0"></p>
+    <div class="wslbl">맨 위 칸</div>
+    <div class="wsmode"><button data-wsmode="fill" class="on">● 이름·날짜 넣기</button><button data-wsmode="blank">○ 빈 칸으로</button></div>
+    <div class="wsgrid"><label for="wsGrade">학년</label><input class="inp" id="wsGrade" autocomplete="off"><label for="wsName">이름</label><input class="inp" id="wsName" autocomplete="off"><label for="wsDate">날짜</label><input type="date" class="inp" id="wsDate"><label for="wsCopies">부수</label><div><input type="number" class="inp" id="wsCopies" min="1" max="30" value="1" style="width:80px;display:inline-block"> 부</div></div>
+    <p class="desc" style="margin:14px 0 0;line-height:1.6">학년·이름은 학생 정보에서 자동으로 채워져요. 바꿔도 이번 인쇄에만 쓰이고 학생 정보는 그대로예요.<br>인쇄하기를 누르면 프린터 창이 떠요. 거기서 '인쇄'를 한 번 더 눌러 주세요.</p>
+    <div class="modalfoot" style="margin-top:auto;padding-top:16px"><button id="wsCancel">취소</button><button class="primary" id="wsGo" disabled>인쇄하기</button></div>
+  </div></div></div>
 <div class="modalback" id="bookModal"><div class="modal"><h3>새 책 추가</h3>
   <p class="desc">추가하면 바로 발문지 편집 화면이 열려요. 질문을 나중에 넣어도 되고, 그동안은 '직접 질문'으로 기록할 수 있어요.</p>
   <label for="newTitle">책 제목</label><input class="inp" id="newTitle" autocomplete="off">
@@ -440,7 +459,7 @@ body.noselect{user-select:none}
 
 <script>
 'use strict';
-const APP_VER='2026-11-17-1';
+const APP_VER='2026-11-17-2';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
@@ -489,7 +508,7 @@ async function boot(){
     const b=await api('bm_bootstrap',{p_token:S.token});
     S.students=b.students||[];S.books=b.books||[];S.unsynced=b.unsynced||0;S.warn=b.warn;
     if(!bookById(S.bookId))S.bookId=(S.books[0]||{}).id||null;
-    show('app');renderSide();renderBanners();renderMain();flushQueue();
+    show('app');renderSide();renderBanners();renderMain();flushQueue();loadWs();
     const h=decodeURIComponent(location.hash.slice(1));if(h&&stu(h))selectStudent(h);
   }catch(e){
     if(onAuthFail(e))return;
@@ -945,6 +964,73 @@ $('cancelAdd').onclick=()=>$('bookModal').classList.remove('open');
 $('confirmAdd').onclick=async()=>{const title=$('newTitle').value.trim(),level=$('newLevel').value.trim();if(!title){$('newTitle').focus();return}if(!level){toast('레벨을 골라 주세요');return}
   $('confirmAdd').disabled=true;try{const r=await api('bm_add_book',{p_token:S.token,p:{title,level}});S.books=r.books;S.bookId=r.id;S.cur='free';$('bookModal').classList.remove('open');savePref();renderBalmun();toast('〈'+title+'〉을(를) 추가했어요');const nb=bookById(r.id);if(nb&&!nb.questions.length)openEditor(r.id,true)}catch(e){if(!onAuthFail(e))toast(errText(e),true)}finally{$('confirmAdd').disabled=false}};
 
+/* ---------- 활동지 인쇄 ---------- */
+const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+S.ws={};
+async function loadWs(){try{S.ws=(await api('bm_ws_map',{p_token:S.token}))||{};updWsBtn()}catch(e){}}
+function updWsBtn(){const btn=$('btnPrintWs'),tag=$('wsTag');if(!btn)return;const b=bookById(S.bookId);
+  if(!b||!S.sel){btn.style.display='none';tag.style.display='none';return}
+  const w=S.ws[b.id];btn.style.display='';tag.style.display='';
+  if(w){btn.disabled=false;tag.className='wstag';tag.textContent=(b.level?b.level+' ':'')+'활동지 있음'+(w[1]?' · '+w[1]+'쪽':'')}
+  else{btn.disabled=true;tag.className='wstag none';tag.textContent='활동지 없음'}}
+let pdfjsP=null;
+function loadPdfjs(){if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);if(pdfjsP)return pdfjsP;
+  pdfjsP=new Promise((res,rej)=>{const s=document.createElement('script');s.src=PDFJS+'pdf.min.js';s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+'pdf.worker.min.js';res(window.pdfjsLib)};s.onerror=()=>{pdfjsP=null;rej(new Error('NETWORK'))};document.head.appendChild(s)});return pdfjsP}
+const WSC={};
+function wsFindFields(items,vp,SC){const ch=[];for(const it of items){const s=String(it.str||'');if(!s)continue;const w=(it.width||0)/Math.max(1,s.length);for(let k=0;k<s.length;k++)ch.push({c:s[k],x:it.transform[4]+w*k,y:it.transform[5],h:Math.abs(it.transform[3]||9)})}
+  const occ=lab=>{const r=[];for(let i=0;i<ch.length-1;i++)if(ch[i].c===lab[0]&&ch[i+1].c===lab[1]&&Math.abs(ch[i].y-ch[i+1].y)<1)r.push(ch[i]);return r};
+  const A=occ('학년'),B=occ('이름'),C=occ('날짜');let best=null;
+  for(const a of A)for(const b of B)for(const c of C){if(Math.abs(a.y-b.y)<1.5&&Math.abs(a.y-c.y)<1.5&&a.x<b.x&&b.x<c.x&&(!best||a.y>best[0].y))best=[a,b,c]}
+  if(!best)return null;const f={};['학년','이름','날짜'].forEach((k,i)=>{const o=best[i];const p=vp.convertToViewportPoint(o.x,o.y);f[k]={x:p[0],y:p[1],h:o.h*SC}});return f}
+async function wsLoad(path){if(WSC[path])return WSC[path];const lib=await loadPdfjs();
+  const doc=await lib.getDocument({url:SB_URL+'/storage/v1/object/public/ilji-ws/'+path}).promise;const SC=2.6,pages=[];
+  for(let i=1;i<=doc.numPages;i++){const pg=await doc.getPage(i);const vp=pg.getViewport({scale:SC});const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+    const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:ctx,viewport:vp}).promise;
+    let fields=null;if(i===1){fields=wsFindFields((await pg.getTextContent()).items,vp,SC)}
+    pages.push({c,fields})}
+  return WSC[path]={pages}}
+function wsGradeText(g){g=String(g||'');let m=g.match(/(초등|중|고등)[^0-9]*(\d)/);if(!m)return '';return (m[1]==='중'?'중등':m[1])+' '+m[2]+'학년'}
+function wsDateText(v){if(!v)return '';const p=v.split('-').map(Number);return p[0]+'년 '+p[1]+'월 '+p[2]+'일'}
+function wsStamp(pg,vals){const c=document.createElement('canvas');c.width=pg.c.width;c.height=pg.c.height;const ctx=c.getContext('2d');ctx.drawImage(pg.c,0,0);
+  const f=pg.fields;if(!f||!vals)return c;
+  const W=c.width,gap=f['학년'].h*0.9,right=W-f['학년'].x;
+  const spans=[[f['학년'].x,f['이름'].x-gap,vals.grade,false],[f['이름'].x,f['날짜'].x-gap,vals.name,true],[f['날짜'].x,right,vals.date,false]];
+  const fs=f['학년'].h*1.32,base=f['학년'].y+f['학년'].h*1.18;
+  ctx.fillStyle='#1f1f1f';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  for(const [x0,x1,t,bold] of spans){if(!t)continue;let s=fs;const fam="'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif";
+    ctx.font=(bold?'700 ':'500 ')+s+'px '+fam;while(ctx.measureText(t).width>(x1-x0)*0.92&&s>fs*0.6){s-=1;ctx.font=(bold?'700 ':'500 ')+s+'px '+fam}
+    ctx.fillText(t,(x0+x1)/2,base)}
+  return c}
+const WS={path:null,mode:'fill'};
+function wsVals(){if(WS.mode!=='fill')return null;return {grade:$('wsGrade').value.trim(),name:$('wsName').value.trim(),date:wsDateText($('wsDate').value)}}
+function wsPreview(){const d=WSC[WS.path];const cv=$('wsCanvas');if(!d){return}const pg=d.pages[0];const st=wsStamp(pg,wsVals());
+  cv.width=600;cv.height=Math.round(600*st.height/st.width);const ctx=cv.getContext('2d');ctx.imageSmoothingQuality='high';ctx.drawImage(st,0,0,cv.width,cv.height)}
+async function openWs(){const b=bookById(S.bookId),s=stu(S.sel);const w=b&&S.ws[b.id];if(!w)return;
+  WS.path=w[0];WS.mode='fill';document.querySelectorAll('[data-wsmode]').forEach(x=>{const on=x.dataset.wsmode==='fill';x.classList.toggle('on',on);x.textContent=(on?'● ':'○ ')+(x.dataset.wsmode==='fill'?'이름·날짜 넣기':'빈 칸으로')});
+  $('wsTitle').textContent='「'+b.title+'」 · '+(b.level?b.level+' ':'')+'글쓰기 활동지'+(w[1]?' · '+w[1]+'쪽':'');
+  $('wsGrade').value=wsGradeText(s&&s.grade);$('wsName').value=s?s.name:'';$('wsDate').value=kstDay();$('wsCopies').value=1;wsInputs(true);
+  $('wsGo').disabled=true;$('wsPgInfo').textContent='활동지를 불러오는 중이에요...';const cv=$('wsCanvas');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+  $('wsModal').classList.add('open');
+  try{const d=await wsLoad(WS.path);if(WS.path!==w[0])return;wsPreview();$('wsGo').disabled=false;
+    $('wsPgInfo').textContent='미리보기 · 1쪽 (전체 '+d.pages.length+'쪽)'+(d.pages[0].fields?'':' · 이 활동지는 이름 칸을 못 찾아서 빈 칸으로 뽑혀요')}
+  catch(e){$('wsPgInfo').textContent='활동지를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'}}
+function wsInputs(on){['wsGrade','wsName','wsDate'].forEach(id=>$(id).disabled=!on)}
+document.querySelectorAll('[data-wsmode]').forEach(x=>x.onclick=()=>{WS.mode=x.dataset.wsmode;document.querySelectorAll('[data-wsmode]').forEach(y=>{const on=y===x;y.classList.toggle('on',on);y.textContent=(on?'● ':'○ ')+(y.dataset.wsmode==='fill'?'이름·날짜 넣기':'빈 칸으로')});wsInputs(WS.mode==='fill');wsPreview()});
+['wsGrade','wsName','wsDate'].forEach(id=>$(id).addEventListener('input',wsPreview));
+$('btnPrintWs').onclick=openWs;
+$('wsCancel').onclick=()=>$('wsModal').classList.remove('open');
+$('wsModal').addEventListener('keydown',e=>{if(e.key==='Escape')$('wsModal').classList.remove('open')});
+$('wsGo').onclick=async()=>{const d=WSC[WS.path];if(!d)return;const btn=$('wsGo');btn.disabled=true;btn.textContent='준비 중...';
+  try{const v=wsVals();const n=Math.max(1,Math.min(30,parseInt($('wsCopies').value)||1));
+    const imgs=d.pages.map(pg=>wsStamp(pg,v).toDataURL('image/png'));
+    const fr=document.createElement('iframe');fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';document.body.appendChild(fr);
+    const all=[];for(let k=0;k<n;k++)all.push(...imgs);
+    const doc=fr.contentWindow.document;doc.open();doc.write('<!doctype html><html><head><title>'+esc(($('wsName').value||'')+' 활동지')+'</title><style>@page{size:A4;margin:0}html,body{margin:0;padding:0}img{display:block;width:210mm;height:296.5mm;page-break-after:always;break-after:page}img:last-child{page-break-after:auto;break-after:auto}</style></head><body>'+all.map(u=>'<img src="'+u+'">').join('')+'</body></html>');doc.close();
+    await Promise.all([...doc.images].map(im=>im.decode?im.decode().catch(()=>{}):Promise.resolve()));
+    fr.contentWindow.focus();fr.contentWindow.print();setTimeout(()=>fr.remove(),60000);$('wsModal').classList.remove('open')}
+  catch(e){toast('인쇄를 준비하지 못했어요: '+(e&&e.message||e),true)}
+  finally{btn.disabled=false;btn.textContent='인쇄하기'}};
+
 /* ---------- 발문지 편집 ---------- */
 function openEditor(id,addFirst){
   const b=bookById(id);if(!b){toast('책을 먼저 골라 주세요');return}
@@ -1010,7 +1096,7 @@ function renderPicker(){
   $('bookArea').innerHTML=h+'</div>';
 }
 function renderBalmun(){
-  bookCombo.sync();
+  bookCombo.sync();updWsBtn();
   if(S.tab!=='balmun')return;
   const b=bookById(S.bookId);
   if(!b){renderPicker();return}
