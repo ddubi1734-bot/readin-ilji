@@ -20,6 +20,12 @@ button,select,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 button:disabled{opacity:.55;cursor:default}
 .hidden{display:none!important}
+.fubtn{margin-top:10px;border:1.5px dashed #b9cbc3;background:#fff;color:var(--green);font-weight:800;border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer}
+.fubtn:hover{border-color:var(--green)}
+.fuwrap{margin-top:12px;border-left:3px solid #b9cbc3;padding-left:12px}
+.fuline{display:flex;gap:8px;align-items:baseline;font-size:13px;padding:4px 0}.fuline .fn{font-weight:800;color:var(--green);min-width:30px}.fuline .fq{font-weight:600}.fuline .fa{color:#536560;flex:1}
+.fuform{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:6px}.fuform .fuh{display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:8px}.fuform .fuh b{color:var(--green)}
+.fuform .tin{margin-bottom:8px}.fuform .grade{margin-top:8px}
 .lgw{margin-top:18px;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:#fff}
 .lgw h5{margin:0 0 10px;font-size:14px;display:flex;align-items:center;gap:8px}.lgw h5 small{font-weight:500;color:var(--muted);font-size:12px}
 .lgadd{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.lgadd select,.lgadd input{font-size:12.5px}.lgadd #lgMemo{flex:1;min-width:160px}
@@ -307,6 +313,12 @@ input[type=date].inp{width:150px}
 .edq .qtools{margin-left:auto;display:flex;gap:4px}
 .edq .qtools button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:4px 8px;font-size:12px;color:#536560}
 .edq .qtools button.rm:hover{color:var(--red);border-color:#e8b9b9}
+.edq .qtools button.ins{color:var(--green);border-color:#cfe3d8;font-weight:700}
+.edq .grip{cursor:grab;touch-action:none;user-select:none;font-size:18px;line-height:1;color:#9fb2ab;padding:4px 6px;border-radius:6px;margin-left:-4px}
+.edq .grip:hover{background:#eef4f1;color:var(--green)}
+.edq.dragging{opacity:.55;border-style:dashed}.edq.drop-before{box-shadow:0 -3px 0 0 var(--green)}.edq.drop-after{box-shadow:0 3px 0 0 var(--green)}
+.edq.moved{background:#e6f3ee;transition:background .8s}
+body.noselect{user-select:none}
 .edq textarea{width:100%;margin-top:6px}
 .edq .lab{font-size:11px;font-weight:800;color:var(--muted);margin-top:8px;display:block}
 .edfoot{padding:12px 22px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center}
@@ -428,7 +440,7 @@ input[type=date].inp{width:150px}
 
 <script>
 'use strict';
-const APP_VER='2026-11-16-4';
+const APP_VER='2026-11-17-1';
 const SB_URL='https://jkazixakznyhixfnrtvj.supabase.co';
 const SB_KEY='sb_publishable_oK4SXAlM-Wm7SkNhVmJfUA_ZKNBn0La';
 const TOKEN_KEY='ilji.token.v1', QUEUE_KEY='ilji.queue.v1', PREF_KEY='ilji.pref.v1';
@@ -540,7 +552,7 @@ $('slist').onclick=e=>{const it=e.target.closest('[data-id]');if(!it)return;if(S
 
 /* ---------- 학생 선택 ---------- */
 async function selectStudent(id){
-  if(S.sel!==id){S.bookId=null;S.cur=0;S.grade='';S.recEdit=null;S.lgKindF='all';S.lgAll=false}
+  if(S.sel!==id){S.bookId=null;S.cur=0;S.grade='';S.recEdit=null;S.fu=null;S.lgKindF='all';S.lgAll=false}
   S.sel=id;S.page=null;S.editing=null;try{history.replaceState(null,'','#'+encodeURIComponent(id))}catch(e){}
   renderSide();renderMain();if(S.tab==='report')loadReport();await loadPage();
 }
@@ -943,7 +955,7 @@ function openEditor(id,addFirst){
 }
 function renderEditor(){
   const qs=S.ed.qs;
-  $('edList').innerHTML=qs.map((q,i)=>'<div class="edq" data-i="'+i+'"><div class="qtop"><span class="qno">질문 '+(i+1)+'</span><input class="inp kind" data-f="kind" list="kindlist" placeholder="종류" value="'+esc(q.kind)+'"><span class="qtools"><button data-mv="-1" title="위로"'+(i===0?' disabled':'')+'>↑</button><button data-mv="1" title="아래로"'+(i===qs.length-1?' disabled':'')+'>↓</button><button class="rm" data-rm="1">삭제</button></span></div>'
+  $('edList').innerHTML=qs.map((q,i)=>'<div class="edq" data-i="'+i+'"><div class="qtop"><span class="grip" data-grip title="잡고 끌어서 순서 바꾸기">⠿</span><span class="qno">질문 '+(i+1)+'</span><input class="inp kind" data-f="kind" list="kindlist" placeholder="종류" value="'+esc(q.kind)+'"><span class="qtools"><button data-mv="-1" title="위로"'+(i===0?' disabled':'')+'>↑</button><button data-mv="1" title="아래로"'+(i===qs.length-1?' disabled':'')+'>↓</button><button class="ins" data-ins="1" title="이 질문 바로 아래에 새 질문 넣기">＋ 아래에 추가</button><button class="rm" data-rm="1">삭제</button></span></div>'
     +'<textarea class="ta small" data-f="q" placeholder="질문">'+esc(q.q)+'</textarea><span class="lab">모범 답안</span><textarea class="ta small" data-f="a" placeholder="모범 답안 (없으면 비워 두세요)">'+esc(q.a)+'</textarea></div>').join('')||'<div class="empty">아직 질문이 없어요. 아래 \'+ 질문 추가\'를 눌러 주세요.</div>';
   $('edInfo').textContent='질문 '+qs.length+'개'+(S.ed.used?' · 이 책 발문 기록 '+S.ed.used+'건':'');
   $('edDelete').classList.toggle('hidden',!!S.ed.used);
@@ -951,7 +963,22 @@ function renderEditor(){
 $('edList').addEventListener('input',e=>{const box=e.target.closest('.edq'),f=e.target.dataset.f;if(!box||!f)return;S.ed.qs[+box.dataset.i][f]=e.target.value;S.ed.dirty=true});
 $('edList').addEventListener('click',e=>{const box=e.target.closest('.edq');if(!box)return;const i=+box.dataset.i,qs=S.ed.qs;
   const mv=e.target.closest('[data-mv]');if(mv){const j=i+(+mv.dataset.mv);if(j<0||j>=qs.length)return;[qs[i],qs[j]]=[qs[j],qs[i]];S.ed.dirty=true;renderEditor();return}
+  if(e.target.closest('[data-ins]')){qs.splice(i+1,0,{id:'',kind:qs[i].kind||'사실 질문',q:'',a:''});S.ed.dirty=true;renderEditor();const t=document.querySelector('#edList .edq[data-i="'+(i+1)+'"] textarea[data-f="q"]');if(t){t.focus();t.scrollIntoView({block:'center'})}return}
   if(e.target.closest('[data-rm]')){if(qs[i].q.trim()&&!confirm('질문 '+(i+1)+'을(를) 지울까요? (이미 남긴 기록은 그대로 남아요)'))return;qs.splice(i,1);S.ed.dirty=true;renderEditor()}});
+/* 끌어서 순서 바꾸기 */
+(function(){let drag=null;const list=$('edList');
+  function boxes(){return [...list.querySelectorAll('.edq')]}
+  function clearMarks(){boxes().forEach(b=>b.classList.remove('drop-before','drop-after','dragging'))}
+  list.addEventListener('pointerdown',e=>{const g=e.target.closest('[data-grip]');if(!g)return;const box=g.closest('.edq');if(!box)return;e.preventDefault();
+    drag={from:+box.dataset.i,to:+box.dataset.i,id:e.pointerId,scroller:list.closest('.edbody')||list};try{g.setPointerCapture(e.pointerId)}catch(_){}box.classList.add('dragging');document.body.classList.add('noselect')});
+  list.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;const bs=boxes();let to=bs.length;
+    for(let k=0;k<bs.length;k++){const r=bs[k].getBoundingClientRect();if(e.clientY<r.top+r.height/2){to=k;break}}
+    drag.to=to;bs.forEach(b=>b.classList.remove('drop-before','drop-after'));
+    if(to<bs.length)bs[to].classList.add('drop-before');else bs[bs.length-1].classList.add('drop-after');
+    const sc=drag.scroller,sr=sc.getBoundingClientRect();if(e.clientY<sr.top+50)sc.scrollTop-=14;else if(e.clientY>sr.bottom-50)sc.scrollTop+=14});
+  const end=e=>{if(!drag||e.pointerId!==drag.id)return;const {from,to}=drag;drag=null;clearMarks();document.body.classList.remove('noselect');
+    let t=to>from?to-1:to;if(t!==from){const qs=S.ed.qs,[m]=qs.splice(from,1);qs.splice(t,0,m);S.ed.dirty=true;renderEditor();const nb=list.querySelector('.edq[data-i="'+t+'"]');if(nb){nb.classList.add('moved');setTimeout(()=>nb.classList.remove('moved'),900)}}};
+  list.addEventListener('pointerup',end);list.addEventListener('pointercancel',end)})();
 $('edAdd').onclick=()=>{const last=S.ed.qs[S.ed.qs.length-1];S.ed.qs.push({id:'',kind:last?last.kind:'사실 질문',q:'',a:''});S.ed.dirty=true;renderEditor();const ts=document.querySelectorAll('#edList textarea[data-f="q"]');const t=ts[ts.length-1];if(t){t.focus();t.scrollIntoView({block:'center'})}};
 $('edCancel').onclick=()=>{if(S.ed&&S.ed.dirty&&!confirm('고친 내용을 저장하지 않고 닫을까요?'))return;$('edModal').classList.remove('open')};
 $('edTitle').addEventListener('input',()=>{S.ed.dirty=true});$('edLevel').addEventListener('input',()=>{S.ed.dirty=true});
@@ -1006,25 +1033,31 @@ function renderBalmun(){
     if(on){h+='<div class="qbody"><div class="answerbox"><div class="cap">모범 답안</div><p>'+esc(q.a||'(모범 답안 없음)')+'</p></div>';
       const done=S.page?S.page.records.filter(r=>r.bookId===b.id&&r.day===kstDay()&&(r.qid?r.qid===q.id:r.question===q.q)).pop():null;
       if(done)h+='<div class="banner" style="margin:0 0 10px">오늘 이미 기록한 답이 있어요: '+GRADE[done.grade]+' · '+esc(done.answer)+'<button data-editrec="'+done.id+'">이 답 고치기</button></div>';
-      h+=body()+'</div>'}
+      h+=body();
+      const fus=S.page?S.page.records.filter(r=>r.bookId===b.id&&r.day===kstDay()&&r.fq&&r.qn===i+1).sort((a,c)=>a.fq-c.fq):[];
+      if(fus.length||S.fu===i){h+='<div class="fuwrap">'+fus.map(r=>'<div class="fuline"><span class="fn">'+(i+1)+'-'+r.fq+'</span><span class="fq">'+esc(r.question)+'</span><span class="fa">→ '+esc(r.answer)+'</span><span class="qm '+r.grade+'">'+MARK[r.grade]+'</span></div>').join('');
+        if(S.fu===i)h+='<div class="fuform"><div class="fuh"><b>'+(i+1)+'-'+(fus.length+1)+'</b> 꼬리 질문<button class="lnk" data-fuclose style="margin-left:auto">닫기</button></div><input class="tin" id="fuQ" placeholder="질문 '+(i+1)+'에 덧붙여 물은 질문"><textarea class="ta small" id="fuA" placeholder="아이의 답"></textarea><div class="grade">'+['ok','part','re'].map(g=>'<button data-fugrade="'+g+'">'+GRADE[g]+'</button>').join('')+'</div></div>';
+        h+='</div>'}
+      if(S.fu!==i)h+='<button class="fubtn" data-fuopen="'+i+'">＋ 꼬리 질문</button>';
+      h+='</div>'}
     h+='</div>'}
   h+='<div class="ql free'+(free?' on':'')+'"><button class="qrow" data-q="free"><span class="qn">+</span><span class="qt">직접 질문 (발문지에 없는 질문)</span></button>';
   if(free)h+='<div class="qbody"><input class="tin" id="freeQ" placeholder="발문지에 없는 질문을 적어 주세요"><textarea class="ta small" id="freeA" placeholder="모범 답안 (없으면 비워 두세요)" style="margin-bottom:10px"></textarea>'+body()+'</div>';
   h+='</div></div>'+pager(' bot');
   h+='<div class="crow"><span class="hint">질문을 누르면 그 자리에서 펼쳐져요. 아이 답을 적고 ○△×를 누르면 바로 저장되고 다음 질문이 열려요(10번째 다음은 자동으로 다음 쪽). 키보드는 Alt+1(○) Alt+2(△) Alt+3(×).</span></div>';
   h+=bookRecordsHtml(b);
-  const ca0=$('childAnswer'),fq0=$('freeQ'),fa0=$('freeA');
+  const ca0=$('childAnswer'),fq0=$('freeQ'),fa0=$('freeA'),fuq0=$('fuQ'),fua0=$('fuA');S.fuKeep=S.fuKeep||{q:'',a:''};if(fuq0){S.fuKeep.q=fuq0.value;S.fuKeep.a=fua0.value}
   S.keep=S.keep||{a:'',fq:'',fa:''};if(ca0)S.keep.a=ca0.value;if(fq0){S.keep.fq=fq0.value;S.keep.fa=fa0.value}
   $('bookArea').innerHTML=h;
-  if($('childAnswer'))$('childAnswer').value=S.keep.a;if(free){$('freeQ').value=S.keep.fq;$('freeA').value=S.keep.fa}
+  if($('childAnswer'))$('childAnswer').value=S.keep.a;if($('fuQ')){$('fuQ').value=S.fuKeep.q;$('fuA').value=S.fuKeep.a}if(free){$('freeQ').value=S.keep.fq;$('freeA').value=S.keep.fa}
 }
 function todaySession(bookId){if(!S.page)return null;return (S.page.sessions||[]).find(x=>x.bookId===bookId&&x.day===kstDay())||null}
 function recHtml(r){
   if(S.recEdit&&S.recEdit.id===r.id){const g=S.recEdit.grade;
-    return '<div class="rec"><div class="rt"><small>'+(r.qn?'질문 '+r.qn+' · ':'')+esc(r.kind||'')+' · 고치는 중</small></div><p class="eq">'+esc(r.question)+'</p>'
+    return '<div class="rec"><div class="rt"><small>'+(r.qn?'질문 '+r.qn+(r.fq?'-'+r.fq:'')+' · ':'')+esc(r.kind||'')+' · 고치는 중</small></div><p class="eq">'+esc(r.question)+'</p>'
       +'<textarea class="ta small" id="recAns">'+esc(r.answer)+'</textarea><div class="grade" style="margin-top:8px">'+['ok','part','re'].map(x=>'<button data-recgrade="'+x+'" class="'+(g===x?'on':'')+'">'+GRADE[x]+'</button>').join('')+'</div>'
       +'<div class="crow" style="margin-top:8px"><span class="hint">고친 내용은 노션 학생 일지에도 바로 반영돼요</span><button class="ghost" data-reccancel="1" style="margin-left:auto">취소</button><button class="primary" data-recsave="'+r.id+'">저장</button></div></div>'}
-  return '<div class="rec"><div class="rt"><span class="badge '+r.grade+'">'+GRADE[r.grade]+'</span><small>'+(r.qn?'질문 '+r.qn:'')+'</small>'+(r.kind?'<span class="kt '+kindCls(r.kind)+'">'+esc(r.kind)+'</span>':'')+'<button class="lnk" data-editrec="'+r.id+'" style="margin-left:auto">수정</button><button class="lnk del" data-delrec="'+r.id+'" style="margin-left:10px">삭제</button></div><p class="eq">'+esc(r.question)+'</p><p><b class="lab">아이 답</b>'+esc(r.answer)+'</p>'+(r.model?'<p class="em"><b class="lab">모범 답안</b>'+esc(r.model)+'</p>':'')+'</div>';
+  return '<div class="rec"><div class="rt"><span class="badge '+r.grade+'">'+GRADE[r.grade]+'</span><small>'+(r.qn?'질문 '+r.qn+(r.fq?'-'+r.fq:''):'')+'</small>'+(r.kind?'<span class="kt '+kindCls(r.kind)+'">'+esc(r.kind)+'</span>':'')+'<button class="lnk" data-editrec="'+r.id+'" style="margin-left:auto">수정</button><button class="lnk del" data-delrec="'+r.id+'" style="margin-left:10px">삭제</button></div><p class="eq">'+esc(r.question)+'</p><p><b class="lab">아이 답</b>'+esc(r.answer)+'</p>'+(r.model?'<p class="em"><b class="lab">모범 답안</b>'+esc(r.model)+'</p>':'')+'</div>';
 }
 function bookRecordsHtml(b){
   if(!S.page)return '';
@@ -1047,7 +1080,10 @@ $('bookArea').addEventListener('click',async e=>{
     catch(err){if(!onAuthFail(err))toast(errText(err),true);rs.disabled=false}return}
   const qb=e.target.closest('[data-q]'),gb=e.target.closest('[data-grade]'),sv=e.target.closest('#aSave'),dr=e.target.closest('[data-delrec]');
   const qp=e.target.closest('[data-qp]');if(qp){const v=qp.dataset.qp;S.qpage=v==='prev'?S.qpage-1:v==='next'?S.qpage+1:+v;renderBalmun();const ql=document.querySelector('.qhead');if(ql)ql.scrollIntoView({block:'nearest'});return}
-  if(qb){S.cur=qb.dataset.q==='free'?'free':+qb.dataset.q;S.grade='';renderBalmun();const f=S.cur==='free'?$('freeQ'):$('childAnswer');if(f)f.focus();return}
+  const fo=e.target.closest('[data-fuopen]');if(fo){S.fu=+fo.dataset.fuopen;S.fuKeep={q:'',a:''};renderBalmun();const f=$('fuQ');if(f)f.focus();return}
+  if(e.target.closest('[data-fuclose]')){S.fu=null;S.fuKeep={q:'',a:''};renderBalmun();return}
+  const fg=e.target.closest('[data-fugrade]');if(fg){await saveFollowUp(fg.dataset.fugrade);return}
+  if(qb){S.fu=null;S.cur=qb.dataset.q==='free'?'free':+qb.dataset.q;S.grade='';renderBalmun();const f=S.cur==='free'?$('freeQ'):$('childAnswer');if(f)f.focus();return}
   if(gb){await gradeAndSave(gb.dataset.grade);return}
   if(dr){if(!confirm('이 답변 기록을 지울까요? 노션 학생 일지에서도 빠져요.'))return;
     try{const r=await api('bm_delete_record',{p_token:S.token,p_id:dr.dataset.delrec});S.unsynced=r.unsynced;await loadPage();toast('기록을 지웠어요')}catch(err){if(!onAuthFail(err))toast(errText(err),true)}}
@@ -1058,7 +1094,22 @@ $('bookArea').addEventListener('change',async e=>{
     try{const r=await api('bm_set_score',{p_token:S.token,p_page:S.sel,p_book:S.bookId,p_day:ts.day,p_score:n});S.unsynced=r.unsynced;await loadPage();toast(n==null?'진단 점수를 지웠어요':'진단 점수 '+n+'점을 노션에도 반영했어요')}catch(err){if(!onAuthFail(err))toast(errText(err),true)}return}
   const el=e.target.closest('[data-score]');if(!el)return;const v=el.value.trim(),n=v===''?null:Math.max(0,Math.min(100,Math.round(+v)));
   try{const r=await api('bm_set_score',{p_token:S.token,p_page:S.sel,p_book:S.bookId,p_day:el.dataset.score,p_score:n});S.unsynced=r.unsynced;await loadPage();toast(n==null?'점수를 지웠어요':'점수 '+n+'점을 노션에도 반영했어요')}catch(err){if(!onAuthFail(err))toast(errText(err),true)}});
-$('bookArea').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.closest('[data-score]')||e.target.id==='todayScore'))e.target.blur();if(e.altKey&&['1','2','3'].includes(e.key)&&(e.target.id==='childAnswer'||e.target.id==='freeQ'||e.target.id==='freeA')){e.preventDefault();gradeAndSave({'1':'ok','2':'part','3':'re'}[e.key])}});
+$('bookArea').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.closest('[data-score]')||e.target.id==='todayScore'))e.target.blur();if(e.altKey&&['1','2','3'].includes(e.key)&&(e.target.id==='childAnswer'||e.target.id==='freeQ'||e.target.id==='freeA')){e.preventDefault();gradeAndSave({'1':'ok','2':'part','3':'re'}[e.key])}else if(e.altKey&&['1','2','3'].includes(e.key)&&(e.target.id==='fuQ'||e.target.id==='fuA')){e.preventDefault();saveFollowUp({'1':'ok','2':'part','3':'re'}[e.key])}});
+let fuBusy=false;
+async function saveFollowUp(g){
+  if(fuBusy)return;const s=stu(S.sel),b=bookById(S.bookId),i=S.fu;if(!b||i==null||!b.questions[i])return;
+  const fq=$('fuQ').value.trim(),fa=$('fuA').value.trim();if(!fq){$('fuQ').focus();toast('꼬리 질문을 적어 주세요');return}if(!fa){$('fuA').focus();toast('아이의 답을 적어 주세요');return}
+  const x=b.questions[i],n=(S.page?S.page.records.filter(r=>r.bookId===b.id&&r.day===kstDay()&&r.fq&&r.qn===i+1).length:0)+1;
+  fuBusy=true;document.querySelectorAll('[data-fugrade]').forEach(z=>z.disabled=true);
+  const tsEl=$('todayScore'),tsv=tsEl&&tsEl.value.trim()!==''?Math.max(0,Math.min(100,Math.round(+tsEl.value))):null;
+  try{const r=await send('bm_save_answer',{p_token:S.token,p:{pageId:s.id,bookId:b.id,qn:i+1,fq:n,qid:(x.id||'q')+'~f'+n,kind:'꼬리 질문',question:fq,model:'',answer:fa,grade:g,score:todaySession(b.id)?undefined:tsv}});
+    delete S.pendingScore[b.id];S.fu=null;S.fuKeep={q:'',a:''};
+    if(r.queued){toast('인터넷이 끊겨서 이 컴퓨터에 보관했어요. 연결되면 자동으로 보내요',true);renderBalmun()}
+    else{S.unsynced=r.unsynced;touchLocal(s.id);await loadPage();toast((i+1)+'-'+n+' 꼬리 질문을 저장했어요'+(r.sync&&r.sync.status==='error'?' (노션은 못 넣었어요)':''),r.sync&&r.sync.status==='error')}
+    renderBanners()}
+  catch(e){if(!onAuthFail(e))toast(errText(e),true)}
+  finally{fuBusy=false;document.querySelectorAll('[data-fugrade]').forEach(z=>z.disabled=false)}
+}
 let gradeBusy=false;
 async function gradeAndSave(g){
   if(gradeBusy)return;
